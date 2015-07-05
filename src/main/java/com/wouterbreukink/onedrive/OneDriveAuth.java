@@ -84,8 +84,7 @@ public class OneDriveAuth {
                 .queryParam("redirect_uri", "https://login.live.com/oauth20_desktop.srf");
 
         log.severe("No authentication tokens found!");
-        log.severe("");
-        log.severe("Open the following in a browser");
+        log.severe("Open the following in a browser and store the returned code in onedrive.xml");
         log.severe("Authorisation URL: " + target.getUri());
     }
 
@@ -106,6 +105,12 @@ public class OneDriveAuth {
 
         Response response = invocationBuilder.get();
 
+        try {
+            props.storeToXML(new FileOutputStream("onedrive.xml"), null);
+        } catch (IOException e) {
+            log.severe("Unable to save token " + e.toString());
+        }
+
         return response.readEntity(Authorisation.class);
     }
 
@@ -125,6 +130,12 @@ public class OneDriveAuth {
                 tokenTarget.request(MediaType.TEXT_PLAIN_TYPE);
 
         Response response = invocationBuilder.get();
+
+        try {
+            props.storeToXML(new FileOutputStream("onedrive.xml"), null);
+        } catch (IOException e) {
+            log.severe("Unable to save token " + e.toString());
+        }
 
         return response.readEntity(Authorisation.class);
     }
