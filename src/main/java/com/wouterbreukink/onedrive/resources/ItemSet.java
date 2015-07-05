@@ -23,6 +23,10 @@ public class ItemSet {
 
     public String getNextToken() {
 
+        if (nextPage == null) {
+            return null;
+        }
+
         String pattern = ".*skiptoken=(.*)";
 
         // Create a Pattern object

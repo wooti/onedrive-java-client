@@ -12,7 +12,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -35,64 +34,25 @@ public class OneDriveClient {
 
         this.authoriser = authoriser;
 
-        serviceTarget = client.target("https://api.onedrive.com/v1.0")
-                .queryParam("access_token", authoriser.getAuthorisation().getAccessToken());
-    }
-
-    private <T> T getResponse(Invocation invoke, Class<T> entityType) {
-
-        for (int retries = 10; retries > 0; retries--) {
-            Response response = invoke.invoke();
-
-            if (response.getStatus() == 401) {
-                serviceTarget.queryParam("access_token", authoriser.getAuthorisation().getAccessToken());
-                continue;
-            }
-
-            if (response.getStatus() == 503) {
-                try {
-                    log.warning("Server returned 503 - sleeping 10 seconds");
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    log.warning(e.toString());
-                }
-                continue;
-            }
-
-            if (response.getStatus() == 509) {
-                try {
-                    log.warning("Server returned 509 - sleeping 60 seconds");
-                    Thread.sleep(60000);
-                } catch (InterruptedException e) {
-                    log.warning(e.toString());
-                }
-                continue;
-            }
-
-            verifyResponse(response);
-            return response.readEntity(entityType);
-        }
-
-        throw new Error("Unable to complete request");
+        serviceTarget = client.target("https://api.onedrive.com/v1.0");
     }
 
     public Drive getDefaultDrive() {
 
-        Invocation invocation =
-                serviceTarget.path("drive")
-                        .request(MediaType.TEXT_PLAIN_TYPE)
-                        .buildGet();
+        OneDriveRequest request = getDefaultRequest()
+                .path("drive")
+                .method("GET");
 
-        return getResponse(invocation, Drive.class);
+        return request.getResponse(Drive.class);
     }
 
     public Item getRoot() {
-        Invocation invocation =
-                serviceTarget.path("drive/root")
-                        .request(MediaType.TEXT_PLAIN_TYPE)
-                        .buildGet();
 
-        return getResponse(invocation, Item.class);
+        OneDriveRequest request = getDefaultRequest()
+                .path("drive/root")
+                .method("GET");
+
+        return request.getResponse(Item.class);
     }
 
     public Item[] getChildren(Item parent) {
@@ -103,29 +63,24 @@ public class OneDriveClient {
 
         List<Item> itemsToReturn = Lists.newArrayList();
 
-        Invocation invocation =
-                serviceTarget.path("/drive/items/" + parent.getId() + "/children")
-                        .request(MediaType.TEXT_PLAIN_TYPE)
-                        .buildGet();
+        String token = null;
 
-        ItemSet items = getResponse(invocation, ItemSet.class);
+        do {
+            OneDriveRequest request = getDefaultRequest()
+                    .path("/drive/items/" + parent.getId() + "/children")
+                    .skipToken(token)
+                    .method("GET");
 
-        Collections.addAll(itemsToReturn, items.getValue());
-
-        while (items.getNextPage() != null) {
-
-            log.finer(String.format("Got %d items, fetching next page", itemsToReturn.size()));
-
-            invocation =
-                    serviceTarget.path("/drive/items/" + parent.getId() + "/children")
-                            .queryParam("$skiptoken", items.getNextToken())
-                            .request(MediaType.TEXT_PLAIN_TYPE)
-                            .buildGet();
-
-            items = getResponse(invocation, ItemSet.class);
+            ItemSet items = request.getResponse(ItemSet.class);
 
             Collections.addAll(itemsToReturn, items.getValue());
-        }
+
+            token = items.getNextToken();
+
+            if (token != null) {
+                log.finer(String.format("Got %d items, fetching next page", itemsToReturn.size()));
+            }
+        } while (token != null); // If we have a token for the next page we need to keep going
 
         return itemsToReturn.toArray(new Item[itemsToReturn.size()]);
     }
@@ -195,13 +150,12 @@ public class OneDriveClient {
         log.fine("Starting upload of file: " + file.getPath());
         long startTime = System.currentTimeMillis();
 
-        Invocation invocation =
-                serviceTarget.path("/drive/items/" + parent.getId() + "/children")
-                        .request()
-                        .buildPost(Entity.entity(multiPart, multiPart.getMediaType()));
+        OneDriveRequest request = getDefaultRequest()
+                .path("/drive/items/" + parent.getId() + "/children")
+                .entity(Entity.entity(multiPart, multiPart.getMediaType()))
+                .method("POST");
 
-
-        Item response = getResponse(invocation, Item.class);
+        Item response = request.getResponse(Item.class);
 
         long elapsedTime = System.currentTimeMillis() - startTime;
         log.fine(String.format("Upload complete - %d KB in %dms - %.2f KB/s",
@@ -212,22 +166,17 @@ public class OneDriveClient {
         return response;
     }
 
-    private void verifyResponse(Response response) {
+    public Item getPath(String path) {
 
-        int status = response.getStatus();
-        if (status != 200 && status != 201) {
-            ErrorFacet error = response.readEntity(ErrorSet.class).getError();
-            throw new Error(String.format("Error Code %d: %s (%s)", response.getStatus(), error.getCode(), error.getMessage()));
-        }
+        OneDriveRequest request = getDefaultRequest()
+                .path("drive/root:/" + path)
+                .method("GET");
+
+        return request.getResponse(Item.class);
     }
 
-    public Item getPath(String path) {
-        Invocation invocation =
-                serviceTarget.path("drive/root:/" + path)
-                        .request(MediaType.TEXT_PLAIN_TYPE)
-                        .buildGet();
-
-        return getResponse(invocation, Item.class);
+    private OneDriveRequest getDefaultRequest() {
+        return OneDriveRequest.newRequest(serviceTarget, authoriser);
     }
 
     public Item updateFile(Item item, Date createdDate, Date modifiedDate) {
@@ -240,23 +189,23 @@ public class OneDriveClient {
         updateItem.getFileSystemInfo().setCreatedDateTime(createdDate);
         updateItem.getFileSystemInfo().setLastModifiedDateTime(modifiedDate);
 
-        Invocation invocation =
-                serviceTarget.path("/drive/items/" + item.getId())
-                        .request(MediaType.TEXT_PLAIN_TYPE)
-                        .build("PATCH", Entity.json(updateItem));
+        OneDriveRequest request = getDefaultRequest()
+                .path("/drive/items/" + item.getId())
+                .entity(Entity.json(updateItem))
+                .method("PATCH");
 
-        return getResponse(invocation, Item.class);
+        return request.getResponse(Item.class);
     }
 
     public Item createFolder(Item parent, String name) {
 
         WriteFolder newFolder = new WriteFolder(name);
 
-        Invocation invocation =
-                serviceTarget.path("/drive/items/" + parent.getId() + "/children")
-                        .request(MediaType.TEXT_PLAIN_TYPE)
-                        .buildPost(Entity.json(newFolder));
+        OneDriveRequest request = getDefaultRequest()
+                .path("/drive/items/" + parent.getId() + "/children")
+                .entity(Entity.json(newFolder))
+                .method("POST");
 
-        return getResponse(invocation, Item.class);
+        return request.getResponse(Item.class);
     }
 }

@@ -45,6 +45,6 @@ public class Authorisation {
     }
 
     public Date getTokenExpiryDate() {
-        return new Date(zeroTime + expiresIn);
+        return new Date(zeroTime + expiresIn * 1000);
     }
 }

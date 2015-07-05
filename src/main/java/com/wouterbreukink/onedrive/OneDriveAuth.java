@@ -34,10 +34,10 @@ public class OneDriveAuth {
         this.props = props;
 
         if (props.containsKey("code") && !props.getProperty("code").equals("[PUT AUTHORISATION CODE HERE]")) {
-            authorisation = getTokenFromCode(props.getProperty("code"));
+            getTokenFromCode(props.getProperty("code"));
             props.remove("code");
         } else if (props.containsKey("refresh_token")) {
-            authorisation = getTokenFromRefreshToken(props.getProperty("refresh_token"));
+            getTokenFromRefreshToken(props.getProperty("refresh_token"));
         } else {
             return;
         }
@@ -57,7 +57,7 @@ public class OneDriveAuth {
             // Refresh if needed
             if (authorisation.getTokenExpiryDate().before(new Date())) {
                 log.info("Authorisation token has expired - refreshing");
-                authorisation = getTokenFromRefreshToken(authorisation.getRefreshToken());
+                getTokenFromRefreshToken(authorisation.getRefreshToken());
 
                 props.setProperty("refresh_token", authorisation.getRefreshToken());
                 log.info("Authorisation token has expired - refreshing");
@@ -88,7 +88,7 @@ public class OneDriveAuth {
         log.severe("Authorisation URL: " + target.getUri());
     }
 
-    public Authorisation getTokenFromCode(String code) {
+    public void getTokenFromCode(String code) {
 
         log.fine("Fetching authorisation token using authorisation code");
 
@@ -111,10 +111,10 @@ public class OneDriveAuth {
             log.severe("Unable to save token " + e.toString());
         }
 
-        return response.readEntity(Authorisation.class);
+        authorisation = response.readEntity(Authorisation.class);
     }
 
-    public Authorisation getTokenFromRefreshToken(String refreshToken) {
+    public void getTokenFromRefreshToken(String refreshToken) {
 
         log.fine("Fetching authorisation token using refresh token");
 
@@ -137,6 +137,6 @@ public class OneDriveAuth {
             log.severe("Unable to save token " + e.toString());
         }
 
-        return response.readEntity(Authorisation.class);
+        authorisation = response.readEntity(Authorisation.class);
     }
 }
