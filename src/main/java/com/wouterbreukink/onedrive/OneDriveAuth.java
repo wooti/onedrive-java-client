@@ -33,7 +33,7 @@ public class OneDriveAuth {
         this.clientSecret = props.getProperty("client_secret");
         this.props = props;
 
-        if (props.containsKey("code")) {
+        if (props.containsKey("code") && !props.getProperty("code").equals("[PUT AUTHORISATION CODE HERE]")) {
             authorisation = getTokenFromCode(props.getProperty("code"));
             props.remove("code");
         } else if (props.containsKey("refresh_token")) {
