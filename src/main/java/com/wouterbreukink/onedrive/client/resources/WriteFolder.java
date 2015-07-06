@@ -1,6 +1,6 @@
-package com.wouterbreukink.onedrive.resources;
+package com.wouterbreukink.onedrive.client.resources;
 
-import com.wouterbreukink.onedrive.resources.facets.FolderFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.FolderFacet;
 
 public class WriteFolder {
     private String name;

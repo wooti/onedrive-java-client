@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.resources;
+package com.wouterbreukink.onedrive.client.resources;
 
 /**
  * Copyright Wouter Breukink 2015
@@ -19,5 +19,13 @@ public class ItemReference {
 
     public String getPath() {
         return path;
+    }
+
+    public String getReadablePath() {
+
+        if (path == null) return path;
+
+        int index = path.indexOf(':');
+        return index > 0 ? path.substring(index + 1) : path;
     }
 }

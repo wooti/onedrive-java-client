@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive;
+package com.wouterbreukink.onedrive.logging;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

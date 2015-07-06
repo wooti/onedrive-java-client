@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.resources;
+package com.wouterbreukink.onedrive.client.resources;
 
 /**
  * Copyright Wouter Breukink 2015

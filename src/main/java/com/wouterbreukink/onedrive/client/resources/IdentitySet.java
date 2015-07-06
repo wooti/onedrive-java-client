@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.resources;
+package com.wouterbreukink.onedrive.client.resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

@@ -1,7 +1,7 @@
-package com.wouterbreukink.onedrive;
+package com.wouterbreukink.onedrive.client;
 
-import com.wouterbreukink.onedrive.resources.*;
-import com.wouterbreukink.onedrive.resources.facets.FileSystemInfoFacet;
+import com.wouterbreukink.onedrive.client.resources.*;
+import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
 import jersey.repackaged.com.google.common.collect.Lists;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.Boundary;
@@ -27,9 +27,6 @@ public class OneDriveClient {
     private final OneDriveAuth authoriser;
 
     public OneDriveClient(Client client, OneDriveAuth authoriser) {
-
-        log.setLevel(Main.logLevel);
-
         this.authoriser = authoriser;
         this.client = client;
     }
@@ -146,7 +143,6 @@ public class OneDriveClient {
         multiPart.bodyPart(p0);
         multiPart.bodyPart(p1);
 
-        log.fine("Starting upload of file: " + file.getPath());
         long startTime = System.currentTimeMillis();
 
         OneDriveRequest request = getDefaultRequest()
@@ -157,10 +153,11 @@ public class OneDriveClient {
         Item response = request.getResponse(Item.class);
 
         long elapsedTime = System.currentTimeMillis() - startTime;
-        log.fine(String.format("Upload complete - %d KB in %dms - %.2f KB/s",
+        log.fine(String.format("Uploaded %d KB in %dms (%.2f KB/s) to %s",
                 file.length() / 1024,
                 elapsedTime,
-                elapsedTime > 0 ? ((file.length() / 1024d) / (elapsedTime / 1000d)) : 0));
+                elapsedTime > 0 ? ((file.length() / 1024d) / (elapsedTime / 1000d)) : 0,
+                response.getFullName()));
 
         return response;
     }

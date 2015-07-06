@@ -1,10 +1,10 @@
-package com.wouterbreukink.onedrive.resources;
+package com.wouterbreukink.onedrive.client.resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.wouterbreukink.onedrive.resources.facets.DeletedFacet;
-import com.wouterbreukink.onedrive.resources.facets.FileFacet;
-import com.wouterbreukink.onedrive.resources.facets.FileSystemInfoFacet;
-import com.wouterbreukink.onedrive.resources.facets.FolderFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.DeletedFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.FileFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.FolderFacet;
 
 import java.util.Date;
 
@@ -101,6 +101,6 @@ public class Item {
     }
 
     public String getFullName() {
-        return parentReference.getPath() + "/" + name;
+        return parentReference.getReadablePath() + "/" + name;
     }
 }

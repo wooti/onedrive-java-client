@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.resources.facets;
+package com.wouterbreukink.onedrive.client.resources.facets;
 
 public class Hashes {
 

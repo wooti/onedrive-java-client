@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.serialization;
+package com.wouterbreukink.onedrive.client.serialization;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;

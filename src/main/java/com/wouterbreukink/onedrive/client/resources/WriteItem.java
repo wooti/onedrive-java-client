@@ -1,9 +1,9 @@
-package com.wouterbreukink.onedrive.resources;
+package com.wouterbreukink.onedrive.client.resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wouterbreukink.onedrive.resources.facets.FileFacet;
-import com.wouterbreukink.onedrive.resources.facets.FileSystemInfoFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.FileFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
 
 public class WriteItem {
     private final FileSystemInfoFacet fileSystemInfo;

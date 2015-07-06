@@ -1,7 +1,7 @@
-package com.wouterbreukink.onedrive;
+package com.wouterbreukink.onedrive.client;
 
-import com.wouterbreukink.onedrive.resources.ErrorFacet;
-import com.wouterbreukink.onedrive.resources.ErrorSet;
+import com.wouterbreukink.onedrive.client.resources.ErrorFacet;
+import com.wouterbreukink.onedrive.client.resources.ErrorSet;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
@@ -51,36 +51,48 @@ public class OneDriveRequest {
 
         // TODO config retries
         for (int retries = 5; retries > 0; retries--) {
-            Response response = getResponse();
+            Response response = null;
+            try {
+                response = getResponse();
 
-            if (response.getStatus() == 401) {
-                log.warning("Received 401 (Unauthorised) response");
-                authoriser.getTokenFromRefreshToken(authoriser.getAuthorisation().getRefreshToken());
-                continue;
-            }
-
-            if (response.getStatus() == 503) {
-                try {
-                    log.warning("Server returned 503 - sleeping 10 seconds");
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    log.warning(e.toString());
+                if (response.getStatus() == 401) {
+                    log.warning("Received 401 (Unauthorised) response");
+                    authoriser.getTokenFromRefreshToken(authoriser.getAuthorisation().getRefreshToken());
+                    continue;
                 }
-                continue;
-            }
 
-            if (response.getStatus() == 509) {
-                try {
-                    log.warning("Server returned 509 - sleeping 60 seconds");
-                    Thread.sleep(60000);
-                } catch (InterruptedException e) {
-                    log.warning(e.toString());
+                if (response.getStatus() == 503) {
+                    try {
+                        log.warning("Server returned 503 - sleeping 10 seconds");
+                        response.close();
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        log.warning(e.toString());
+                    }
+                    continue;
                 }
-                continue;
-            }
 
-            verifyResponse(response);
-            return response.readEntity(entityType);
+                if (response.getStatus() == 509) {
+                    try {
+                        log.warning("Server returned 509 - sleeping 60 seconds");
+                        response.close();
+                        Thread.sleep(60000);
+                    } catch (InterruptedException e) {
+                        log.warning(e.toString());
+                    }
+                    continue;
+                }
+
+                verifyResponse(response);
+                return response.readEntity(entityType);
+            } catch (Throwable ex) {
+                log.severe("Caught exception: " + ex);
+            } finally {
+
+                if (response != null) {
+                    response.close();
+                }
+            }
         }
 
         throw new Error("Unable to complete request");

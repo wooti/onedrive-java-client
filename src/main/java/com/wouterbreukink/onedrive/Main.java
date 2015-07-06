@@ -1,7 +1,9 @@
 package com.wouterbreukink.onedrive;
 
-import com.wouterbreukink.onedrive.resources.Authorisation;
-import com.wouterbreukink.onedrive.resources.Item;
+import com.wouterbreukink.onedrive.client.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.OneDriveClient;
+import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.logging.LogFormatter;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -21,15 +23,11 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.zip.CRC32;
-import java.util.zip.CheckedInputStream;
 
 public class Main {
 
-    public static final Level logLevel = Level.ALL;
-
     private static final Properties props = new Properties();
-    private static final Logger log = Logger.getLogger(Main.class.getName());
+    private static final Logger log = Logger.getLogger(Main.class.getPackage().getName());
 
     public static void main(String[] args) throws Exception {
 
@@ -37,14 +35,13 @@ public class Main {
         LogManager.getLogManager().reset();
 
         // Initialise logger
-        log.setLevel(logLevel);
+        log.setLevel(Level.ALL);
 
         // Set custom handler
-        Logger globalLogger = Logger.getLogger("");
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new LogFormatter());
         handler.setLevel(Level.ALL);
-        globalLogger.addHandler(handler);
+        log.addHandler(handler);
 
         log.fine("Initialised logging");
 
@@ -63,14 +60,10 @@ public class Main {
         client.property("jersey.config.client.httpUrlConnection.setMethodWorkaround", true);
 
         OneDriveAuth authoriser = new OneDriveAuth(client, props);
-        Authorisation auth = authoriser.getAuthorisation();
 
-        if (auth == null) {
-            authoriser.printAuthInstructions();
+        if (authoriser.getAuthorisation() == null) {
             return;
         }
-
-        log.fine("Fetched authorisation token for user " + auth.getUserId());
 
         OneDriveClient oneDrive = new OneDriveClient(client, authoriser);
 
@@ -83,10 +76,10 @@ public class Main {
 
         log.fine(String.format("Fetched root folder '%s' - found %d items", rootFolder.getFullName(), rootFolder.getFolder().getChildCount()));
 
-        compareFolder(oneDrive, rootFolder, new File("P:\\"));
+        compareFolders(oneDrive, rootFolder, new File("P:\\"));
     }
 
-    public static void compareFolder(OneDriveClient oneDrive, Item remoteFolder, File localFolder) {
+    public static void compareFolders(OneDriveClient oneDrive, Item remoteFolder, File localFolder) {
 
         Preconditions.checkNotNull(oneDrive);
         Preconditions.checkNotNull(remoteFolder);
@@ -100,9 +93,9 @@ public class Main {
             throw new IllegalArgumentException("Specified localFolder is not a folder");
         }
 
-        // Fetch the children
-        log.info("Scanning path " + remoteFolder.getFullName());
-        Item[] children = oneDrive.getChildren(remoteFolder);
+        // Fetch the remote files
+        log.info("Syncing path " + remoteFolder.getFullName());
+        Item[] remoteFiles = oneDrive.getChildren(remoteFolder);
 
         // Index the local files
         Map<String, File> localFiles = Maps.newHashMap();
@@ -110,27 +103,32 @@ public class Main {
             localFiles.put(file.getName(), file);
         }
 
-        for (Item child : children) {
+        for (Item remoteFile : remoteFiles) {
 
-            File localFile = localFiles.get(child.getName());
+            File localFile = localFiles.get(remoteFile.getName());
 
             if (localFile != null) {
 
-                if (child.isFolder() != localFile.isDirectory()) {
-                    log.warning("CONFLICT!!" + child.getFullName());
+                if (remoteFile.isFolder() != localFile.isDirectory()) {
+                    log.warning(String.format(
+                            "Conflict detected in item '%s'. Local is %s, Remote is %s",
+                            remoteFile.getFullName(),
+                            remoteFile.isFolder() ? "directory" : "file",
+                            localFile.isDirectory() ? "directory" : "file"));
+
                     continue;
                 }
 
-                if (child.isFolder()) {
-                    compareFolder(oneDrive, child, localFile);
+                if (remoteFile.isFolder()) {
+                    compareFolders(oneDrive, remoteFile, localFile);
                 } else {
-                    compareFile(oneDrive, child, localFile);
+                    compareFile(oneDrive, remoteFile, localFile);
                 }
 
-                localFiles.remove(child.getName());
+                localFiles.remove(remoteFile.getName());
 
             } else {
-                log.info("TODO Item is extra - Would delete item?: " + child.getFullName());
+                log.info("TODO Item is extra - Would delete item?: " + remoteFile.getFullName());
             }
         }
 
@@ -143,20 +141,16 @@ public class Main {
         localFiles.remove("._.DS_Store");
         localFiles.remove(".DS_Store");
 
-        if (localFiles.size() > 0) {
-            log.info("Extra files: " + localFiles.size());
-        }
-
         for (File file : localFiles.values()) {
             if (file.isDirectory()) {
                 Item createdItem = oneDrive.createFolder(remoteFolder, file.getName());
                 log.info("Created new folder " + createdItem.getFullName());
-                compareFolder(oneDrive, createdItem, file);
+                compareFolders(oneDrive, createdItem, file);
             } else {
                 try {
                     oneDrive.uploadFile(remoteFolder, file);
                 } catch (IOException e) {
-                    log.warning("Unable to upload file: " + file);
+                    log.log(Level.WARNING, "Unable to upload new file", e);
                 }
             }
         }
@@ -166,12 +160,10 @@ public class Main {
         try {
             BasicFileAttributes attr = Files.readAttributes(localFile.toPath(), BasicFileAttributes.class);
 
-            long createdDate = attr.creationTime().toMillis();
-            long modifiedDate = attr.lastModifiedTime().toMillis();
-
-            if (remoteFile.getSize() == attr.size()
-                    && remoteFile.getFileSystemInfo().getCreatedDateTime().getTime() == createdDate
-                    && remoteFile.getFileSystemInfo().getLastModifiedDateTime().getTime() == modifiedDate) {
+            boolean sizeMatches = remoteFile.getSize() == localFile.length();
+            boolean createdMatches = remoteFile.getFileSystemInfo().getCreatedDateTime().getTime() == attr.creationTime().toMillis();
+            boolean modifiedMatches = remoteFile.getFileSystemInfo().getLastModifiedDateTime().getTime() == attr.lastModifiedTime().toMillis();
+            if (sizeMatches && createdMatches && modifiedMatches) {
                 // Close enough!
                 return;
             }
@@ -182,43 +174,29 @@ public class Main {
                 return;
             }
 
-            long remoteCrc = remoteFile.getFile().getHashes().getCrc32();
-            long localCrc = getChecksum(localFile);
-
-            if (remoteCrc != localCrc) {
-                log.info("Item on OneDrive has content: " + remoteFile.getFullName());
-            }
-
-            if (remoteFile.getFileSystemInfo().getCreatedDateTime().getTime() != attr.creationTime().toMillis()) {
+            if (!createdMatches) {
                 log.info("Item on OneDrive has different creation time: " + remoteFile.getFullName());
             }
 
-            if (remoteFile.getFileSystemInfo().getLastModifiedDateTime().getTime() != attr.lastModifiedTime().toMillis()) {
+            if (!modifiedMatches) {
                 log.info("Item on OneDrive has different modified time: " + remoteFile.getFullName());
             }
+
+            long remoteCrc = remoteFile.getFile().getHashes().getCrc32();
+            long localCrc = Utils.getChecksum(localFile);
 
             // If the content is different
             if (remoteCrc != localCrc) {
                 log.fine("Uploading new copy of file: " + remoteFile.getFullName());
                 oneDrive.replaceFile(remoteFile.getParentReference(), localFile);
-            } else {
+            } else if (!createdMatches || !modifiedMatches) {
                 log.fine("Updating properties on item: " + remoteFile.getFullName());
-                oneDrive.updateFile(remoteFile, new Date(createdDate), new Date(modifiedDate));
+                oneDrive.updateFile(remoteFile, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis()));
             }
 
         } catch (IOException e) {
             e.printStackTrace();
+            log.log(Level.WARNING, "Unable to compare file", e);
         }
-    }
-
-    private static long getChecksum(File file) throws IOException {
-
-        // Compute CRC32 checksum
-        CheckedInputStream cis = new CheckedInputStream(new FileInputStream(file), new CRC32());
-        byte[] buf = new byte[128];
-        while (cis.read(buf) >= 0) {
-        }
-
-        return cis.getChecksum().getValue();
     }
 }
