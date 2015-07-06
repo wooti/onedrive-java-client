@@ -3,6 +3,7 @@ package com.wouterbreukink.onedrive;
 import com.wouterbreukink.onedrive.resources.ErrorFacet;
 import com.wouterbreukink.onedrive.resources.ErrorSet;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
@@ -18,16 +19,12 @@ public class OneDriveRequest {
     private String method;
     private OneDriveAuth authoriser;
     private String skipToken;
-    private WebTarget target;
+    private Client client;
     private Entity<?> entity;
 
-    private OneDriveRequest(WebTarget target, OneDriveAuth authoriser) {
-        this.target = target;
+    public OneDriveRequest(Client client, OneDriveAuth authoriser) {
+        this.client = client;
         this.authoriser = authoriser;
-    }
-
-    public static OneDriveRequest newRequest(WebTarget target, OneDriveAuth authoriser) {
-        return new OneDriveRequest(target, authoriser);
     }
 
     public OneDriveRequest path(String path) {
@@ -90,7 +87,10 @@ public class OneDriveRequest {
     }
 
     private Response getResponse() {
-        WebTarget requestTarget = target.path(path)
+
+        WebTarget requestTarget = client
+                .target("https://api.onedrive.com/v1.0")
+                .path(path)
                 .queryParam("access_token", authoriser.getAuthorisation().getAccessToken());
 
         if (skipToken != null) {

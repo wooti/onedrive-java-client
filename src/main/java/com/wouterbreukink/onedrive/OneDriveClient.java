@@ -9,8 +9,6 @@ import org.glassfish.jersey.media.multipart.MultiPart;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,7 +23,7 @@ import java.util.logging.Logger;
 public class OneDriveClient {
 
     private static final Logger log = Logger.getLogger(OneDriveClient.class.getName());
-    private final WebTarget serviceTarget;
+    private final Client client;
     private final OneDriveAuth authoriser;
 
     public OneDriveClient(Client client, OneDriveAuth authoriser) {
@@ -33,8 +31,7 @@ public class OneDriveClient {
         log.setLevel(Main.logLevel);
 
         this.authoriser = authoriser;
-
-        serviceTarget = client.target("https://api.onedrive.com/v1.0");
+        this.client = client;
     }
 
     public Drive getDefaultDrive() {
@@ -85,45 +82,47 @@ public class OneDriveClient {
         return itemsToReturn.toArray(new Item[itemsToReturn.size()]);
     }
 
-    /*
-    public Item uploadFileNoMeta(Item parent, File file) throws FileNotFoundException, JsonProcessingException {
+    public Item replaceFile(ItemReference parent, File file) throws IOException {
+        return replaceFile(parent.getId(), file);
+    }
 
+    public Item replaceFile(Item parent, File file) throws IOException {
         if (!parent.isFolder()) {
             throw new IllegalArgumentException("Specified Item is not a folder");
         }
 
-        WebTarget uploadTarget = serviceTarget.path("/drive/items/" + parent.getId() + ":/" + file.getName() + ":/content");
+        return replaceFile(parent.getId(), file);
+    }
 
-        Invocation.Builder putBuilder = uploadTarget.request(MediaType.TEXT_PLAIN_TYPE);
+    private Item replaceFile(String parentId, File file) throws IOException {
 
-        FileInputStream stream = null;
-        stream = new FileInputStream(file);
+        FileInputStream stream = new FileInputStream(file);
 
-        Response response = putBuilder.put(Entity.entity(stream, MediaType.APPLICATION_OCTET_STREAM));
+        OneDriveRequest request = getDefaultRequest()
+                .path("/drive/items/" + parentId + ":/" + file.getName() + ":/content")
+                .entity(Entity.entity(stream, MediaType.APPLICATION_OCTET_STREAM))
+                .method("PUT");
 
-        Item item = response.readEntity(Item.class);
+        Item item = request.getResponse(Item.class);
 
         // Now update the item
-        WebTarget updateTarget = serviceTarget.path("/drive/items/" + item.getId());
-        Invocation.Builder updateBuilder = updateTarget.request(MediaType.TEXT_PLAIN_TYPE);
-
-        item.getFileSystemInfo().setCreatedDateTime(new Date(file.lastModified()));
-        item.getFileSystemInfo().setLastModifiedDateTime(new Date(file.lastModified()));
-
-        Entity<WriteItem> json = Entity.json(item.toWrite());
-
-        response = updateBuilder.method("PATCH", json);
-
-        verifyResponse(response);
-        return response.readEntity(Item.class);
+        BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+        return updateFile(item, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis()));
     }
-    */
+
+    public Item uploadFile(ItemReference parent, File file) throws IOException {
+        return uploadFile(parent.getId(), file);
+    }
 
     public Item uploadFile(Item parent, File file) throws IOException {
-
         if (!parent.isFolder()) {
             throw new IllegalArgumentException("Specified Item is not a folder");
         }
+
+        return uploadFile(parent.getId(), file);
+    }
+
+    private Item uploadFile(String parentId, File file) throws IOException {
 
         FileInputStream stream = new FileInputStream(file);
 
@@ -151,7 +150,7 @@ public class OneDriveClient {
         long startTime = System.currentTimeMillis();
 
         OneDriveRequest request = getDefaultRequest()
-                .path("/drive/items/" + parent.getId() + "/children")
+                .path("/drive/items/" + parentId + "/children")
                 .entity(Entity.entity(multiPart, multiPart.getMediaType()))
                 .method("POST");
 
@@ -176,13 +175,10 @@ public class OneDriveClient {
     }
 
     private OneDriveRequest getDefaultRequest() {
-        return OneDriveRequest.newRequest(serviceTarget, authoriser);
+        return new OneDriveRequest(client, authoriser);
     }
 
     public Item updateFile(Item item, Date createdDate, Date modifiedDate) {
-
-        WebTarget updateTarget = serviceTarget.path("/drive/items/" + item.getId());
-        Invocation.Builder updateBuilder = updateTarget.request(MediaType.TEXT_PLAIN_TYPE);
 
         WriteItem updateItem = new WriteItem(item.getName(), new FileSystemInfoFacet(), false);
 

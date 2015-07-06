@@ -100,10 +100,6 @@ public class Item {
         return deleted;
     }
 
-    public WriteItem toWrite() {
-        return new WriteItem(this.name, this.fileSystemInfo, false);
-    }
-
     public String getFullName() {
         return parentReference.getPath() + "/" + name;
     }

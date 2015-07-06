@@ -162,16 +162,16 @@ public class Main {
         }
     }
 
-    private static void compareFile(OneDriveClient oneDrive, Item child, File localFile) {
+    private static void compareFile(OneDriveClient oneDrive, Item remoteFile, File localFile) {
         try {
             BasicFileAttributes attr = Files.readAttributes(localFile.toPath(), BasicFileAttributes.class);
 
             long createdDate = attr.creationTime().toMillis();
             long modifiedDate = attr.lastModifiedTime().toMillis();
 
-            if (child.getSize() == attr.size()
-                    && child.getFileSystemInfo().getCreatedDateTime().getTime() == createdDate
-                    && child.getFileSystemInfo().getLastModifiedDateTime().getTime() == modifiedDate) {
+            if (remoteFile.getSize() == attr.size()
+                    && remoteFile.getFileSystemInfo().getCreatedDateTime().getTime() == createdDate
+                    && remoteFile.getFileSystemInfo().getLastModifiedDateTime().getTime() == modifiedDate) {
                 // Close enough!
                 return;
             }
@@ -182,31 +182,28 @@ public class Main {
                 return;
             }
 
-            long remoteCrc = child.getFile().getHashes().getCrc32();
+            long remoteCrc = remoteFile.getFile().getHashes().getCrc32();
             long localCrc = getChecksum(localFile);
 
-            if (child.getSize() != attr.size()) {
-                log.info("Item on OneDrive has different size: " + child.getFullName());
-            }
-
             if (remoteCrc != localCrc) {
-                log.info("Item on OneDrive has different CRC32: " + child.getFullName());
+                log.info("Item on OneDrive has content: " + remoteFile.getFullName());
             }
 
-            if (child.getFileSystemInfo().getCreatedDateTime().getTime() != attr.creationTime().toMillis()) {
-                log.info("Item on OneDrive has different creation time: " + child.getFullName());
+            if (remoteFile.getFileSystemInfo().getCreatedDateTime().getTime() != attr.creationTime().toMillis()) {
+                log.info("Item on OneDrive has different creation time: " + remoteFile.getFullName());
             }
 
-            if (child.getFileSystemInfo().getLastModifiedDateTime().getTime() != attr.lastModifiedTime().toMillis()) {
-                log.info("Item on OneDrive has different modified time: " + child.getFullName());
+            if (remoteFile.getFileSystemInfo().getLastModifiedDateTime().getTime() != attr.lastModifiedTime().toMillis()) {
+                log.info("Item on OneDrive has different modified time: " + remoteFile.getFullName());
             }
 
             // If the content is different
-            if (child.getSize() != attr.size() || remoteCrc != localCrc) {
-                log.warning("TODO WOULD UPLOAD NEW FILE HERE");
+            if (remoteCrc != localCrc) {
+                log.fine("Uploading new copy of file: " + remoteFile.getFullName());
+                oneDrive.replaceFile(remoteFile.getParentReference(), localFile);
             } else {
-                log.fine("Updating properties on item: " + child.getFullName());
-                oneDrive.updateFile(child, new Date(createdDate), new Date(modifiedDate));
+                log.fine("Updating properties on item: " + remoteFile.getFullName());
+                oneDrive.updateFile(remoteFile, new Date(createdDate), new Date(modifiedDate));
             }
 
         } catch (IOException e) {
