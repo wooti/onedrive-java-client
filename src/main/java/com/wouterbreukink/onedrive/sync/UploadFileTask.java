@@ -10,16 +10,16 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class UploadFile implements Task {
+public class UploadFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(CheckFile.class.getName());
+    private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
 
     private final OneDriveClient client;
     private final OneDriveItem parent;
     private final File file;
     private final boolean replace;
 
-    public UploadFile(OneDriveClient client, OneDriveItem parent, File file, boolean replace) {
+    public UploadFileTask(OneDriveClient client, OneDriveItem parent, File file, boolean replace) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(parent);
@@ -37,10 +37,6 @@ public class UploadFile implements Task {
 
     public int priority() {
         return 50;
-    }
-
-    public int compareTo(Task o) {
-        return o.priority() - priority();
     }
 
     public void run() {

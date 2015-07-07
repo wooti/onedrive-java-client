@@ -10,18 +10,15 @@ import java.io.File;
 import java.util.Map;
 import java.util.logging.Logger;
 
-/**
- * Copyright Wouter Breukink 2015
- */
-public class CheckFolder implements Task {
+public class SyncFolderTask extends Task {
 
-    private static final Logger log = Logger.getLogger(CheckFolder.class.getName());
+    private static final Logger log = Logger.getLogger(SyncFolderTask.class.getName());
 
     private final OneDriveClient client;
     private final Item remoteFolder;
     private final File localFolder;
 
-    public CheckFolder(OneDriveClient client, Item remoteFolder, File localFolder) {
+    public SyncFolderTask(OneDriveClient client, Item remoteFolder, File localFolder) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(remoteFolder);
@@ -42,10 +39,6 @@ public class CheckFolder implements Task {
 
     public int priority() {
         return 10;
-    }
-
-    public int compareTo(Task o) {
-        return o.priority() - priority();
     }
 
     public void run() {
@@ -77,9 +70,9 @@ public class CheckFolder implements Task {
                 }
 
                 if (remoteFile.isFolder()) {
-                    Main.queue.add(new CheckFolder(client, remoteFile, localFile));
+                    Main.queue.add(new SyncFolderTask(client, remoteFile, localFile));
                 } else {
-                    Main.queue.add(new CheckFile(client, remoteFile, localFile));
+                    Main.queue.add(new SyncFileTask(client, remoteFile, localFile));
                 }
 
                 localFiles.remove(remoteFile.getName());
@@ -101,9 +94,9 @@ public class CheckFolder implements Task {
             if (localFile.isDirectory()) {
                 Item createdItem = client.createFolder(remoteFolder, localFile.getName());
                 log.info("Created new folder " + createdItem.getFullName());
-                Main.queue.add(new CheckFolder(client, createdItem, localFile));
+                Main.queue.add(new SyncFolderTask(client, createdItem, localFile));
             } else {
-                Main.queue.add(new UploadFile(client, remoteFolder, localFile, false));
+                Main.queue.add(new UploadFileTask(client, remoteFolder, localFile, false));
             }
         }
 

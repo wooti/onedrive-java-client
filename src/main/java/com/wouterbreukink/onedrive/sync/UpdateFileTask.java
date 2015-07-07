@@ -7,16 +7,16 @@ import jersey.repackaged.com.google.common.base.Preconditions;
 import java.util.Date;
 import java.util.logging.Logger;
 
-public class UpdateFile implements Task {
+public class UpdateFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(CheckFile.class.getName());
+    private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
 
     private final OneDriveClient client;
     private final Date created;
     private final Date modified;
     private final Item remoteFile;
 
-    public UpdateFile(OneDriveClient client, Item remoteFile, Date created, Date modified) {
+    public UpdateFileTask(OneDriveClient client, Item remoteFile, Date created, Date modified) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(remoteFile);
@@ -29,10 +29,6 @@ public class UpdateFile implements Task {
 
     public int priority() {
         return 50;
-    }
-
-    public int compareTo(Task o) {
-        return o.priority() - priority();
     }
 
     public void run() {

@@ -14,18 +14,15 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Copyright Wouter Breukink 2015
- */
-public class CheckFile implements Task {
+public class SyncFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(CheckFile.class.getName());
+    private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
 
     private final OneDriveClient client;
     private final Item remoteFile;
     private final File localFile;
 
-    public CheckFile(OneDriveClient client, Item remoteFile, File localFile) {
+    public SyncFileTask(OneDriveClient client, Item remoteFile, File localFile) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(remoteFile);
@@ -38,10 +35,6 @@ public class CheckFile implements Task {
 
     public int priority() {
         return 50;
-    }
-
-    public int compareTo(Task o) {
-        return o.priority() - priority();
     }
 
     public void run() {
@@ -68,9 +61,9 @@ public class CheckFile implements Task {
 
             // If the content is different
             if (remoteCrc != localCrc) {
-                Main.queue.add(new UploadFile(client, remoteFile.getParentReference(), localFile, true));
+                Main.queue.add(new UploadFileTask(client, remoteFile.getParentReference(), localFile, true));
             } else if (!createdMatches || !modifiedMatches) {
-                Main.queue.add(new UpdateFile(client, remoteFile, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis())));
+                Main.queue.add(new UpdateFileTask(client, remoteFile, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis())));
             }
 
         } catch (IOException e) {
