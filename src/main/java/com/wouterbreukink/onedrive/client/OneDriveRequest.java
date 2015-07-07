@@ -2,6 +2,9 @@ package com.wouterbreukink.onedrive.client;
 
 import com.wouterbreukink.onedrive.client.resources.ErrorFacet;
 import com.wouterbreukink.onedrive.client.resources.ErrorSet;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.Boundary;
+import org.glassfish.jersey.media.multipart.MultiPart;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
@@ -9,18 +12,24 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OneDriveRequest {
 
     private static final Logger log = Logger.getLogger(OneDriveRequest.class.getName());
+    private final OneDriveAuth authoriser;
+    private final Client client;
 
     private String path;
     private String method;
-    private OneDriveAuth authoriser;
     private String skipToken;
-    private Client client;
-    private Entity<?> entity;
+
+    private Object payloadJson;
+    private File payloadFile;
 
     public OneDriveRequest(Client client, OneDriveAuth authoriser) {
         this.client = client;
@@ -42,8 +51,13 @@ public class OneDriveRequest {
         return this;
     }
 
-    public OneDriveRequest entity(Entity<?> entity) {
-        this.entity = entity;
+    public OneDriveRequest payloadFile(File payloadFile) {
+        this.payloadFile = payloadFile;
+        return this;
+    }
+
+    public OneDriveRequest payloadJson(Object payloadJson) {
+        this.payloadJson = payloadJson;
         return this;
     }
 
@@ -53,42 +67,17 @@ public class OneDriveRequest {
         for (int retries = 5; retries > 0; retries--) {
             Response response = null;
             try {
+
                 response = getResponse();
-
-                if (response.getStatus() == 401) {
-                    log.warning("Received 401 (Unauthorised) response");
-                    authoriser.getTokenFromRefreshToken(authoriser.getAuthorisation().getRefreshToken());
+                if (!responseValid(response)) {
                     continue;
                 }
 
-                if (response.getStatus() == 503) {
-                    try {
-                        log.warning("Server returned 503 - sleeping 10 seconds");
-                        response.close();
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        log.warning(e.toString());
-                    }
-                    continue;
-                }
-
-                if (response.getStatus() == 509) {
-                    try {
-                        log.warning("Server returned 509 - sleeping 60 seconds");
-                        response.close();
-                        Thread.sleep(60000);
-                    } catch (InterruptedException e) {
-                        log.warning(e.toString());
-                    }
-                    continue;
-                }
-
-                verifyResponse(response);
                 return response.readEntity(entityType);
-            } catch (Throwable ex) {
-                log.severe("Caught exception: " + ex);
-            } finally {
 
+            } catch (Throwable ex) {
+                log.log(Level.SEVERE, "Unable to process request", ex);
+            } finally {
                 if (response != null) {
                     response.close();
                 }
@@ -98,7 +87,7 @@ public class OneDriveRequest {
         throw new Error("Unable to complete request");
     }
 
-    private Response getResponse() {
+    private Response getResponse() throws FileNotFoundException {
 
         WebTarget requestTarget = client
                 .target("https://api.onedrive.com/v1.0")
@@ -109,22 +98,63 @@ public class OneDriveRequest {
             requestTarget = requestTarget.queryParam("$skiptoken", skipToken);
         }
 
-        Invocation.Builder builder = requestTarget
-                .request(MediaType.TEXT_PLAIN_TYPE);
+        Invocation.Builder builder = requestTarget.request(MediaType.TEXT_PLAIN_TYPE);
 
-        if (entity != null) {
-            return builder.method(method, entity);
-        } else {
-            return builder.method(method);
+        Entity<?> entity = null;
+        if (payloadFile != null && payloadJson != null) {
+            entity = generateMultipartEntity();
+        } else if (payloadFile != null) {
+            Entity.entity(new FileInputStream(payloadFile), MediaType.APPLICATION_OCTET_STREAM);
+        } else if (payloadJson != null) {
+            entity = Entity.json(payloadJson);
         }
+
+        return entity != null ? builder.method(method, entity) : builder.method(method);
     }
 
-    private void verifyResponse(Response response) {
+    private Entity<?> generateMultipartEntity() throws FileNotFoundException {
+        MultiPart multiPart = new MultiPart();
+        multiPart.setMediaType(Boundary.addBoundary(new MediaType("multipart", "related")));
 
-        int status = response.getStatus();
-        if (status != 200 && status != 201) {
-            ErrorFacet error = response.readEntity(ErrorSet.class).getError();
-            throw new Error(String.format("Error Code %d: %s (%s)", response.getStatus(), error.getCode(), error.getMessage()));
+        BodyPart jsonPart = new BodyPart(payloadJson, MediaType.APPLICATION_JSON_TYPE);
+        jsonPart.getHeaders().putSingle("Content-ID", "<metadata>");
+        multiPart.bodyPart(jsonPart);
+
+        BodyPart filePart = new BodyPart(new FileInputStream(payloadFile), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        filePart.getHeaders().putSingle("Content-ID", "<content>");
+        multiPart.bodyPart(filePart);
+
+        return Entity.entity(multiPart, multiPart.getMediaType());
+    }
+
+    private boolean responseValid(Response response) {
+
+        try {
+            switch (response.getStatus()) {
+                case 200:
+                case 201:
+                case 202:
+                    return true;
+                case 401:
+                    log.warning("Received 401 (Unauthorised) response");
+                    authoriser.getTokenFromRefreshToken(authoriser.getAuthorisation().getRefreshToken());
+                    return false;
+                case 503:
+                    log.warning("Server returned 503 (Temporarily Unavailable) - sleeping 10 seconds");
+                    Thread.sleep(10000);
+                    return false;
+                case 509:
+                    log.warning("Server returned 509 (Bandwidth Limit Exceeded) - sleeping 60 seconds");
+                    Thread.sleep(60000);
+                    return false;
+                default:
+                    ErrorFacet error = response.readEntity(ErrorSet.class).getError();
+                    throw new Error(String.format("Error Code %d: %s (%s)", response.getStatus(), error.getCode(), error.getMessage()));
+
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 }

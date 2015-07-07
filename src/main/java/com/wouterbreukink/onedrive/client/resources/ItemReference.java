@@ -1,9 +1,8 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-/**
- * Copyright Wouter Breukink 2015
- */
-public class ItemReference {
+import com.wouterbreukink.onedrive.client.OneDriveItem;
+
+public class ItemReference implements OneDriveItem {
 
     private String driveId;
     private String id;
@@ -17,13 +16,19 @@ public class ItemReference {
         return id;
     }
 
+    public boolean isFolder() {
+        return true;
+    }
+
     public String getPath() {
         return path;
     }
 
     public String getReadablePath() {
 
-        if (path == null) return path;
+        if (path == null) {
+            return path;
+        }
 
         int index = path.indexOf(':');
         return index > 0 ? path.substring(index + 1) : path;

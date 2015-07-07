@@ -15,11 +15,13 @@ public class Utils {
      * @return The CRC32 checksum of the file
      * @throws IOException
      */
-    static long getChecksum(File file) throws IOException {
+    public static long getChecksum(File file) throws IOException {
 
         // Compute CRC32 checksum
         CheckedInputStream cis = new CheckedInputStream(new FileInputStream(file), new CRC32());
-        byte[] buf = new byte[128];
+        byte[] buf = new byte[1024];
+
+        //noinspection StatementWithEmptyBody
         while (cis.read(buf) >= 0) {
         }
 
