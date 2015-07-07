@@ -12,11 +12,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class OneDriveClient {
 
-    private static final Logger log = Logger.getLogger(OneDriveClient.class.getName());
     private final Client client;
     private final OneDriveAuth authoriser;
 
@@ -60,14 +58,9 @@ public class OneDriveClient {
                     .method("GET");
 
             ItemSet items = request.getResponse(ItemSet.class);
-
             Collections.addAll(itemsToReturn, items.getValue());
-
             token = items.getNextToken();
 
-            if (token != null) {
-                log.finer(String.format("Got %d items, fetching next page", itemsToReturn.size()));
-            }
         } while (token != null); // If we have a token for the next page we need to keep going
 
         return itemsToReturn.toArray(new Item[itemsToReturn.size()]);
@@ -110,18 +103,7 @@ public class OneDriveClient {
                 .payloadFile(file)
                 .method("POST");
 
-        long startTime = System.currentTimeMillis();
-
-        Item response = request.getResponse(Item.class);
-
-        long elapsedTime = System.currentTimeMillis() - startTime;
-        log.fine(String.format("Uploaded %d KB in %dms (%.2f KB/s) to %s",
-                file.length() / 1024,
-                elapsedTime,
-                elapsedTime > 0 ? ((file.length() / 1024d) / (elapsedTime / 1000d)) : 0,
-                response.getFullName()));
-
-        return response;
+        return request.getResponse(Item.class);
     }
 
     public Item getPath(String path) {

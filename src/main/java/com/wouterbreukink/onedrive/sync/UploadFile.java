@@ -2,6 +2,7 @@ package com.wouterbreukink.onedrive.sync;
 
 import com.wouterbreukink.onedrive.client.OneDriveClient;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.client.resources.Item;
 import jersey.repackaged.com.google.common.base.Preconditions;
 
 import java.io.File;
@@ -44,13 +45,23 @@ public class UploadFile implements Task {
 
     public void run() {
         try {
+            long startTime = System.currentTimeMillis();
+            Item response;
             if (replace) {
-                log.fine("Uploading new copy of file: " + parent.getPath() + "/" + file.getName());
-                client.replaceFile(parent, file);
+                response = client.replaceFile(parent, file);
             } else {
-                log.fine("Uploading file: " + parent.getPath() + "/" + file.getName());
-                client.uploadFile(parent, file);
+                response = client.uploadFile(parent, file);
             }
+
+            long elapsedTime = System.currentTimeMillis() - startTime;
+
+            log.fine(String.format("Uploaded %d KB in %dms (%.2f KB/s) to %s file %s",
+                    file.length() / 1024,
+                    elapsedTime,
+                    elapsedTime > 0 ? ((file.length() / 1024d) / (elapsedTime / 1000d)) : 0,
+                    replace ? "replace" : "new",
+                    response.getFullName()));
+
         } catch (IOException e) {
             log.log(Level.WARNING, "Unable to upload file " + file.getName(), e);
         }
