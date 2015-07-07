@@ -20,6 +20,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -27,7 +28,7 @@ import java.util.logging.Logger;
 
 public class Main {
 
-    public static final PriorityBlockingQueue<Runnable> queue = new PriorityBlockingQueue<Runnable>();
+    public static final PriorityBlockingQueue<Task> queue = new PriorityBlockingQueue<Task>();
     private static final Properties props = new Properties();
     private static final Logger log = Logger.getLogger(Main.class.getPackage().getName());
 
@@ -46,7 +47,15 @@ public class Main {
         log.addHandler(handler);
 
         log.fine("Initialised logging");
-        
+
+        // Process command line args
+        CommandLineOpts opts = new CommandLineOpts(args);
+
+        if (!opts.parse() || opts.isHelp()) {
+            opts.printHelp();
+            return;
+        }
+
         // Load configuration
         props.loadFromXML(new FileInputStream("onedrive.xml"));
         log.fine("Loaded configuration");
@@ -69,7 +78,7 @@ public class Main {
 
         OneDriveClient oneDrive = new OneDriveClient(client, authoriser);
 
-        Item rootFolder = oneDrive.getPath("Pictures");
+        Item rootFolder = oneDrive.getPath(opts.getRemotePath());
 
         if (!rootFolder.isFolder()) {
             log.severe(String.format("Specified root '%s' is not a folder", rootFolder.getFullName()));
@@ -79,18 +88,18 @@ public class Main {
         log.fine(String.format("Fetched root folder '%s' - found %d items", rootFolder.getFullName(), rootFolder.getFolder().getChildCount()));
 
         // Start the queue
-        Main.queue.add(new SyncFolderTask(oneDrive, rootFolder, new File("P:\\")));
+        Main.queue.add(new SyncFolderTask(oneDrive, rootFolder, new File(opts.getLocalPath())));
 
         // Get a bunch of threads going
-        int threads = 6;
-        ExecutorService executorService = Executors.newFixedThreadPool(threads);
+        ExecutorService executorService = Executors.newFixedThreadPool(opts.getThreads());
 
-        for (int i = 0; i < threads; i++) {
+        for (int i = 0; i < opts.getThreads(); i++) {
             executorService.submit(new Runnable() {
                 public void run() {
                     try {
-                        while (true) {
-                            queue.take().run();
+                        Task nextTask;
+                        while ((nextTask = queue.poll(30, TimeUnit.SECONDS)) != null) {
+                            nextTask.run();
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -101,7 +110,7 @@ public class Main {
 
         while (true) {
             Thread.sleep(60000);
-            Task[] tasks = queue.toArray(new Task[0]);
+            Task[] tasks = queue.toArray(new Task[1]);
             Map<String, Integer> map = Maps.newHashMap();
 
             for (Task task : tasks) {
