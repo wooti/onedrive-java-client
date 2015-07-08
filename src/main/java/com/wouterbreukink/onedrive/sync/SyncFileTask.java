@@ -2,7 +2,7 @@ package com.wouterbreukink.onedrive.sync;
 
 import com.wouterbreukink.onedrive.Main;
 import com.wouterbreukink.onedrive.Utils;
-import com.wouterbreukink.onedrive.client.OneDriveClient;
+import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import jersey.repackaged.com.google.common.base.Preconditions;
 
@@ -18,11 +18,11 @@ public class SyncFileTask extends Task {
 
     private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
 
-    private final OneDriveClient client;
+    private final OneDriveAPI client;
     private final Item remoteFile;
     private final File localFile;
 
-    public SyncFileTask(OneDriveClient client, Item remoteFile, File localFile) {
+    public SyncFileTask(OneDriveAPI client, Item remoteFile, File localFile) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(remoteFile);
@@ -37,7 +37,8 @@ public class SyncFileTask extends Task {
         return 50;
     }
 
-    public void run() {
+    @Override
+    protected void taskBody() {
 
         try {
             BasicFileAttributes attr = Files.readAttributes(localFile.toPath(), BasicFileAttributes.class);

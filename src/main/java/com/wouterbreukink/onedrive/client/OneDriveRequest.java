@@ -1,7 +1,7 @@
 package com.wouterbreukink.onedrive.client;
 
-import com.wouterbreukink.onedrive.client.resources.ErrorFacet;
 import com.wouterbreukink.onedrive.client.resources.ErrorSet;
+import jersey.repackaged.com.google.common.base.Throwables;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.Boundary;
 import org.glassfish.jersey.media.multipart.MultiPart;
@@ -15,7 +15,6 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OneDriveRequest {
@@ -61,33 +60,23 @@ public class OneDriveRequest {
         return this;
     }
 
-    public <T> T getResponse(Class<T> entityType) {
+    public <T> T getResponse(Class<T> entityType) throws OneDriveAPIException {
 
-        // TODO config retries
-        for (int retries = 5; retries > 0; retries--) {
-            Response response = null;
-            try {
+        Response response = getResponse();
 
-                response = getResponse();
-                if (!responseValid(response)) {
-                    continue;
-                }
-
+        switch (response.getStatus()) {
+            case 200:
+            case 201:
+            case 202:
                 return response.readEntity(entityType);
-
-            } catch (Throwable ex) {
-                log.log(Level.SEVERE, "Unable to process request", ex);
-            } finally {
-                if (response != null) {
-                    response.close();
-                }
-            }
+            case 401:
+                authoriser.getTokenFromRefreshToken(authoriser.getAuthorisation().getRefreshToken());
+            default:
+                throw new OneDriveAPIException(response.getStatus(), getMessage(response));
         }
-
-        throw new Error("Unable to complete request");
     }
 
-    private Response getResponse() throws FileNotFoundException {
+    private Response getResponse() {
 
         WebTarget requestTarget = client
                 .target("https://api.onedrive.com/v1.0")
@@ -101,12 +90,16 @@ public class OneDriveRequest {
         Invocation.Builder builder = requestTarget.request(MediaType.TEXT_PLAIN_TYPE);
 
         Entity<?> entity = null;
-        if (payloadFile != null && payloadJson != null) {
-            entity = generateMultipartEntity();
-        } else if (payloadFile != null) {
-            Entity.entity(new FileInputStream(payloadFile), MediaType.APPLICATION_OCTET_STREAM);
-        } else if (payloadJson != null) {
-            entity = Entity.json(payloadJson);
+        try {
+            if (payloadFile != null && payloadJson != null) {
+                entity = generateMultipartEntity();
+            } else if (payloadFile != null) {
+                Entity.entity(new FileInputStream(payloadFile), MediaType.APPLICATION_OCTET_STREAM);
+            } else if (payloadJson != null) {
+                entity = Entity.json(payloadJson);
+            }
+        } catch (FileNotFoundException e) {
+            Throwables.propagate(e);
         }
 
         return entity != null ? builder.method(method, entity) : builder.method(method);
@@ -127,34 +120,23 @@ public class OneDriveRequest {
         return Entity.entity(multiPart, multiPart.getMediaType());
     }
 
-    private boolean responseValid(Response response) {
+    private String getMessage(Response response) {
 
-        try {
-            switch (response.getStatus()) {
-                case 200:
-                case 201:
-                case 202:
-                    return true;
-                case 401:
-                    log.warning("Received 401 (Unauthorised) response");
-                    authoriser.getTokenFromRefreshToken(authoriser.getAuthorisation().getRefreshToken());
-                    return false;
-                case 503:
-                    log.warning("Server returned 503 (Temporarily Unavailable) - sleeping 10 seconds");
-                    Thread.sleep(10000);
-                    return false;
-                case 509:
-                    log.warning("Server returned 509 (Bandwidth Limit Exceeded) - sleeping 60 seconds");
-                    Thread.sleep(60000);
-                    return false;
-                default:
-                    ErrorFacet error = response.readEntity(ErrorSet.class).getError();
-                    throw new Error(String.format("Error Code %d: %s (%s)", response.getStatus(), error.getCode(), error.getMessage()));
-
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
+        if (response == null) {
+            return null;
         }
+
+        StringBuilder msgBuilder = new StringBuilder().append("Error Code ").append(response.getStatus());
+
+        ErrorSet error;
+
+        if ((error = response.readEntity(ErrorSet.class)) != null) {
+            msgBuilder.append(": ").append(error.getError().getCode());
+            msgBuilder.append(" (").append(error.getError().getMessage()).append(")");
+        } else {
+            msgBuilder.append(": unknown error");
+        }
+
+        return msgBuilder.toString();
     }
 }

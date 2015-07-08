@@ -1,8 +1,9 @@
 package com.wouterbreukink.onedrive.sync;
 
-import com.wouterbreukink.onedrive.client.OneDriveClient;
-import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.client.OneDriveAPI;
+import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.client.resources.OneDriveItem;
 import jersey.repackaged.com.google.common.base.Preconditions;
 
 import java.io.File;
@@ -14,12 +15,12 @@ public class UploadFileTask extends Task {
 
     private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
 
-    private final OneDriveClient client;
+    private final OneDriveAPI client;
     private final OneDriveItem parent;
     private final File file;
     private final boolean replace;
 
-    public UploadFileTask(OneDriveClient client, OneDriveItem parent, File file, boolean replace) {
+    public UploadFileTask(OneDriveAPI client, OneDriveItem parent, File file, boolean replace) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(parent);
@@ -39,7 +40,8 @@ public class UploadFileTask extends Task {
         return 50;
     }
 
-    public void run() {
+    @Override
+    protected void taskBody() throws OneDriveAPIException {
         try {
             long startTime = System.currentTimeMillis();
             Item response;

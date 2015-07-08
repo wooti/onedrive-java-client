@@ -1,6 +1,7 @@
 package com.wouterbreukink.onedrive.sync;
 
-import com.wouterbreukink.onedrive.client.OneDriveClient;
+import com.wouterbreukink.onedrive.client.OneDriveAPI;
+import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import jersey.repackaged.com.google.common.base.Preconditions;
 
@@ -11,12 +12,12 @@ public class UpdateFileTask extends Task {
 
     private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
 
-    private final OneDriveClient client;
+    private final OneDriveAPI client;
     private final Date created;
     private final Date modified;
     private final Item remoteFile;
 
-    public UpdateFileTask(OneDriveClient client, Item remoteFile, Date created, Date modified) {
+    public UpdateFileTask(OneDriveAPI client, Item remoteFile, Date created, Date modified) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(remoteFile);
@@ -31,7 +32,8 @@ public class UpdateFileTask extends Task {
         return 50;
     }
 
-    public void run() {
+    @Override
+    protected void taskBody() throws OneDriveAPIException {
         log.fine("Updating properties on item: " + remoteFile.getFullName());
         client.updateFile(remoteFile, created, modified);
     }

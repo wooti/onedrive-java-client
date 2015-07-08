@@ -1,7 +1,7 @@
 package com.wouterbreukink.onedrive;
 
+import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
-import com.wouterbreukink.onedrive.client.OneDriveClient;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.logging.LogFormatter;
 import com.wouterbreukink.onedrive.sync.SyncFolderTask;
@@ -76,7 +76,7 @@ public class Main {
             return;
         }
 
-        OneDriveClient oneDrive = new OneDriveClient(client, authoriser);
+        OneDriveAPI oneDrive = new OneDriveAPI(client, authoriser);
 
         Item rootFolder = oneDrive.getPath(opts.getRemotePath());
 

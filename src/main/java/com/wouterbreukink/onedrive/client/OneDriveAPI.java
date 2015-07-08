@@ -13,17 +13,17 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-public class OneDriveClient {
+public class OneDriveAPI {
 
     private final Client client;
     private final OneDriveAuth authoriser;
 
-    public OneDriveClient(Client client, OneDriveAuth authoriser) {
+    public OneDriveAPI(Client client, OneDriveAuth authoriser) {
         this.authoriser = authoriser;
         this.client = client;
     }
 
-    public Drive getDefaultDrive() {
+    public Drive getDefaultDrive() throws OneDriveAPIException {
 
         OneDriveRequest request = getDefaultRequest()
                 .path("drive")
@@ -32,7 +32,7 @@ public class OneDriveClient {
         return request.getResponse(Drive.class);
     }
 
-    public Item getRoot() {
+    public Item getRoot() throws OneDriveAPIException {
 
         OneDriveRequest request = getDefaultRequest()
                 .path("drive/root")
@@ -41,7 +41,7 @@ public class OneDriveClient {
         return request.getResponse(Item.class);
     }
 
-    public Item[] getChildren(Item parent) {
+    public Item[] getChildren(Item parent) throws OneDriveAPIException {
 
         if (!parent.isFolder()) {
             throw new IllegalArgumentException("Specified Item is not a folder");
@@ -66,7 +66,7 @@ public class OneDriveClient {
         return itemsToReturn.toArray(new Item[itemsToReturn.size()]);
     }
 
-    public Item replaceFile(OneDriveItem parent, File file) throws IOException {
+    public Item replaceFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
 
         if (!parent.isFolder()) {
             throw new IllegalArgumentException("Parent is not a folder");
@@ -84,7 +84,7 @@ public class OneDriveClient {
         return updateFile(item, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis()));
     }
 
-    public Item uploadFile(OneDriveItem parent, File file) throws IOException {
+    public Item uploadFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
 
         if (!parent.isFolder()) {
             throw new IllegalArgumentException("Parent is not a folder");
@@ -106,7 +106,7 @@ public class OneDriveClient {
         return request.getResponse(Item.class);
     }
 
-    public Item getPath(String path) {
+    public Item getPath(String path) throws OneDriveAPIException {
 
         OneDriveRequest request = getDefaultRequest()
                 .path("drive/root:/" + path)
@@ -115,11 +115,7 @@ public class OneDriveClient {
         return request.getResponse(Item.class);
     }
 
-    private OneDriveRequest getDefaultRequest() {
-        return new OneDriveRequest(client, authoriser);
-    }
-
-    public Item updateFile(Item item, Date createdDate, Date modifiedDate) {
+    public Item updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {
 
         WriteItem updateItem = new WriteItem(item.getName(), new FileSystemInfoFacet(), false);
 
@@ -134,7 +130,7 @@ public class OneDriveClient {
         return request.getResponse(Item.class);
     }
 
-    public Item createFolder(Item parent, String name) {
+    public Item createFolder(Item parent, String name) throws OneDriveAPIException {
 
         WriteFolder newFolder = new WriteFolder(name);
 
@@ -144,5 +140,9 @@ public class OneDriveClient {
                 .method("POST");
 
         return request.getResponse(Item.class);
+    }
+
+    private OneDriveRequest getDefaultRequest() {
+        return new OneDriveRequest(client, authoriser);
     }
 }

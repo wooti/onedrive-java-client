@@ -1,8 +1,5 @@
-package com.wouterbreukink.onedrive.client;
+package com.wouterbreukink.onedrive.client.resources;
 
-/**
- * Copyright Wouter Breukink 2015
- */
 public interface OneDriveItem {
     String getId();
 

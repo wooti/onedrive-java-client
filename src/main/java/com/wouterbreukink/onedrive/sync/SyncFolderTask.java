@@ -1,7 +1,8 @@
 package com.wouterbreukink.onedrive.sync;
 
 import com.wouterbreukink.onedrive.Main;
-import com.wouterbreukink.onedrive.client.OneDriveClient;
+import com.wouterbreukink.onedrive.client.OneDriveAPI;
+import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
@@ -14,11 +15,11 @@ public class SyncFolderTask extends Task {
 
     private static final Logger log = Logger.getLogger(SyncFolderTask.class.getName());
 
-    private final OneDriveClient client;
+    private final OneDriveAPI client;
     private final Item remoteFolder;
     private final File localFolder;
 
-    public SyncFolderTask(OneDriveClient client, Item remoteFolder, File localFolder) {
+    public SyncFolderTask(OneDriveAPI client, Item remoteFolder, File localFolder) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(remoteFolder);
@@ -41,7 +42,8 @@ public class SyncFolderTask extends Task {
         return 10;
     }
 
-    public void run() {
+    @Override
+    protected void taskBody() throws OneDriveAPIException {
 
         // Fetch the remote files
         log.info("Syncing folder " + remoteFolder.getFullName());
