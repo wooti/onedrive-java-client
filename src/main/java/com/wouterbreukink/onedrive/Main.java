@@ -4,7 +4,7 @@ import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.logging.LogFormatter;
-import com.wouterbreukink.onedrive.sync.SyncFolderTask;
+import com.wouterbreukink.onedrive.sync.CheckFolderTask;
 import com.wouterbreukink.onedrive.sync.Task;
 import jersey.repackaged.com.google.common.collect.Maps;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
@@ -88,7 +88,7 @@ public class Main {
         log.fine(String.format("Fetched root folder '%s' - found %d items", rootFolder.getFullName(), rootFolder.getFolder().getChildCount()));
 
         // Start the queue
-        Main.queue.add(new SyncFolderTask(oneDrive, rootFolder, new File(opts.getLocalPath())));
+        Main.queue.add(new CheckFolderTask(oneDrive, rootFolder, new File(opts.getLocalPath())));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(opts.getThreads());
@@ -110,7 +110,7 @@ public class Main {
 
         while (true) {
             Thread.sleep(60000);
-            Task[] tasks = queue.toArray(new Task[1]);
+            Task[] tasks = queue.toArray(new Task[0]);
             Map<String, Integer> map = Maps.newHashMap();
 
             for (Task task : tasks) {

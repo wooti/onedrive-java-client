@@ -14,15 +14,15 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SyncFileTask extends Task {
+public class CheckFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
+    private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
 
     private final OneDriveAPI client;
     private final Item remoteFile;
     private final File localFile;
 
-    public SyncFileTask(OneDriveAPI client, Item remoteFile, File localFile) {
+    public CheckFileTask(OneDriveAPI client, Item remoteFile, File localFile) {
 
         Preconditions.checkNotNull(client);
         Preconditions.checkNotNull(remoteFile);
@@ -35,6 +35,11 @@ public class SyncFileTask extends Task {
 
     public int priority() {
         return 50;
+    }
+
+    @Override
+    public String toString() {
+        return "Check file " + remoteFile.getFullName();
     }
 
     @Override
@@ -68,7 +73,6 @@ public class SyncFileTask extends Task {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
             log.log(Level.WARNING, "Unable to compare file", e);
         }
     }

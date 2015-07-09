@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 public abstract class Task implements Runnable, Comparable<Task> {
 
-    private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
+    private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
     private static AtomicInteger taskIdCounter = new AtomicInteger(1);
 
     private final int id;
@@ -27,6 +27,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
     public void run() {
         attempt++;
         try {
+            log.finest(String.format("Starting task %d:%d - %s", id, attempt, this.toString()));
             taskBody();
             return;
         } catch (OneDriveAPIException ex) {
@@ -48,9 +49,10 @@ public abstract class Task implements Runnable, Comparable<Task> {
         }
 
         if (attempt < 3) {
+            sleep(1);
             Main.queue.add(this);
         } else {
-            log.severe(String.format("Task %d:%d did not complete", id, attempt));
+            log.severe(String.format("Task %d did not complete", id, attempt));
         }
     }
 

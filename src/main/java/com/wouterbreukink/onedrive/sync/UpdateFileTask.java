@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 public class UpdateFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
+    private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
 
     private final OneDriveAPI client;
     private final Date created;
@@ -30,6 +30,11 @@ public class UpdateFileTask extends Task {
 
     public int priority() {
         return 50;
+    }
+
+    @Override
+    public String toString() {
+        return "Update properties for " + remoteFile.getFullName();
     }
 
     @Override

@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 public class UploadFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(SyncFileTask.class.getName());
+    private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
 
     private final OneDriveAPI client;
     private final OneDriveItem parent;
@@ -38,6 +38,11 @@ public class UploadFileTask extends Task {
 
     public int priority() {
         return 50;
+    }
+
+    @Override
+    public String toString() {
+        return "Upload file " + parent.getPath() + "/" + file.getName();
     }
 
     @Override
