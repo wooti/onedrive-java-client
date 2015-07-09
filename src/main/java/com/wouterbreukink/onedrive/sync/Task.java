@@ -20,9 +20,9 @@ public abstract class Task implements Runnable, Comparable<Task> {
         this.attempt = 0;
     }
 
-    abstract int priority();
+    protected abstract int priority();
 
-    abstract void taskBody() throws OneDriveAPIException;
+    protected abstract void taskBody() throws OneDriveAPIException;
 
     public void run() {
         attempt++;

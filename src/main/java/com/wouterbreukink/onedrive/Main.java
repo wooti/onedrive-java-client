@@ -6,7 +6,6 @@ import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.logging.LogFormatter;
 import com.wouterbreukink.onedrive.sync.CheckFolderTask;
 import com.wouterbreukink.onedrive.sync.Task;
-import jersey.repackaged.com.google.common.collect.Maps;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -15,12 +14,11 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Semaphore;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -98,38 +96,40 @@ public class Main {
                 public void run() {
                     try {
                         Task nextTask;
-                        while ((nextTask = queue.poll(30, TimeUnit.SECONDS)) != null) {
+                        while ((nextTask = queue.take()) != null) {
                             nextTask.run();
                         }
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
                     }
                 }
             });
         }
 
-        while (true) {
-            Thread.sleep(60000);
-            Task[] tasks = queue.toArray(new Task[0]);
-            Map<String, Integer> map = Maps.newHashMap();
+        Thread.sleep(5000);
 
-            for (Task task : tasks) {
-                Integer value = map.get(task.name());
-                if (value == null) {
-                    map.put(task.name(), 1);
-                } else {
-                    map.put(task.name(), value + 1);
-                }
+        final Semaphore queueIdle = new Semaphore(0);
+
+        Main.queue.add(new Task() {
+            @Override
+            public int priority() {
+                return 0;
             }
 
-            log.info(String.format("Queue contains %d tasks:", tasks.length));
-            for (Map.Entry<String, Integer> entry : map.entrySet()) {
-                log.info(String.format("%d tasks of type %s", entry.getValue(), entry.getKey()));
+            @Override
+            public String toString() {
+                return "Exit program";
             }
 
-            if (tasks.length == 0) {
-                return;
+            @Override
+            protected void taskBody() {
+                queueIdle.release();
             }
-        }
+        });
+
+        queueIdle.acquire();
+        log.info("Finished.");
+
+        System.exit(0);
     }
 }

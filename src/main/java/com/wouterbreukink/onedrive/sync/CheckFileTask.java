@@ -57,7 +57,7 @@ public class CheckFileTask extends Task {
             }
 
             // TODO: Skip big files (for now)
-            if (localFile.length() > 10 * 1024 * 2014) {
+            if (localFile.length() > 10 * 1024 * 1024) {
                 log.warning("TODO Skipping big file");
                 return;
             }
