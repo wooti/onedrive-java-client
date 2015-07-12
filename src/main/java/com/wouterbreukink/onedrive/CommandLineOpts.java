@@ -4,57 +4,53 @@ import org.apache.commons.cli.*;
 
 public class CommandLineOpts {
 
-    private final Options opts;
-    private final String[] args;
-
+    private static final Options optionsToParse = buildOptions();
+    private static final CommandLineOpts opts = new CommandLineOpts();
+    private boolean isInitalised;
     private String direction;
     private String localPath;
     private String remotePath;
     private boolean help = false;
     private int threads = 5;
 
-    public CommandLineOpts(String[] args) {
-        this.opts = buildOptions();
-        this.args = args;
-    }
-
-    public boolean parse() {
-
-        try {
-            CommandLineParser parser = new DefaultParser();
-            CommandLine line = parser.parse(opts, args);
-
-            this.help = line.hasOption("help");
-
-            if (line.hasOption("local")) {
-                this.localPath = line.getOptionValue("local");
-            }
-
-            if (line.hasOption("remote")) {
-                this.remotePath = line.getOptionValue("remote");
-            }
-
-            if (line.hasOption("direction")) {
-                this.direction = line.getOptionValue("direction");
-            }
-
-            if (line.hasOption("threads")) {
-                this.threads = Integer.parseInt(line.getOptionValue("threads"));
-            }
-
-            //TODO: Parse other command line options here
-
-            return true;
-        } catch (ParseException ex) {
-            System.err.println(ex.getMessage());
-            return false;
+    public static CommandLineOpts getCommandLineOpts() {
+        if (!opts.isInitalised) {
+            throw new IllegalStateException("The command line options have not been initialised");
         }
+        return opts;
     }
 
-    private Options buildOptions() {
+    public static void initialise(String[] args) throws ParseException {
+
+        CommandLineParser parser = new DefaultParser();
+        CommandLine line = parser.parse(optionsToParse, args);
+
+        opts.help = line.hasOption("help");
+        if (line.hasOption("local")) {
+            opts.localPath = line.getOptionValue("local");
+        }
+
+        if (line.hasOption("remote")) {
+            opts.remotePath = line.getOptionValue("remote");
+        }
+
+        if (line.hasOption("direction")) {
+            opts.direction = line.getOptionValue("direction");
+        }
+
+        if (line.hasOption("threads")) {
+            opts.threads = Integer.parseInt(line.getOptionValue("threads"));
+        }
+
+        //TODO: Parse other command line options here
+
+        opts.isInitalised = true;
+    }
+
+    private static Options buildOptions() {
         Option hash = Option.builder("c")
                 .longOpt("hash-compare")
-                .desc("compare files by hash")
+                .desc("always compare files by hash")
                 .build();
 
         Option direction = Option.builder()
@@ -176,9 +172,9 @@ public class CommandLineOpts {
                 .addOption(retries);
     }
 
-    public void printHelp() {
+    public static void printHelp() {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("onedrive-java-syncer", opts);
+        formatter.printHelp("onedrive-java-syncer", optionsToParse);
     }
 
     public String getDirection() {
@@ -200,4 +196,5 @@ public class CommandLineOpts {
     public int getThreads() {
         return threads;
     }
+
 }

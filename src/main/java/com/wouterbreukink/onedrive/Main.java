@@ -6,6 +6,7 @@ import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.sync.CheckFolderTask;
 import com.wouterbreukink.onedrive.sync.Task;
 import com.wouterbreukink.onedrive.sync.TaskQueue;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
@@ -16,13 +17,11 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.io.File;
 import java.io.FileInputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Properties;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
 public class Main {
 
@@ -31,18 +30,16 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        // Parse command line args
+        try {
+            CommandLineOpts.initialise(args);
+        } catch (ParseException ex) {
+            log.error("Unable to parse command line arguments - " + ex.getMessage());
+            return;
+        }
 
-        Date now = new Date();
-        Date trunc = new Date((now.getTime() / 1000) * 1000);
-        Date trunc2 = new Date((now.getTime() / 1000) * 1000 + 1);
-
-        // Process command line args
-        CommandLineOpts opts = new CommandLineOpts(args);
-
-        if (!opts.parse() || opts.isHelp()) {
-            opts.printHelp();
+        if (getCommandLineOpts().isHelp()) {
+            CommandLineOpts.printHelp();
             return;
         }
 
@@ -69,7 +66,7 @@ public class Main {
         // Initialise the OneDrive API
         OneDriveAPI api = new OneDriveAPI(client, authoriser);
 
-        Item rootFolder = api.getPath(opts.getRemotePath());
+        Item rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
 
         if (!rootFolder.isFolder()) {
             log.error(String.format("Specified root '%s' is not a folder", rootFolder.getFullName()));
@@ -80,12 +77,12 @@ public class Main {
 
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
-        queue.add(new CheckFolderTask(queue, api, rootFolder, new File(opts.getLocalPath())));
+        queue.add(new CheckFolderTask(queue, api, rootFolder, new File(getCommandLineOpts().getLocalPath())));
 
         // Get a bunch of threads going
-        ExecutorService executorService = Executors.newFixedThreadPool(opts.getThreads());
+        ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());
 
-        for (int i = 0; i < opts.getThreads(); i++) {
+        for (int i = 0; i < getCommandLineOpts().getThreads(); i++) {
             executorService.submit(new Runnable() {
                 public void run() {
                     try {
