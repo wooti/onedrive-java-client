@@ -14,6 +14,8 @@ public class Authorisation {
     private String accessToken;
     private String refreshToken;
     private String userId;
+    private String error;
+    private String errorDescription;
 
     @JsonProperty("token_type")
     public String getTokenType() {
@@ -42,6 +44,16 @@ public class Authorisation {
     @JsonProperty("user_id")
     public String getUserId() {
         return userId;
+    }
+
+    @JsonProperty("error")
+    public String getError() {
+        return error;
+    }
+
+    @JsonProperty("error_description")
+    public String getErrorDescription() {
+        return errorDescription;
     }
 
     public Date getTokenExpiryDate() {

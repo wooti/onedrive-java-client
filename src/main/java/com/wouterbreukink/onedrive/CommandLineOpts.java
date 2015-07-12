@@ -2,15 +2,20 @@ package com.wouterbreukink.onedrive;
 
 import org.apache.commons.cli.*;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class CommandLineOpts {
 
     private static final Options optionsToParse = buildOptions();
     private static final CommandLineOpts opts = new CommandLineOpts();
     private boolean isInitialised;
+
     // Mandatory arguments
     private Direction direction;
     private String localPath;
     private String remotePath;
+
     // Optional arguments
     private boolean help = false;
     private boolean useHash = false;
@@ -19,6 +24,7 @@ public class CommandLineOpts {
     private boolean version = false;
     private boolean recursive = false;
     private int maxSizeKb = 0;
+    private Path keyFile = Paths.get("keyFile.txt");
 
     public static CommandLineOpts getCommandLineOpts() {
         if (!opts.isInitialised) {
@@ -65,7 +71,10 @@ public class CommandLineOpts {
             opts.maxSizeKb = Integer.parseInt(line.getOptionValue("max-size"));
         }
 
-        // TODO: KeyFile
+        if (line.hasOption("keyfile")) {
+            opts.keyFile = Paths.get(line.getOptionValue("keyfile"));
+        }
+
         // TODO: LogLevel
         // TODO: LogFile
         // TODO: Dry run
@@ -234,6 +243,10 @@ public class CommandLineOpts {
 
     public int getMaxSizeKb() {
         return maxSizeKb;
+    }
+
+    public Path getKeyFile() {
+        return keyFile;
     }
 
     public enum Direction {

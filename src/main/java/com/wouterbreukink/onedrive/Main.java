@@ -16,8 +16,6 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.io.File;
-import java.io.FileInputStream;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -25,7 +23,6 @@ import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
 public class Main {
 
-    private static final Properties props = new Properties();
     private static final Logger log = LogManager.getLogger(Main.class.getName());
 
     public static void main(String[] args) throws Exception {
@@ -47,11 +44,7 @@ public class Main {
             log.info("onedrive-java-client version ALPHA");
         }
 
-        // Load configuration
-        props.loadFromXML(new FileInputStream("onedrive.xml"));
-        log.debug("Loaded configuration");
-
-        // Init client
+        // Initialise the client
         Client client = ClientBuilder
                 .newClient()
                         //.register(new LoggingFilter(Logger.getLogger(LoggingFilter.class.getName()), false))
@@ -61,15 +54,17 @@ public class Main {
         // Workaround to be able to submit PATCH requests
         client.property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true);
 
-        OneDriveAuth authoriser = new OneDriveAuth(client, props);
-
-        if (authoriser.getAuthorisation() == null) {
+        // Initialise the OneDrive Authoriser
+        OneDriveAuth authoriser = new OneDriveAuth(client);
+        if (!authoriser.initialise(getCommandLineOpts().getKeyFile())) {
+            authoriser.printAuthInstructions();
             return;
         }
 
         // Initialise the OneDrive API
         OneDriveAPI api = new OneDriveAPI(client, authoriser);
 
+        // Check the given root folder
         Item rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
 
         if (!rootFolder.isFolder()) {
@@ -90,6 +85,7 @@ public class Main {
             executorService.submit(new Runnable() {
                 public void run() {
                     try {
+                        //noinspection InfiniteLoopStatement
                         while (true) {
                             Task taskToRun = null;
                             try {

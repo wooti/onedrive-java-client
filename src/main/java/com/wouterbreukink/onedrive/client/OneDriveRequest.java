@@ -68,7 +68,7 @@ public class OneDriveRequest {
             case 202:
                 return response.readEntity(entityType);
             case 401:
-                authoriser.getTokenFromRefreshToken(authoriser.getAuthorisation().getRefreshToken());
+                authoriser.refresh();
             default:
                 throw new OneDriveAPIException(response.getStatus(), getMessage(response));
         }
@@ -79,7 +79,7 @@ public class OneDriveRequest {
         WebTarget requestTarget = client
                 .target("https://api.onedrive.com/v1.0")
                 .path(path)
-                .queryParam("access_token", authoriser.getAuthorisation().getAccessToken());
+                .queryParam("access_token", authoriser.getAccessToken());
 
         if (skipToken != null) {
             requestTarget = requestTarget.queryParam("$skiptoken", skipToken);

@@ -12,5 +12,6 @@
 hs_err_pid*
 
 .idea
-onedrive.xml
+OneDrive.iml
 logs
+keyFile.txt
