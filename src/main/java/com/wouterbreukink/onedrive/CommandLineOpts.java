@@ -25,6 +25,7 @@ public class CommandLineOpts {
     private boolean recursive = false;
     private int maxSizeKb = 0;
     private Path keyFile = Paths.get("keyFile.txt");
+    private boolean dryRun = false;
 
     public static CommandLineOpts getCommandLineOpts() {
         if (!opts.isInitialised) {
@@ -42,6 +43,7 @@ public class CommandLineOpts {
         opts.useHash = line.hasOption("hash-compare");
         opts.version = line.hasOption("version");
         opts.recursive = line.hasOption("recursive");
+        opts.dryRun = line.hasOption("dry-run");
 
         if (line.hasOption("local")) {
             opts.localPath = line.getOptionValue("local");
@@ -247,6 +249,10 @@ public class CommandLineOpts {
 
     public Path getKeyFile() {
         return keyFile;
+    }
+
+    public boolean isDryRun() {
+        return dryRun;
     }
 
     public enum Direction {

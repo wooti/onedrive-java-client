@@ -92,7 +92,7 @@ public class OneDriveRequest {
             if (payloadFile != null && payloadJson != null) {
                 entity = generateMultipartEntity();
             } else if (payloadFile != null) {
-                Entity.entity(new FileInputStream(payloadFile), MediaType.APPLICATION_OCTET_STREAM);
+                entity = Entity.entity(new FileInputStream(payloadFile), MediaType.APPLICATION_OCTET_STREAM);
             } else if (payloadJson != null) {
                 entity = Entity.json(payloadJson);
             }

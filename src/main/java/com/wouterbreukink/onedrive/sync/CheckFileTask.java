@@ -39,7 +39,7 @@ public class CheckFileTask extends Task {
 
     @Override
     public String toString() {
-        return "Check file " + remoteFile.getFullName();
+        return "Checking file " + remoteFile.getFullName();
     }
 
     @Override
@@ -77,7 +77,6 @@ public class CheckFileTask extends Task {
             } else if (!createdMatches || !modifiedMatches) {
                 queue.add(new UpdateFileDatesTask(queue, api, remoteFile, localCreatedDate, localModifiedDate));
             }
-
         } catch (IOException e) {
             log.error("Unable to compare file", e);
         }

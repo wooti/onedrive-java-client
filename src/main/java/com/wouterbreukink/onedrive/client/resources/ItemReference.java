@@ -22,10 +22,10 @@ public class ItemReference implements OneDriveItem {
         return path;
     }
 
-    public String getReadablePath() {
+    public String getFullName() {
 
         if (path == null) {
-            return path;
+            return null;
         }
 
         int index = path.indexOf(':');

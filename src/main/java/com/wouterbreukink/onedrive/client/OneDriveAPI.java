@@ -41,7 +41,7 @@ public class OneDriveAPI {
         return request.getResponse(Item.class);
     }
 
-    public Item[] getChildren(Item parent) throws OneDriveAPIException {
+    public Item[] getChildren(OneDriveItem parent) throws OneDriveAPIException {
 
         if (!parent.isFolder()) {
             throw new IllegalArgumentException("Specified Item is not a folder");
@@ -130,7 +130,7 @@ public class OneDriveAPI {
         return request.getResponse(Item.class);
     }
 
-    public Item createFolder(Item parent, String name) throws OneDriveAPIException {
+    public Item createFolder(OneDriveItem parent, String name) throws OneDriveAPIException {
 
         WriteFolder newFolder = new WriteFolder(name);
 

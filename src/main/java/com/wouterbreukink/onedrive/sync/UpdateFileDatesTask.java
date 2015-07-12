@@ -9,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Date;
 
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
+
 public class UpdateFileDatesTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UpdateFileDatesTask.class.getName());
@@ -38,8 +40,13 @@ public class UpdateFileDatesTask extends Task {
 
     @Override
     protected void taskBody() throws OneDriveAPIException {
-        log.info("Updating timestamps on item: " + remoteFile.getFullName());
-        api.updateFile(remoteFile, created, modified);
+
+        if (getCommandLineOpts().isDryRun()) {
+            log.info("Would update timestamps on item: " + remoteFile.getFullName());
+        } else {
+            log.info("Updating timestamps on item: " + remoteFile.getFullName());
+            api.updateFile(remoteFile, created, modified);
+        }
     }
 }
 

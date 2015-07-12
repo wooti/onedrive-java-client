@@ -5,5 +5,5 @@ public interface OneDriveItem {
 
     boolean isFolder();
 
-    String getPath();
+    String getFullName();
 }

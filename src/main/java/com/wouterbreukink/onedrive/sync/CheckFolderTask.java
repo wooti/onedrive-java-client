@@ -3,6 +3,7 @@ package com.wouterbreukink.onedrive.sync;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.client.resources.OneDriveItem;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
 import org.apache.logging.log4j.LogManager;
@@ -17,15 +18,15 @@ public class CheckFolderTask extends Task {
 
     private static final Logger log = LogManager.getLogger(CheckFolderTask.class.getName());
     private final OneDriveAPI api;
-    private final Item remoteFolder;
+    private final OneDriveItem remoteFolder;
     private final File localFolder;
 
-    public CheckFolderTask(TaskQueue queue, OneDriveAPI api, Item remoteFolder, File localFolder) {
+    public CheckFolderTask(TaskQueue queue, OneDriveAPI api, OneDriveItem remoteFolder, File localFolder) {
 
         super(queue);
 
         this.api = Preconditions.checkNotNull(api);
-        this.remoteFolder = Preconditions.checkNotNull(remoteFolder);
+        this.remoteFolder = remoteFolder;
         this.localFolder = Preconditions.checkNotNull(localFolder);
 
         if (!remoteFolder.isFolder()) {
@@ -43,15 +44,16 @@ public class CheckFolderTask extends Task {
 
     @Override
     public String toString() {
-        return "Check folder " + remoteFolder.getFullName();
+        return "Checking folder " + remoteFolder.getFullName();
     }
 
     @Override
     protected void taskBody() throws OneDriveAPIException {
 
         // Fetch the remote files
-        log.info("Syncing folder " + remoteFolder.getFullName());
-        Item[] remoteFiles = api.getChildren(remoteFolder);
+        log.debug("Checking folder " + remoteFolder.getFullName());
+
+        Item[] remoteFiles = remoteFolder.getId() == null ? new Item[0] : api.getChildren(remoteFolder);
 
         // Index the local files
         Map<String, File> localFiles = Maps.newHashMap();
@@ -88,7 +90,11 @@ public class CheckFolderTask extends Task {
 
                 localFiles.remove(remoteFile.getName());
             } else {
-                log.info("TODO Item is extra - Would delete item?: " + remoteFile.getFullName());
+                if (getCommandLineOpts().isDryRun()) {
+                    log.info("Would delete item: " + remoteFile.getFullName());
+                } else {
+                    log.info("TODO Item is extra - Would delete item?: " + remoteFile.getFullName());
+                }
             }
         }
 
@@ -108,9 +114,34 @@ public class CheckFolderTask extends Task {
                     continue;
                 }
 
-                Item createdItem = api.createFolder(remoteFolder, localFile.getName());
-                log.info("Created new folder " + createdItem.getFullName());
-                queue.add(new CheckFolderTask(queue, api, createdItem, localFile));
+                OneDriveItem newFolderItem;
+
+                if (getCommandLineOpts().isDryRun()) {
+                    log.info(String.format("Would create new folder %s/%s",
+                            remoteFolder.getFullName(),
+                            localFile.getName()));
+
+                    final String fullPath = remoteFolder.getFullName() + "/" + localFile.getName();
+                    newFolderItem = new OneDriveItem() {
+                        public String getId() {
+                            return null;
+                        }
+
+                        public boolean isFolder() {
+                            return true;
+                        }
+
+                        public String getFullName() {
+                            return fullPath;
+                        }
+                    };
+
+                } else {
+                    newFolderItem = api.createFolder(remoteFolder, localFile.getName());
+                    log.info("Created new folder " + newFolderItem.getFullName());
+                }
+
+                queue.add(new CheckFolderTask(queue, api, newFolderItem, localFile));
 
             } else {
 
@@ -126,6 +157,5 @@ public class CheckFolderTask extends Task {
                 queue.add(new UploadFileTask(queue, api, remoteFolder, localFile, false));
             }
         }
-
     }
 }

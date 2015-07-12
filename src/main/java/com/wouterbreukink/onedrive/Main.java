@@ -64,6 +64,11 @@ public class Main {
         // Initialise the OneDrive API
         OneDriveAPI api = new OneDriveAPI(client, authoriser);
 
+        // Warning for dry Run
+        if (getCommandLineOpts().isDryRun()) {
+            log.warn("This is a dry run - no changes will be made");
+        }
+
         // Check the given root folder
         Item rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
 

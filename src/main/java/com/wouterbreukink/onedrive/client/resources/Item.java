@@ -40,10 +40,6 @@ public class Item implements OneDriveItem {
         return folder != null;
     }
 
-    public String getPath() {
-        return parentReference.getPath();
-    }
-
     public String getId() {
         return id;
     }
@@ -105,6 +101,6 @@ public class Item implements OneDriveItem {
     }
 
     public String getFullName() {
-        return parentReference.getReadablePath() + "/" + name;
+        return parentReference.getFullName() + "/" + name;
     }
 }
