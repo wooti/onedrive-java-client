@@ -38,9 +38,13 @@ public class Main {
             return;
         }
 
-        if (getCommandLineOpts().isHelp()) {
+        if (getCommandLineOpts().help()) {
             CommandLineOpts.printHelp();
             return;
+        }
+
+        if (getCommandLineOpts().version()) {
+            log.info("onedrive-java-client version ALPHA");
         }
 
         // Load configuration

@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.util.Map;
 
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
+
 public class CheckFolderTask extends Task {
 
     private static final Logger log = LogManager.getLogger(CheckFolderTask.class.getName());
@@ -74,6 +76,11 @@ public class CheckFolderTask extends Task {
                 }
 
                 if (remoteFile.isFolder()) {
+
+                    if (!getCommandLineOpts().isRecursive()) {
+                        continue;
+                    }
+
                     queue.add(new CheckFolderTask(queue, api, remoteFile, localFile));
                 } else {
                     queue.add(new CheckFileTask(queue, api, remoteFile, localFile));
@@ -96,14 +103,23 @@ public class CheckFolderTask extends Task {
 
         for (File localFile : localFiles.values()) {
             if (localFile.isDirectory()) {
+
+                if (!getCommandLineOpts().isRecursive()) {
+                    continue;
+                }
+
                 Item createdItem = api.createFolder(remoteFolder, localFile.getName());
                 log.info("Created new folder " + createdItem.getFullName());
                 queue.add(new CheckFolderTask(queue, api, createdItem, localFile));
+
             } else {
 
-                // TODO: Skip big files (for now)
-                if (localFile.length() > 10 * 1024 * 1024) {
-                    log.warn("TODO Skipping big file");
+                int maxSizeKb = getCommandLineOpts().getMaxSizeKb();
+                if (maxSizeKb > 0 && localFile.length() > maxSizeKb * 1024) {
+                    log.info(String.format("Skipping file %s/%s - size is bigger than %dKB",
+                            remoteFolder.getFullName(),
+                            localFile.getName(),
+                            maxSizeKb));
                     return;
                 }
 

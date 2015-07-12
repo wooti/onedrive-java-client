@@ -7,6 +7,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
+
 public abstract class Task implements Runnable, Comparable<Task> {
 
     private static final Logger log = LogManager.getLogger(Task.class.getName());
@@ -50,7 +52,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
             log.error(String.format("Task %d:%d encountered exception", id, attempt), ex);
         }
 
-        if (attempt < 3) {
+        if (attempt < getCommandLineOpts().getTries()) {
             queue.add(this);
         } else {
             log.error(String.format("Task %d did not complete - %s", id, this.toString()));

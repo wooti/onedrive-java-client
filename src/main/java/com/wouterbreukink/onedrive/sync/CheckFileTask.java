@@ -60,9 +60,11 @@ public class CheckFileTask extends Task {
                 return;
             }
 
-            // TODO: Skip big files (for now)
-            if (localFile.length() > 10 * 1024 * 1024) {
-                log.warn("TODO Skipping big file");
+            int maxSizeKb = getCommandLineOpts().getMaxSizeKb();
+            if (maxSizeKb > 0 && localFile.length() > maxSizeKb * 1024) {
+                log.info(String.format("Skipping file %s - size is bigger than %dKB",
+                        remoteFile.getFullName(),
+                        maxSizeKb));
                 return;
             }
 

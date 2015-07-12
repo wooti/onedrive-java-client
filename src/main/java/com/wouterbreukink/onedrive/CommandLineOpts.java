@@ -7,12 +7,18 @@ public class CommandLineOpts {
     private static final Options optionsToParse = buildOptions();
     private static final CommandLineOpts opts = new CommandLineOpts();
     private boolean isInitialised;
-    private String direction;
+    // Mandatory arguments
+    private Direction direction;
     private String localPath;
     private String remotePath;
+    // Optional arguments
     private boolean help = false;
+    private boolean useHash = false;
     private int threads = 5;
-    private boolean useHash;
+    private int tries = 3;
+    private boolean version = false;
+    private boolean recursive = false;
+    private int maxSizeKb = 0;
 
     public static CommandLineOpts getCommandLineOpts() {
         if (!opts.isInitialised) {
@@ -28,6 +34,8 @@ public class CommandLineOpts {
 
         opts.help = line.hasOption("help");
         opts.useHash = line.hasOption("hash-compare");
+        opts.version = line.hasOption("version");
+        opts.recursive = line.hasOption("recursive");
 
         if (line.hasOption("local")) {
             opts.localPath = line.getOptionValue("local");
@@ -38,12 +46,30 @@ public class CommandLineOpts {
         }
 
         if (line.hasOption("direction")) {
-            opts.direction = line.getOptionValue("direction");
+            String chosen = line.getOptionValue("direction").toLowerCase();
+            if (!chosen.equals("up") && !chosen.equals("down") && !chosen.equals("sync")) {
+                throw new ParseException("Direction must be one of up, down or sync");
+            }
+            opts.direction = Direction.valueOf(chosen.toUpperCase());
         }
 
         if (line.hasOption("threads")) {
             opts.threads = Integer.parseInt(line.getOptionValue("threads"));
         }
+
+        if (line.hasOption("tries")) {
+            opts.tries = Integer.parseInt(line.getOptionValue("tries"));
+        }
+
+        if (line.hasOption("max-size")) {
+            opts.maxSizeKb = Integer.parseInt(line.getOptionValue("max-size"));
+        }
+
+        // TODO: KeyFile
+        // TODO: LogLevel
+        // TODO: LogFile
+        // TODO: Dry run
+        // TODO: Conflict
 
         opts.isInitialised = true;
     }
@@ -99,15 +125,8 @@ public class CommandLineOpts {
         Option maxSize = Option.builder("M")
                 .longOpt("max-size")
                 .hasArg()
-                .argName("size")
-                .desc("only process files smaller than <size>")
-                .build();
-
-        Option minSize = Option.builder("m")
-                .longOpt("max-size")
-                .hasArg()
-                .argName("size")
-                .desc("only process files larger than <size>")
+                .argName("size_in_KB")
+                .desc("only process files smaller than <size> KB")
                 .build();
 
         Option dryRun = Option.builder("n")
@@ -148,10 +167,10 @@ public class CommandLineOpts {
                 .build();
 
         Option retries = Option.builder("y")
-                .longOpt("retries")
+                .longOpt("tries")
                 .hasArg()
                 .argName("count")
-                .desc("retry each service request <count> times")
+                .desc("try each service request <count> times")
                 .build();
 
         return new Options()
@@ -163,7 +182,6 @@ public class CommandLineOpts {
                 .addOption(localPath)
                 .addOption(logFile)
                 .addOption(maxSize)
-                .addOption(minSize)
                 .addOption(dryRun)
                 .addOption(recursive)
                 .addOption(remotePath)
@@ -178,7 +196,7 @@ public class CommandLineOpts {
         formatter.printHelp("onedrive-java-syncer", optionsToParse);
     }
 
-    public String getDirection() {
+    public Direction getDirection() {
         return direction;
     }
 
@@ -190,7 +208,7 @@ public class CommandLineOpts {
         return remotePath;
     }
 
-    public boolean isHelp() {
+    public boolean help() {
         return help;
     }
 
@@ -201,4 +219,27 @@ public class CommandLineOpts {
     public boolean useHash() {
         return useHash;
     }
+
+    public int getTries() {
+        return tries;
+    }
+
+    public boolean version() {
+        return version;
+    }
+
+    public boolean isRecursive() {
+        return recursive;
+    }
+
+    public int getMaxSizeKb() {
+        return maxSizeKb;
+    }
+
+    public enum Direction {
+        UP,
+        DOWN,
+        BOTH
+    }
+
 }
