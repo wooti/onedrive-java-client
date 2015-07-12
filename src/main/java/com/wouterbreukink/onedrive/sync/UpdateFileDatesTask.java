@@ -9,15 +9,15 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Date;
 
-public class UpdateFileTask extends Task {
+public class UpdateFileDatesTask extends Task {
 
-    private static final Logger log = LogManager.getLogger(UpdateFileTask.class.getName());
+    private static final Logger log = LogManager.getLogger(UpdateFileDatesTask.class.getName());
     private final OneDriveAPI client;
     private final Date created;
     private final Date modified;
     private final Item remoteFile;
 
-    public UpdateFileTask(TaskQueue queue, OneDriveAPI client, Item remoteFile, Date created, Date modified) {
+    public UpdateFileDatesTask(TaskQueue queue, OneDriveAPI client, Item remoteFile, Date created, Date modified) {
 
         super(queue);
 
@@ -38,7 +38,7 @@ public class UpdateFileTask extends Task {
 
     @Override
     protected void taskBody() throws OneDriveAPIException {
-        log.info("Updating properties on item: " + remoteFile.getFullName());
+        log.info("Updating timestamps on item: " + remoteFile.getFullName());
         client.updateFile(remoteFile, created, modified);
     }
 }

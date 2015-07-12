@@ -16,7 +16,11 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.io.File;
 import java.io.FileInputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -26,6 +30,13 @@ public class Main {
     private static final Logger log = LogManager.getLogger(Main.class.getName());
 
     public static void main(String[] args) throws Exception {
+
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Date now = new Date();
+        Date trunc = new Date((now.getTime() / 1000) * 1000);
+        Date trunc2 = new Date((now.getTime() / 1000) * 1000 + 1);
 
         // Process command line args
         CommandLineOpts opts = new CommandLineOpts(args);

@@ -1,6 +1,5 @@
 package com.wouterbreukink.onedrive.sync;
 
-import com.sun.istack.internal.NotNull;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
@@ -58,7 +57,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
         }
     }
 
-    public int compareTo(@NotNull Task o) {
+    public int compareTo(Task o) {
         return o.priority() - priority();
     }
 }

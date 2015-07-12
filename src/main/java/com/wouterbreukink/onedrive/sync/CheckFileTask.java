@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class CheckFileTask extends Task {
 
@@ -45,9 +46,12 @@ public class CheckFileTask extends Task {
         try {
             BasicFileAttributes attr = Files.readAttributes(localFile.toPath(), BasicFileAttributes.class);
 
+            Date localCreatedDate = new Date(attr.creationTime().to(TimeUnit.SECONDS) * 1000);
+            Date localModifiedDate = new Date(attr.lastModifiedTime().to(TimeUnit.SECONDS) * 1000);
+
             boolean sizeMatches = remoteFile.getSize() == localFile.length();
-            boolean createdMatches = remoteFile.getFileSystemInfo().getCreatedDateTime().getTime() == attr.creationTime().toMillis();
-            boolean modifiedMatches = remoteFile.getFileSystemInfo().getLastModifiedDateTime().getTime() == attr.lastModifiedTime().toMillis();
+            boolean createdMatches = remoteFile.getFileSystemInfo().getCreatedDateTime().equals(localCreatedDate);
+            boolean modifiedMatches = remoteFile.getFileSystemInfo().getLastModifiedDateTime().equals(localModifiedDate);
             if (sizeMatches && createdMatches && modifiedMatches) {
                 // Close enough!
                 return;
@@ -66,7 +70,7 @@ public class CheckFileTask extends Task {
             if (remoteCrc != localCrc) {
                 queue.add(new UploadFileTask(queue, client, remoteFile.getParentReference(), localFile, true));
             } else if (!createdMatches || !modifiedMatches) {
-                queue.add(new UpdateFileTask(queue, client, remoteFile, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis())));
+                queue.add(new UpdateFileDatesTask(queue, client, remoteFile, localCreatedDate, localModifiedDate));
             }
 
         } catch (IOException e) {
