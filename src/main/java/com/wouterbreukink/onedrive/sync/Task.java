@@ -1,15 +1,16 @@
 package com.wouterbreukink.onedrive.sync;
 
+import com.sun.istack.internal.NotNull;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import jersey.repackaged.com.google.common.base.Preconditions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public abstract class Task implements Runnable, Comparable<Task> {
 
-    private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
+    private static final Logger log = LogManager.getLogger(Task.class.getName());
     private static AtomicInteger taskIdCounter = new AtomicInteger(1);
 
     protected final TaskQueue queue;
@@ -29,35 +30,35 @@ public abstract class Task implements Runnable, Comparable<Task> {
     public void run() {
         attempt++;
         try {
-            log.finest(String.format("Starting task %d:%d - %s", id, attempt, this.toString()));
+            log.debug(String.format("Starting task %d:%d - %s", id, attempt, this.toString()));
             taskBody();
             return;
         } catch (OneDriveAPIException ex) {
 
             switch (ex.getCode()) {
                 case 401:
-                    log.warning(String.format("Task %d:%d encountered 401 (Unauthorised) response", id, attempt));
+                    log.warn(String.format("Task %d:%d encountered 401 (Unauthorised) response", id, attempt));
                 case 503:
-                    log.warning(String.format("Task %d:%d encountered 503 (Temporarily Unavailable) - sleeping 10 seconds", id, attempt));
+                    log.warn(String.format("Task %d:%d encountered 503 (Temporarily Unavailable) - sleeping 10 seconds", id, attempt));
                     queue.suspend(10);
                 case 509:
-                    log.warning(String.format("Task %d:%d encountered error 509 (Bandwidth Limit Exceeded) - sleeping 60 seconds", id, attempt));
+                    log.warn(String.format("Task %d:%d encountered error 509 (Bandwidth Limit Exceeded) - sleeping 60 seconds", id, attempt));
                     queue.suspend(60);
                 default:
-                    log.warning(String.format("Task %d:%d encountered %s", id, attempt, ex.getMessage()));
+                    log.warn(String.format("Task %d:%d encountered %s", id, attempt, ex.getMessage()));
             }
         } catch (Exception ex) {
-            log.log(Level.WARNING, String.format("Task %d:%d encountered exception", id, attempt), ex);
+            log.error(String.format("Task %d:%d encountered exception", id, attempt), ex);
         }
 
         if (attempt < 3) {
             queue.add(this);
         } else {
-            log.severe(String.format("Task %d did not complete - %d", id, this.toString()));
+            log.error(String.format("Task %d did not complete - %s", id, this.toString()));
         }
     }
 
-    public int compareTo(Task o) {
+    public int compareTo(@NotNull Task o) {
         return o.priority() - priority();
     }
 }

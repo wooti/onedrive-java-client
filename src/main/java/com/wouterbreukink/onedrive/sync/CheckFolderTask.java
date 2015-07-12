@@ -5,15 +5,15 @@ import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.Map;
-import java.util.logging.Logger;
 
 public class CheckFolderTask extends Task {
 
-    private static final Logger log = Logger.getLogger(CheckFolderTask.class.getName());
-
+    private static final Logger log = LogManager.getLogger(CheckFolderTask.class.getName());
     private final OneDriveAPI client;
     private final Item remoteFolder;
     private final File localFolder;
@@ -64,7 +64,7 @@ public class CheckFolderTask extends Task {
             if (localFile != null) {
 
                 if (remoteFile.isFolder() != localFile.isDirectory()) {
-                    log.warning(String.format(
+                    log.warn(String.format(
                             "Conflict detected in item '%s'. Local is %s, Remote is %s",
                             remoteFile.getFullName(),
                             remoteFile.isFolder() ? "directory" : "file",
@@ -103,7 +103,7 @@ public class CheckFolderTask extends Task {
 
                 // TODO: Skip big files (for now)
                 if (localFile.length() > 10 * 1024 * 1024) {
-                    log.warning("TODO Skipping big file");
+                    log.warn("TODO Skipping big file");
                     return;
                 }
 

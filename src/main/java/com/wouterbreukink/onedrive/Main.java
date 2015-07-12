@@ -3,10 +3,11 @@ package com.wouterbreukink.onedrive;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
 import com.wouterbreukink.onedrive.client.resources.Item;
-import com.wouterbreukink.onedrive.logging.LogFormatter;
 import com.wouterbreukink.onedrive.sync.CheckFolderTask;
 import com.wouterbreukink.onedrive.sync.Task;
 import com.wouterbreukink.onedrive.sync.TaskQueue;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -18,31 +19,13 @@ import java.io.FileInputStream;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public class Main {
 
     private static final Properties props = new Properties();
-    private static final Logger log = Logger.getLogger(Main.class.getPackage().getName());
+    private static final Logger log = LogManager.getLogger(Main.class.getName());
 
     public static void main(String[] args) throws Exception {
-
-        // Remove existing handlers
-        LogManager.getLogManager().reset();
-
-        // Initialise logger
-        log.setLevel(Level.ALL);
-
-        // Set custom handler
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        handler.setLevel(Level.ALL);
-        log.addHandler(handler);
-
-        log.fine("Initialised logging");
 
         // Process command line args
         CommandLineOpts opts = new CommandLineOpts(args);
@@ -54,7 +37,7 @@ public class Main {
 
         // Load configuration
         props.loadFromXML(new FileInputStream("onedrive.xml"));
-        log.fine("Loaded configuration");
+        log.debug("Loaded configuration");
 
         // Init client
         Client client = ClientBuilder
@@ -77,11 +60,11 @@ public class Main {
         Item rootFolder = oneDrive.getPath(opts.getRemotePath());
 
         if (!rootFolder.isFolder()) {
-            log.severe(String.format("Specified root '%s' is not a folder", rootFolder.getFullName()));
+            log.error(String.format("Specified root '%s' is not a folder", rootFolder.getFullName()));
             return;
         }
 
-        log.fine(String.format("Fetched root folder '%s' - found %d items", rootFolder.getFullName(), rootFolder.getFolder().getChildCount()));
+        log.info(String.format("Fetched root folder '%s' - found %d items", rootFolder.getFullName(), rootFolder.getFolder().getChildCount()));
 
         // Start the queue
         final TaskQueue queue = new TaskQueue();

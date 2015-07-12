@@ -4,18 +4,18 @@ import com.wouterbreukink.onedrive.Utils;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import jersey.repackaged.com.google.common.base.Preconditions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class CheckFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
+    private static final Logger log = LogManager.getLogger(CheckFileTask.class.getName());
 
     private final OneDriveAPI client;
     private final Item remoteFile;
@@ -55,7 +55,7 @@ public class CheckFileTask extends Task {
 
             // TODO: Skip big files (for now)
             if (localFile.length() > 10 * 1024 * 1024) {
-                log.warning("TODO Skipping big file");
+                log.warn("TODO Skipping big file");
                 return;
             }
 
@@ -70,7 +70,7 @@ public class CheckFileTask extends Task {
             }
 
         } catch (IOException e) {
-            log.log(Level.WARNING, "Unable to compare file", e);
+            log.error("Unable to compare file", e);
         }
     }
 }

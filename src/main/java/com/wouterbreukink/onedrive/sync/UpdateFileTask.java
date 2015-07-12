@@ -4,14 +4,14 @@ import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import jersey.repackaged.com.google.common.base.Preconditions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Date;
-import java.util.logging.Logger;
 
 public class UpdateFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
-
+    private static final Logger log = LogManager.getLogger(UpdateFileTask.class.getName());
     private final OneDriveAPI client;
     private final Date created;
     private final Date modified;
@@ -38,7 +38,7 @@ public class UpdateFileTask extends Task {
 
     @Override
     protected void taskBody() throws OneDriveAPIException {
-        log.fine("Updating properties on item: " + remoteFile.getFullName());
+        log.info("Updating properties on item: " + remoteFile.getFullName());
         client.updateFile(remoteFile, created, modified);
     }
 }

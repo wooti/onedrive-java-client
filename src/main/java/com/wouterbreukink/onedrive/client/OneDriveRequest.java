@@ -15,11 +15,9 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.logging.Logger;
 
 public class OneDriveRequest {
 
-    private static final Logger log = Logger.getLogger(OneDriveRequest.class.getName());
     private final OneDriveAuth authoriser;
     private final Client client;
 
@@ -99,7 +97,7 @@ public class OneDriveRequest {
                 entity = Entity.json(payloadJson);
             }
         } catch (FileNotFoundException e) {
-            Throwables.propagate(e);
+            throw Throwables.propagate(e);
         }
 
         return entity != null ? builder.method(method, entity) : builder.method(method);

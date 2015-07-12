@@ -5,16 +5,15 @@ import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.OneDriveItem;
 import jersey.repackaged.com.google.common.base.Preconditions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class UploadFileTask extends Task {
 
-    private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
-
+    private static final Logger log = LogManager.getLogger(UploadFileTask.class.getName());
     private final OneDriveAPI client;
     private final OneDriveItem parent;
     private final File file;
@@ -56,7 +55,7 @@ public class UploadFileTask extends Task {
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
-            log.fine(String.format("Uploaded %d KB in %dms (%.2f KB/s) to %s file %s",
+            log.info(String.format("Uploaded %d KB in %dms (%.2f KB/s) to %s file %s",
                     file.length() / 1024,
                     elapsedTime,
                     elapsedTime > 0 ? ((file.length() / 1024d) / (elapsedTime / 1000d)) : 0,
@@ -64,7 +63,7 @@ public class UploadFileTask extends Task {
                     response.getFullName()));
 
         } catch (IOException e) {
-            log.log(Level.WARNING, "Unable to upload file " + file.getName(), e);
+            log.error("Unable to upload file " + file.getName(), e);
         }
     }
 }
