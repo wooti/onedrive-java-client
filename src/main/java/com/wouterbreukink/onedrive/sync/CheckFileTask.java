@@ -1,6 +1,5 @@
 package com.wouterbreukink.onedrive.sync;
 
-import com.wouterbreukink.onedrive.Main;
 import com.wouterbreukink.onedrive.Utils;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.resources.Item;
@@ -22,15 +21,13 @@ public class CheckFileTask extends Task {
     private final Item remoteFile;
     private final File localFile;
 
-    public CheckFileTask(OneDriveAPI client, Item remoteFile, File localFile) {
+    public CheckFileTask(TaskQueue queue, OneDriveAPI client, Item remoteFile, File localFile) {
 
-        Preconditions.checkNotNull(client);
-        Preconditions.checkNotNull(remoteFile);
-        Preconditions.checkNotNull(localFile);
+        super(queue);
 
-        this.client = client;
-        this.remoteFile = remoteFile;
-        this.localFile = localFile;
+        this.client = Preconditions.checkNotNull(client);
+        this.remoteFile = Preconditions.checkNotNull(remoteFile);
+        this.localFile = Preconditions.checkNotNull(localFile);
     }
 
     public int priority() {
@@ -67,9 +64,9 @@ public class CheckFileTask extends Task {
 
             // If the content is different
             if (remoteCrc != localCrc) {
-                Main.queue.add(new UploadFileTask(client, remoteFile.getParentReference(), localFile, true));
+                queue.add(new UploadFileTask(queue, client, remoteFile.getParentReference(), localFile, true));
             } else if (!createdMatches || !modifiedMatches) {
-                Main.queue.add(new UpdateFileTask(client, remoteFile, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis())));
+                queue.add(new UpdateFileTask(queue, client, remoteFile, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis())));
             }
 
         } catch (IOException e) {

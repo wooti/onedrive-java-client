@@ -17,15 +17,14 @@ public class UpdateFileTask extends Task {
     private final Date modified;
     private final Item remoteFile;
 
-    public UpdateFileTask(OneDriveAPI client, Item remoteFile, Date created, Date modified) {
+    public UpdateFileTask(TaskQueue queue, OneDriveAPI client, Item remoteFile, Date created, Date modified) {
 
-        Preconditions.checkNotNull(client);
-        Preconditions.checkNotNull(remoteFile);
+        super(queue);
 
-        this.client = client;
-        this.remoteFile = remoteFile;
-        this.created = created;
-        this.modified = modified;
+        this.client = Preconditions.checkNotNull(client);
+        this.remoteFile = Preconditions.checkNotNull(remoteFile);
+        this.created = Preconditions.checkNotNull(created);
+        this.modified = Preconditions.checkNotNull(modified);
     }
 
     public int priority() {

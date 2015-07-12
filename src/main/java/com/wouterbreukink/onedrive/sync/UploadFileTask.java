@@ -20,20 +20,18 @@ public class UploadFileTask extends Task {
     private final File file;
     private final boolean replace;
 
-    public UploadFileTask(OneDriveAPI client, OneDriveItem parent, File file, boolean replace) {
+    public UploadFileTask(TaskQueue queue, OneDriveAPI client, OneDriveItem parent, File file, boolean replace) {
 
-        Preconditions.checkNotNull(client);
-        Preconditions.checkNotNull(parent);
-        Preconditions.checkNotNull(file);
+        super(queue);
+
+        this.client = Preconditions.checkNotNull(client);
+        this.parent = Preconditions.checkNotNull(parent);
+        this.file = Preconditions.checkNotNull(file);
+        this.replace = replace;
 
         if (!parent.isFolder()) {
             throw new IllegalArgumentException("Specified folder is not a folder");
         }
-
-        this.client = client;
-        this.parent = parent;
-        this.file = file;
-        this.replace = replace;
     }
 
     public int priority() {

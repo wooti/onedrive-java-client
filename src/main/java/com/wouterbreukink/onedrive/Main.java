@@ -6,6 +6,7 @@ import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.logging.LogFormatter;
 import com.wouterbreukink.onedrive.sync.CheckFolderTask;
 import com.wouterbreukink.onedrive.sync.Task;
+import com.wouterbreukink.onedrive.sync.TaskQueue;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -17,8 +18,6 @@ import java.io.FileInputStream;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.Semaphore;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -26,7 +25,6 @@ import java.util.logging.Logger;
 
 public class Main {
 
-    public static final PriorityBlockingQueue<Task> queue = new PriorityBlockingQueue<Task>();
     private static final Properties props = new Properties();
     private static final Logger log = Logger.getLogger(Main.class.getPackage().getName());
 
@@ -86,7 +84,8 @@ public class Main {
         log.fine(String.format("Fetched root folder '%s' - found %d items", rootFolder.getFullName(), rootFolder.getFolder().getChildCount()));
 
         // Start the queue
-        Main.queue.add(new CheckFolderTask(oneDrive, rootFolder, new File(opts.getLocalPath())));
+        final TaskQueue queue = new TaskQueue();
+        queue.add(new CheckFolderTask(queue, oneDrive, rootFolder, new File(opts.getLocalPath())));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(opts.getThreads());
@@ -95,9 +94,17 @@ public class Main {
             executorService.submit(new Runnable() {
                 public void run() {
                     try {
-                        Task nextTask;
-                        while ((nextTask = queue.take()) != null) {
-                            nextTask.run();
+                        while (true) {
+                            Task taskToRun = null;
+                            try {
+                                taskToRun = queue.take();
+                                taskToRun.run();
+                            } finally {
+                                if (taskToRun != null) {
+                                    queue.done(taskToRun);
+                                }
+                            }
+
                         }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
@@ -106,28 +113,7 @@ public class Main {
             });
         }
 
-        Thread.sleep(5000);
-
-        final Semaphore queueIdle = new Semaphore(0);
-
-        Main.queue.add(new Task() {
-            @Override
-            public int priority() {
-                return 0;
-            }
-
-            @Override
-            public String toString() {
-                return "Exit program";
-            }
-
-            @Override
-            protected void taskBody() {
-                queueIdle.release();
-            }
-        });
-
-        queueIdle.acquire();
+        queue.waitForCompletion();
         log.info("Finished.");
 
         System.exit(0);

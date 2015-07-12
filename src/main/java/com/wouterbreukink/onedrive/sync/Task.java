@@ -1,7 +1,7 @@
 package com.wouterbreukink.onedrive.sync;
 
-import com.wouterbreukink.onedrive.Main;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import jersey.repackaged.com.google.common.base.Preconditions;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -12,12 +12,14 @@ public abstract class Task implements Runnable, Comparable<Task> {
     private static final Logger log = Logger.getLogger(CheckFileTask.class.getName());
     private static AtomicInteger taskIdCounter = new AtomicInteger(1);
 
+    protected final TaskQueue queue;
     private final int id;
     private int attempt;
 
-    public Task() {
+    public Task(TaskQueue queue) {
         this.id = taskIdCounter.getAndIncrement();
         this.attempt = 0;
+        this.queue = Preconditions.checkNotNull(queue);
     }
 
     protected abstract int priority();
@@ -37,10 +39,10 @@ public abstract class Task implements Runnable, Comparable<Task> {
                     log.warning(String.format("Task %d:%d encountered 401 (Unauthorised) response", id, attempt));
                 case 503:
                     log.warning(String.format("Task %d:%d encountered 503 (Temporarily Unavailable) - sleeping 10 seconds", id, attempt));
-                    sleep(10);
+                    queue.suspend(10);
                 case 509:
                     log.warning(String.format("Task %d:%d encountered error 509 (Bandwidth Limit Exceeded) - sleeping 60 seconds", id, attempt));
-                    sleep(60);
+                    queue.suspend(60);
                 default:
                     log.warning(String.format("Task %d:%d encountered %s", id, attempt, ex.getMessage()));
             }
@@ -49,26 +51,13 @@ public abstract class Task implements Runnable, Comparable<Task> {
         }
 
         if (attempt < 3) {
-            sleep(1);
-            Main.queue.add(this);
+            queue.add(this);
         } else {
-            log.severe(String.format("Task %d did not complete", id, attempt));
+            log.severe(String.format("Task %d did not complete - %d", id, this.toString()));
         }
-    }
-
-    public String name() {
-        return this.getClass().getName();
     }
 
     public int compareTo(Task o) {
         return o.priority() - priority();
-    }
-
-    private void sleep(int seconds) {
-        try {
-            Thread.sleep(seconds * 1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 }

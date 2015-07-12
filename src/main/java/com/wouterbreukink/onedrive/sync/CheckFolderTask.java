@@ -1,6 +1,5 @@
 package com.wouterbreukink.onedrive.sync;
 
-import com.wouterbreukink.onedrive.Main;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
@@ -19,11 +18,13 @@ public class CheckFolderTask extends Task {
     private final Item remoteFolder;
     private final File localFolder;
 
-    public CheckFolderTask(OneDriveAPI client, Item remoteFolder, File localFolder) {
+    public CheckFolderTask(TaskQueue queue, OneDriveAPI client, Item remoteFolder, File localFolder) {
 
-        Preconditions.checkNotNull(client);
-        Preconditions.checkNotNull(remoteFolder);
-        Preconditions.checkNotNull(localFolder);
+        super(queue);
+
+        this.client = Preconditions.checkNotNull(client);
+        this.remoteFolder = Preconditions.checkNotNull(remoteFolder);
+        this.localFolder = Preconditions.checkNotNull(localFolder);
 
         if (!remoteFolder.isFolder()) {
             throw new IllegalArgumentException("Specified folder is not a folder");
@@ -32,10 +33,6 @@ public class CheckFolderTask extends Task {
         if (!localFolder.isDirectory()) {
             throw new IllegalArgumentException("Specified localFolder is not a folder");
         }
-
-        this.client = client;
-        this.remoteFolder = remoteFolder;
-        this.localFolder = localFolder;
     }
 
     public int priority() {
@@ -77,9 +74,9 @@ public class CheckFolderTask extends Task {
                 }
 
                 if (remoteFile.isFolder()) {
-                    Main.queue.add(new CheckFolderTask(client, remoteFile, localFile));
+                    queue.add(new CheckFolderTask(queue, client, remoteFile, localFile));
                 } else {
-                    Main.queue.add(new CheckFileTask(client, remoteFile, localFile));
+                    queue.add(new CheckFileTask(queue, client, remoteFile, localFile));
                 }
 
                 localFiles.remove(remoteFile.getName());
@@ -101,9 +98,16 @@ public class CheckFolderTask extends Task {
             if (localFile.isDirectory()) {
                 Item createdItem = client.createFolder(remoteFolder, localFile.getName());
                 log.info("Created new folder " + createdItem.getFullName());
-                Main.queue.add(new CheckFolderTask(client, createdItem, localFile));
+                queue.add(new CheckFolderTask(queue, client, createdItem, localFile));
             } else {
-                Main.queue.add(new UploadFileTask(client, remoteFolder, localFile, false));
+
+                // TODO: Skip big files (for now)
+                if (localFile.length() > 10 * 1024 * 1024) {
+                    log.warning("TODO Skipping big file");
+                    return;
+                }
+
+                queue.add(new UploadFileTask(queue, client, remoteFolder, localFile, false));
             }
         }
 
