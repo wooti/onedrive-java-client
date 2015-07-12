@@ -12,16 +12,16 @@ import java.util.Date;
 public class UpdateFileDatesTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UpdateFileDatesTask.class.getName());
-    private final OneDriveAPI client;
+    private final OneDriveAPI api;
     private final Date created;
     private final Date modified;
     private final Item remoteFile;
 
-    public UpdateFileDatesTask(TaskQueue queue, OneDriveAPI client, Item remoteFile, Date created, Date modified) {
+    public UpdateFileDatesTask(TaskQueue queue, OneDriveAPI api, Item remoteFile, Date created, Date modified) {
 
         super(queue);
 
-        this.client = Preconditions.checkNotNull(client);
+        this.api = Preconditions.checkNotNull(api);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.created = Preconditions.checkNotNull(created);
         this.modified = Preconditions.checkNotNull(modified);
@@ -39,7 +39,7 @@ public class UpdateFileDatesTask extends Task {
     @Override
     protected void taskBody() throws OneDriveAPIException {
         log.info("Updating timestamps on item: " + remoteFile.getFullName());
-        client.updateFile(remoteFile, created, modified);
+        api.updateFile(remoteFile, created, modified);
     }
 }
 

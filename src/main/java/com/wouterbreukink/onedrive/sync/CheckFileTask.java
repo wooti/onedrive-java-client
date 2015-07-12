@@ -18,15 +18,15 @@ public class CheckFileTask extends Task {
 
     private static final Logger log = LogManager.getLogger(CheckFileTask.class.getName());
 
-    private final OneDriveAPI client;
+    private final OneDriveAPI api;
     private final Item remoteFile;
     private final File localFile;
 
-    public CheckFileTask(TaskQueue queue, OneDriveAPI client, Item remoteFile, File localFile) {
+    public CheckFileTask(TaskQueue queue, OneDriveAPI api, Item remoteFile, File localFile) {
 
         super(queue);
 
-        this.client = Preconditions.checkNotNull(client);
+        this.api = Preconditions.checkNotNull(api);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.localFile = Preconditions.checkNotNull(localFile);
     }
@@ -68,9 +68,9 @@ public class CheckFileTask extends Task {
 
             // If the content is different
             if (remoteCrc != localCrc) {
-                queue.add(new UploadFileTask(queue, client, remoteFile.getParentReference(), localFile, true));
+                queue.add(new UploadFileTask(queue, api, remoteFile.getParentReference(), localFile, true));
             } else if (!createdMatches || !modifiedMatches) {
-                queue.add(new UpdateFileDatesTask(queue, client, remoteFile, localCreatedDate, localModifiedDate));
+                queue.add(new UpdateFileDatesTask(queue, api, remoteFile, localCreatedDate, localModifiedDate));
             }
 
         } catch (IOException e) {

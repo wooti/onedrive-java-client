@@ -14,15 +14,15 @@ import java.util.Map;
 public class CheckFolderTask extends Task {
 
     private static final Logger log = LogManager.getLogger(CheckFolderTask.class.getName());
-    private final OneDriveAPI client;
+    private final OneDriveAPI api;
     private final Item remoteFolder;
     private final File localFolder;
 
-    public CheckFolderTask(TaskQueue queue, OneDriveAPI client, Item remoteFolder, File localFolder) {
+    public CheckFolderTask(TaskQueue queue, OneDriveAPI api, Item remoteFolder, File localFolder) {
 
         super(queue);
 
-        this.client = Preconditions.checkNotNull(client);
+        this.api = Preconditions.checkNotNull(api);
         this.remoteFolder = Preconditions.checkNotNull(remoteFolder);
         this.localFolder = Preconditions.checkNotNull(localFolder);
 
@@ -49,7 +49,7 @@ public class CheckFolderTask extends Task {
 
         // Fetch the remote files
         log.info("Syncing folder " + remoteFolder.getFullName());
-        Item[] remoteFiles = client.getChildren(remoteFolder);
+        Item[] remoteFiles = api.getChildren(remoteFolder);
 
         // Index the local files
         Map<String, File> localFiles = Maps.newHashMap();
@@ -74,9 +74,9 @@ public class CheckFolderTask extends Task {
                 }
 
                 if (remoteFile.isFolder()) {
-                    queue.add(new CheckFolderTask(queue, client, remoteFile, localFile));
+                    queue.add(new CheckFolderTask(queue, api, remoteFile, localFile));
                 } else {
-                    queue.add(new CheckFileTask(queue, client, remoteFile, localFile));
+                    queue.add(new CheckFileTask(queue, api, remoteFile, localFile));
                 }
 
                 localFiles.remove(remoteFile.getName());
@@ -96,9 +96,9 @@ public class CheckFolderTask extends Task {
 
         for (File localFile : localFiles.values()) {
             if (localFile.isDirectory()) {
-                Item createdItem = client.createFolder(remoteFolder, localFile.getName());
+                Item createdItem = api.createFolder(remoteFolder, localFile.getName());
                 log.info("Created new folder " + createdItem.getFullName());
-                queue.add(new CheckFolderTask(queue, client, createdItem, localFile));
+                queue.add(new CheckFolderTask(queue, api, createdItem, localFile));
             } else {
 
                 // TODO: Skip big files (for now)
@@ -107,7 +107,7 @@ public class CheckFolderTask extends Task {
                     return;
                 }
 
-                queue.add(new UploadFileTask(queue, client, remoteFolder, localFile, false));
+                queue.add(new UploadFileTask(queue, api, remoteFolder, localFile, false));
             }
         }
 

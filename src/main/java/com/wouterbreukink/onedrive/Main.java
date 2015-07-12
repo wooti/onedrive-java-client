@@ -66,9 +66,10 @@ public class Main {
             return;
         }
 
-        OneDriveAPI oneDrive = new OneDriveAPI(client, authoriser);
+        // Initialise the OneDrive API
+        OneDriveAPI api = new OneDriveAPI(client, authoriser);
 
-        Item rootFolder = oneDrive.getPath(opts.getRemotePath());
+        Item rootFolder = api.getPath(opts.getRemotePath());
 
         if (!rootFolder.isFolder()) {
             log.error(String.format("Specified root '%s' is not a folder", rootFolder.getFullName()));
@@ -77,9 +78,9 @@ public class Main {
 
         log.info(String.format("Fetched root folder '%s' - found %d items", rootFolder.getFullName(), rootFolder.getFolder().getChildCount()));
 
-        // Start the queue
+        // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
-        queue.add(new CheckFolderTask(queue, oneDrive, rootFolder, new File(opts.getLocalPath())));
+        queue.add(new CheckFolderTask(queue, api, rootFolder, new File(opts.getLocalPath())));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(opts.getThreads());

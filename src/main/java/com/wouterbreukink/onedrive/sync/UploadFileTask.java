@@ -14,16 +14,16 @@ import java.io.IOException;
 public class UploadFileTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadFileTask.class.getName());
-    private final OneDriveAPI client;
+    private final OneDriveAPI api;
     private final OneDriveItem parent;
     private final File file;
     private final boolean replace;
 
-    public UploadFileTask(TaskQueue queue, OneDriveAPI client, OneDriveItem parent, File file, boolean replace) {
+    public UploadFileTask(TaskQueue queue, OneDriveAPI api, OneDriveItem parent, File file, boolean replace) {
 
         super(queue);
 
-        this.client = Preconditions.checkNotNull(client);
+        this.api = Preconditions.checkNotNull(api);
         this.parent = Preconditions.checkNotNull(parent);
         this.file = Preconditions.checkNotNull(file);
         this.replace = replace;
@@ -48,9 +48,9 @@ public class UploadFileTask extends Task {
             long startTime = System.currentTimeMillis();
             Item response;
             if (replace) {
-                response = client.replaceFile(parent, file);
+                response = api.replaceFile(parent, file);
             } else {
-                response = client.uploadFile(parent, file);
+                response = api.uploadFile(parent, file);
             }
 
             long elapsedTime = System.currentTimeMillis() - startTime;
