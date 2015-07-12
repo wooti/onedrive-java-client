@@ -14,6 +14,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
+
 public class CheckFileTask extends Task {
 
     private static final Logger log = LogManager.getLogger(CheckFileTask.class.getName());
@@ -52,7 +54,8 @@ public class CheckFileTask extends Task {
             boolean sizeMatches = remoteFile.getSize() == localFile.length();
             boolean createdMatches = remoteFile.getFileSystemInfo().getCreatedDateTime().equals(localCreatedDate);
             boolean modifiedMatches = remoteFile.getFileSystemInfo().getLastModifiedDateTime().equals(localModifiedDate);
-            if (sizeMatches && createdMatches && modifiedMatches) {
+
+            if (!getCommandLineOpts().useHash() && sizeMatches && createdMatches && modifiedMatches) {
                 // Close enough!
                 return;
             }

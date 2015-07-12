@@ -6,15 +6,16 @@ public class CommandLineOpts {
 
     private static final Options optionsToParse = buildOptions();
     private static final CommandLineOpts opts = new CommandLineOpts();
-    private boolean isInitalised;
+    private boolean isInitialised;
     private String direction;
     private String localPath;
     private String remotePath;
     private boolean help = false;
     private int threads = 5;
+    private boolean useHash;
 
     public static CommandLineOpts getCommandLineOpts() {
-        if (!opts.isInitalised) {
+        if (!opts.isInitialised) {
             throw new IllegalStateException("The command line options have not been initialised");
         }
         return opts;
@@ -26,6 +27,8 @@ public class CommandLineOpts {
         CommandLine line = parser.parse(optionsToParse, args);
 
         opts.help = line.hasOption("help");
+        opts.useHash = line.hasOption("hash-compare");
+
         if (line.hasOption("local")) {
             opts.localPath = line.getOptionValue("local");
         }
@@ -42,9 +45,7 @@ public class CommandLineOpts {
             opts.threads = Integer.parseInt(line.getOptionValue("threads"));
         }
 
-        //TODO: Parse other command line options here
-
-        opts.isInitalised = true;
+        opts.isInitialised = true;
     }
 
     private static Options buildOptions() {
@@ -197,4 +198,7 @@ public class CommandLineOpts {
         return threads;
     }
 
+    public boolean useHash() {
+        return useHash;
+    }
 }
