@@ -1,11 +1,15 @@
 package com.wouterbreukink.onedrive;
 
 import org.apache.commons.cli.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CommandLineOpts {
+
+    private static final Logger log = LogManager.getLogger(Main.class.getName());
 
     private static final Options optionsToParse = buildOptions();
     private static final CommandLineOpts opts = new CommandLineOpts();
@@ -38,6 +42,12 @@ public class CommandLineOpts {
 
         CommandLineParser parser = new DefaultParser();
         CommandLine line = parser.parse(optionsToParse, args);
+
+        for (Option opt : line.getOptions()) {
+            log.debug(String.format("Parsing command line option -%s, value = %s ",
+                    opt.getLongOpt() != null ? "-" + opt.getLongOpt() : opt.getOpt(),
+                    opt.getValue()));
+        }
 
         opts.help = line.hasOption("help");
         opts.useHash = line.hasOption("hash-compare");
@@ -79,7 +89,6 @@ public class CommandLineOpts {
 
         // TODO: LogLevel
         // TODO: LogFile
-        // TODO: Dry run
         // TODO: Conflict
 
         opts.isInitialised = true;
