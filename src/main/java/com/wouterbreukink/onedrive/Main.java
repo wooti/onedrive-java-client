@@ -44,6 +44,12 @@ public class Main {
             log.info("onedrive-java-client version ALPHA");
         }
 
+        // Initialise a log file (if set)
+        if (getCommandLineOpts().getLogFile() != null) {
+            String logFileName = LogUtils.addFileLogger(getCommandLineOpts().getLogFile());
+            log.info(String.format("Writing log output to %s", logFileName));
+        }
+
         // Initialise the client
         Client client = ClientBuilder
                 .newClient()

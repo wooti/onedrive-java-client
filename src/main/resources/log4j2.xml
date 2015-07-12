@@ -5,7 +5,7 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%highlight{%d %-5level: %msg%n%throwable}"/>
         </Console>
-        <File name="LogFile" fileName="logs/app.log">
+        <File name="LogFile" fileName="${sys:logFilename}">
             <PatternLayout>
                 <Pattern>%d %p [%t] %m%n</Pattern>
             </PatternLayout>

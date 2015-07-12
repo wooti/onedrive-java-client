@@ -30,6 +30,7 @@ public class CommandLineOpts {
     private int maxSizeKb = 0;
     private Path keyFile = Paths.get("keyFile.txt");
     private boolean dryRun = false;
+    private String logFile = null;
 
     public static CommandLineOpts getCommandLineOpts() {
         if (!opts.isInitialised) {
@@ -87,8 +88,10 @@ public class CommandLineOpts {
             opts.keyFile = Paths.get(line.getOptionValue("keyfile"));
         }
 
-        // TODO: LogLevel
-        // TODO: LogFile
+        if (line.hasOption("logfile")) {
+            opts.logFile = line.getOptionValue("logfile");
+        }
+
         // TODO: Conflict
 
         opts.isInitialised = true;
@@ -262,6 +265,10 @@ public class CommandLineOpts {
 
     public boolean isDryRun() {
         return dryRun;
+    }
+
+    public String getLogFile() {
+        return logFile;
     }
 
     public enum Direction {

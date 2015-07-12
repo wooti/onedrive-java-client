@@ -1,6 +1,5 @@
 package com.wouterbreukink.onedrive.sync;
 
-import com.wouterbreukink.onedrive.Utils;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import jersey.repackaged.com.google.common.base.Preconditions;
@@ -8,11 +7,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedInputStream;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
@@ -31,6 +33,26 @@ public class CheckFileTask extends Task {
         this.api = Preconditions.checkNotNull(api);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.localFile = Preconditions.checkNotNull(localFile);
+    }
+
+    /**
+     * Get the CRC32 Checksum for a file
+     *
+     * @param file The file to check
+     * @return The CRC32 checksum of the file
+     * @throws IOException
+     */
+    private static long getChecksum(File file) throws IOException {
+
+        // Compute CRC32 checksum
+        CheckedInputStream cis = new CheckedInputStream(new FileInputStream(file), new CRC32());
+        byte[] buf = new byte[1024];
+
+        //noinspection StatementWithEmptyBody
+        while (cis.read(buf) >= 0) {
+        }
+
+        return cis.getChecksum().getValue();
     }
 
     public int priority() {
@@ -69,7 +91,7 @@ public class CheckFileTask extends Task {
             }
 
             long remoteCrc = remoteFile.getFile().getHashes().getCrc32();
-            long localCrc = Utils.getChecksum(localFile);
+            long localCrc = getChecksum(localFile);
 
             // If the content is different
             if (remoteCrc != localCrc) {
