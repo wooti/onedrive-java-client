@@ -2,8 +2,7 @@ package com.wouterbreukink.onedrive.sync;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
-import com.wouterbreukink.onedrive.client.resources.Item;
-import com.wouterbreukink.onedrive.client.resources.OneDriveItem;
+import com.wouterbreukink.onedrive.client.OneDriveItem;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,14 +45,14 @@ public class UploadTask extends Task {
     protected void taskBody() throws IOException, OneDriveAPIException {
 
         if (file.isDirectory()) {
-            Item newParent = api.createFolder(parent, file.getName());
+            OneDriveItem newParent = api.createFolder(parent, file.getName());
 
             for (File f : file.listFiles()) {
                 queue.add(new UploadTask(queue, api, newParent, f, false));
             }
         } else {
             long startTime = System.currentTimeMillis();
-            Item response = replace ? api.replaceFile(parent, file) : api.uploadFile(parent, file);
+            OneDriveItem response = replace ? api.replaceFile(parent, file) : api.uploadFile(parent, file);
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 

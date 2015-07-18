@@ -1,6 +1,7 @@
 package com.wouterbreukink.onedrive.client.resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.resources.facets.DeletedFacet;
 import com.wouterbreukink.onedrive.client.resources.facets.FileFacet;
 import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;

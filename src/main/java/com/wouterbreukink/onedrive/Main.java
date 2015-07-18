@@ -2,6 +2,8 @@ package com.wouterbreukink.onedrive;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.ROOneDriveAPI;
+import com.wouterbreukink.onedrive.client.RWOneDriveAPI;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.sync.CheckTask;
 import com.wouterbreukink.onedrive.sync.Task;
@@ -68,7 +70,12 @@ public class Main {
         }
 
         // Initialise the OneDrive API
-        OneDriveAPI api = new OneDriveAPI(client, authoriser);
+        OneDriveAPI api;
+        if (getCommandLineOpts().isDryRun()) {
+            api = new ROOneDriveAPI(client, authoriser);
+        } else {
+            api = new RWOneDriveAPI(client, authoriser);
+        }
 
         // Warning for dry Run
         if (getCommandLineOpts().isDryRun()) {

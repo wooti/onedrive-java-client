@@ -1,5 +1,7 @@
 package com.wouterbreukink.onedrive.client.resources;
 
+import com.wouterbreukink.onedrive.client.OneDriveItem;
+
 public class ItemReference implements OneDriveItem {
 
     private String driveId;
