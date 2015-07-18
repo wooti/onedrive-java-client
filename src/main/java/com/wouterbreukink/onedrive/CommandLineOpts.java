@@ -66,8 +66,8 @@ public class CommandLineOpts {
 
         if (line.hasOption("direction")) {
             String chosen = line.getOptionValue("direction").toLowerCase();
-            if (!chosen.equals("up") && !chosen.equals("down") && !chosen.equals("sync")) {
-                throw new ParseException("Direction must be one of up, down or sync");
+            if (!chosen.equals("up") && !chosen.equals("down")) {
+                throw new ParseException("Direction must be one of up or down");
             }
             opts.direction = Direction.valueOf(chosen.toUpperCase());
         }
@@ -92,8 +92,6 @@ public class CommandLineOpts {
             opts.logFile = line.getOptionValue("logfile");
         }
 
-        // TODO: Conflict
-
         opts.isInitialised = true;
     }
 
@@ -106,7 +104,7 @@ public class CommandLineOpts {
         Option direction = Option.builder()
                 .longOpt("direction")
                 .hasArg()
-                .argName("up|down|sync")
+                .argName("up|down")
                 .desc("direction of synchronisation.")
                 .required()
                 .build();
@@ -182,13 +180,6 @@ public class CommandLineOpts {
                 .desc("print the version information and exit")
                 .build();
 
-        Option conflict = Option.builder("x")
-                .longOpt("conflict")
-                .hasArg()
-                .argName("L|R|B|S")
-                .desc("conflict resolution by Local file, Remote file, Both files or Skipping the file.")
-                .build();
-
         Option retries = Option.builder("y")
                 .longOpt("tries")
                 .hasArg()
@@ -210,7 +201,6 @@ public class CommandLineOpts {
                 .addOption(remotePath)
                 .addOption(threads)
                 .addOption(version)
-                .addOption(conflict)
                 .addOption(retries);
     }
 
@@ -273,8 +263,7 @@ public class CommandLineOpts {
 
     public enum Direction {
         UP,
-        DOWN,
-        BOTH
+        DOWN
     }
 
 }

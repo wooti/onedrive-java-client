@@ -9,7 +9,7 @@
 
     <Loggers>
         <Root level="debug">
-            <AppenderRef ref="Console" level="info"/>
+            <AppenderRef ref="Console" level="debug"/>
         </Root>
     </Loggers>
 </Configuration>

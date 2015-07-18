@@ -142,6 +142,22 @@ public class OneDriveAPI {
         return request.getResponse(Item.class);
     }
 
+    public void download(Item item, File target) throws OneDriveAPIException {
+        OneDriveRequest request = getDefaultRequest()
+                .path("/drive/items/" + item.getId() + "/content")
+                .method("GET");
+
+        request.getFile(target);
+    }
+
+    public void delete(Item remoteFile) throws OneDriveAPIException {
+        OneDriveRequest request = getDefaultRequest()
+                .path("/drive/items/" + remoteFile.getId())
+                .method("DELETE");
+
+        request.getResponse(null);
+    }
+
     private OneDriveRequest getDefaultRequest() {
         return new OneDriveRequest(client, authoriser);
     }

@@ -5,6 +5,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
@@ -26,7 +27,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
 
     protected abstract int priority();
 
-    protected abstract void taskBody() throws OneDriveAPIException;
+    protected abstract void taskBody() throws IOException, OneDriveAPIException;
 
     public void run() {
         attempt++;

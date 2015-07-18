@@ -12,9 +12,10 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 
 public class OneDriveRequest {
 
@@ -67,6 +68,8 @@ public class OneDriveRequest {
             case 201:
             case 202:
                 return response.readEntity(entityType);
+            case 204:
+                return null;
             case 401:
                 authoriser.refresh();
             default:
@@ -136,5 +139,29 @@ public class OneDriveRequest {
         }
 
         return msgBuilder.toString();
+    }
+
+    public void getFile(File target) throws OneDriveAPIException {
+
+        WebTarget requestTarget = client
+                .target("https://api.onedrive.com/v1.0")
+                .path(path)
+                .queryParam("access_token", authoriser.getAccessToken());
+
+        try {
+
+            ReadableByteChannel rbc = Channels.newChannel(requestTarget.getUri().toURL().openStream());
+            FileOutputStream fos = new FileOutputStream(target);
+            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+
+            rbc.close();
+            fos.close();
+        } catch (MalformedURLException e) {
+            throw new OneDriveAPIException(0, "Unable to download file", e);
+        } catch (FileNotFoundException e) {
+            throw new OneDriveAPIException(0, "Unable to download file");
+        } catch (IOException e) {
+            throw new OneDriveAPIException(0, "Unable to download file");
+        }
     }
 }

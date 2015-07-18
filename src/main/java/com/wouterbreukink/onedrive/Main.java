@@ -3,7 +3,7 @@ package com.wouterbreukink.onedrive;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
 import com.wouterbreukink.onedrive.client.resources.Item;
-import com.wouterbreukink.onedrive.sync.CheckFolderTask;
+import com.wouterbreukink.onedrive.sync.CheckTask;
 import com.wouterbreukink.onedrive.sync.Task;
 import com.wouterbreukink.onedrive.sync.TaskQueue;
 import org.apache.commons.cli.ParseException;
@@ -87,7 +87,7 @@ public class Main {
 
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
-        queue.add(new CheckFolderTask(queue, api, rootFolder, new File(getCommandLineOpts().getLocalPath())));
+        queue.add(new CheckTask(queue, api, rootFolder, new File(getCommandLineOpts().getLocalPath())));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());
