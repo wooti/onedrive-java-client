@@ -75,10 +75,7 @@ public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
 
         int uploaded = 0;
         String uploadUrl = session.getUploadUrl();
-
-        // Reading 6MB at a time (this is a multiple of 320KB as recommended my MS)
         byte[] chunk = new byte[chunkSize];
-
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         Item item = null;
 

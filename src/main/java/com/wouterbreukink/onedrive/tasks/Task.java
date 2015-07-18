@@ -91,7 +91,8 @@ public abstract class Task implements Runnable, Comparable<Task> {
         return false;
     }
 
-    public int compareTo(@SuppressWarnings("NullableProblems") Task o) {
+    @SuppressWarnings("NullableProblems")
+    public int compareTo(Task o) {
         return o.priority() - priority();
     }
 }

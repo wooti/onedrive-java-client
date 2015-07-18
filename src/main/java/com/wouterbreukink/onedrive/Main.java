@@ -45,7 +45,8 @@ public class Main {
         }
 
         if (getCommandLineOpts().version()) {
-            log.info("onedrive-java-client version ALPHA");
+            log.info("onedrive-java-client version 0.1");
+            return;
         }
 
         // Initialise a log file (if set)
@@ -103,25 +104,23 @@ public class Main {
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());
 
         for (int i = 0; i < getCommandLineOpts().getThreads(); i++) {
-            executorService.submit(new Runnable() {
-                public void run() {
-                    try {
-                        //noinspection InfiniteLoopStatement
-                        while (true) {
-                            Task taskToRun = null;
-                            try {
-                                taskToRun = queue.take();
-                                taskToRun.run();
-                            } finally {
-                                if (taskToRun != null) {
-                                    queue.done(taskToRun);
-                                }
+            executorService.submit(() -> {
+                try {
+                    //noinspection InfiniteLoopStatement
+                    while (true) {
+                        Task taskToRun = null;
+                        try {
+                            taskToRun = queue.take();
+                            taskToRun.run();
+                        } finally {
+                            if (taskToRun != null) {
+                                queue.done(taskToRun);
                             }
-
                         }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+
                     }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             });
         }
