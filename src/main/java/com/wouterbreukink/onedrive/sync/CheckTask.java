@@ -49,7 +49,8 @@ public class CheckTask extends Task {
     protected void taskBody() throws IOException, OneDriveAPIException {
 
         if (localFile.isDirectory() && remoteFile.isFolder()) { // If we are syncing folders
-            Item[] remoteFiles = api.getChildren(remoteFile);
+
+            Item[] remoteFiles = remoteFile.getChildren() != null ? remoteFile.getChildren() : api.getChildren(remoteFile);
 
             // Index the local files
             Map<String, File> localFileCache = Maps.newHashMap();

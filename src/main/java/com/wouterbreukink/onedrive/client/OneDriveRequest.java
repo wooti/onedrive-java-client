@@ -25,10 +25,11 @@ public class OneDriveRequest {
     private String path;
     private String method;
     private String skipToken;
+    private boolean withChildren;
 
     private Object payloadJson;
     private File payloadFile;
-
+    
     public OneDriveRequest(Client client, OneDriveAuth authoriser) {
         this.client = client;
         this.authoriser = authoriser;
@@ -46,6 +47,11 @@ public class OneDriveRequest {
 
     public OneDriveRequest skipToken(String skipToken) {
         this.skipToken = skipToken;
+        return this;
+    }
+
+    public OneDriveRequest withChildren() {
+        this.withChildren = true;
         return this;
     }
 
@@ -86,6 +92,10 @@ public class OneDriveRequest {
 
         if (skipToken != null) {
             requestTarget = requestTarget.queryParam("$skiptoken", skipToken);
+        }
+
+        if (withChildren) {
+            requestTarget = requestTarget.queryParam("expand", "children");
         }
 
         Invocation.Builder builder = requestTarget.request(MediaType.TEXT_PLAIN_TYPE);

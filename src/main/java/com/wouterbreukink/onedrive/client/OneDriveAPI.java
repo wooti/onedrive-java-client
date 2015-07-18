@@ -110,6 +110,7 @@ public class OneDriveAPI {
 
         OneDriveRequest request = getDefaultRequest()
                 .path("drive/root:/" + path)
+                .withChildren()
                 .method("GET");
 
         return request.getResponse(Item.class);

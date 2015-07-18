@@ -21,6 +21,7 @@ public class Item implements OneDriveItem {
     private Date lastModifiedDateTime;
     private long size;
     private ItemReference parentReference;
+    private Item[] children;
     private String webUrl;
     private FolderFacet folder;
     private FileFacet file;
@@ -102,5 +103,9 @@ public class Item implements OneDriveItem {
 
     public String getFullName() {
         return parentReference.getFullName() + "/" + name;
+    }
+
+    public Item[] getChildren() {
+        return children;
     }
 }
