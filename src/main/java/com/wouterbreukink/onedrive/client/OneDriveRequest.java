@@ -2,6 +2,7 @@ package com.wouterbreukink.onedrive.client;
 
 import com.wouterbreukink.onedrive.client.resources.ErrorSet;
 import jersey.repackaged.com.google.common.base.Throwables;
+import jersey.repackaged.com.google.common.collect.Maps;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.Boundary;
 import org.glassfish.jersey.media.multipart.MultiPart;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Map;
 
 public class OneDriveRequest {
 
@@ -30,10 +32,8 @@ public class OneDriveRequest {
     private String method;
     private String skipToken;
     private boolean withChildren;
-    private long start;
-    private long end;
-    private long length;
-    private long totalLength;
+
+    private Map<String, Object> headers;
 
     private Object payloadJson;
     private byte[] payloadBinary;
@@ -42,6 +42,7 @@ public class OneDriveRequest {
         this.client = client;
         this.authoriser = authoriser;
         this.target = target;
+        this.headers = Maps.newHashMap();
     }
 
     public OneDriveRequest target(String target) {
@@ -79,15 +80,8 @@ public class OneDriveRequest {
         return this;
     }
 
-    public OneDriveRequest range(long start, long end, long totalLength) {
-        this.start = start;
-        this.end = end;
-        this.totalLength = totalLength;
-        return this;
-    }
-
-    public OneDriveRequest length(long length) {
-        this.length = length;
+    public OneDriveRequest header(String key, Object value) {
+        headers.put(key, value);
         return this;
     }
 
@@ -111,9 +105,7 @@ public class OneDriveRequest {
 
     private Response getResponse() {
 
-        WebTarget requestTarget = client
-                .target(target)
-                .queryParam("access_token", authoriser.getAccessToken());
+        WebTarget requestTarget = client.target(target);
 
         if (path != null) {
             requestTarget = requestTarget.path(path);
@@ -129,12 +121,10 @@ public class OneDriveRequest {
 
         Invocation.Builder builder = requestTarget.request(MediaType.TEXT_PLAIN_TYPE);
 
-        if (totalLength > 0) {
-            builder = builder.header("Content-Range", String.format("bytes %d-%d/%d", start, end, totalLength));
-        }
+        builder = builder.header("Authorization", "bearer " + authoriser.getAccessToken());
 
-        if (length > 0) {
-            builder = builder.header("Content-Length", length);
+        for (Map.Entry<String, Object> kvp : headers.entrySet()) {
+            builder = builder.header(kvp.getKey(), kvp.getValue());
         }
 
         Entity<?> entity = null;

@@ -68,7 +68,7 @@ public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + parent.getId() + ":/" + file.getName() + ":/upload.createSession")
                 .payloadJson(MultiPartItem.create(file.getName()))
-                .length(file.length())
+                .header("Content-Length", file.length())
                 .method("POST");
 
         UploadSession session = request.getResponse(UploadSession.class);
@@ -98,7 +98,7 @@ public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
             OneDriveRequest uploadPart = getDefaultRequest()
                     .target(uploadUrl)
                     .payloadBinary(chunk)
-                    .range(uploaded, uploaded + chunk.length - 1, file.length())
+                    .header("Content-Range", String.format("bytes %d-%d/%d", uploaded, uploaded + chunk.length - 1, file.length()))
                     .method("PUT");
 
             if (read == chunkSize && uploaded + read < file.length()) {
