@@ -5,6 +5,9 @@ import com.wouterbreukink.onedrive.client.OneDriveAuth;
 import com.wouterbreukink.onedrive.client.ROOneDriveAPI;
 import com.wouterbreukink.onedrive.client.RWOneDriveAPI;
 import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.io.FileSystemProvider;
+import com.wouterbreukink.onedrive.io.ROFileSystemProvider;
+import com.wouterbreukink.onedrive.io.RWFileSystemProvider;
 import com.wouterbreukink.onedrive.sync.CheckTask;
 import com.wouterbreukink.onedrive.sync.Task;
 import com.wouterbreukink.onedrive.sync.TaskQueue;
@@ -71,15 +74,14 @@ public class Main {
 
         // Initialise the OneDrive API
         OneDriveAPI api;
-        if (getCommandLineOpts().isDryRun()) {
-            api = new ROOneDriveAPI(client, authoriser);
-        } else {
-            api = new RWOneDriveAPI(client, authoriser);
-        }
-
-        // Warning for dry Run
+        FileSystemProvider fileSystem;
         if (getCommandLineOpts().isDryRun()) {
             log.warn("This is a dry run - no changes will be made");
+            api = new ROOneDriveAPI(client, authoriser);
+            fileSystem = new ROFileSystemProvider();
+        } else {
+            api = new RWOneDriveAPI(client, authoriser);
+            fileSystem = new RWFileSystemProvider();
         }
 
         // Check the given root folder
@@ -94,7 +96,7 @@ public class Main {
 
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
-        queue.add(new CheckTask(queue, api, rootFolder, new File(getCommandLineOpts().getLocalPath())));
+        queue.add(new CheckTask(queue, api, fileSystem, rootFolder, new File(getCommandLineOpts().getLocalPath())));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());

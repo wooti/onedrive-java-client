@@ -3,6 +3,7 @@ package com.wouterbreukink.onedrive.sync;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.io.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,15 +22,13 @@ import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 public class UpdateFileDatesTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UpdateFileDatesTask.class.getName());
-    private final OneDriveAPI api;
     private final Item remoteFile;
     private final File localFile;
 
-    public UpdateFileDatesTask(TaskQueue queue, OneDriveAPI api, Item remoteFile, File localFile) {
+    public UpdateFileDatesTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, Item remoteFile, File localFile) {
 
-        super(queue);
+        super(queue, api, fileSystem);
 
-        this.api = Preconditions.checkNotNull(api);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.localFile = Preconditions.checkNotNull(localFile);
     }

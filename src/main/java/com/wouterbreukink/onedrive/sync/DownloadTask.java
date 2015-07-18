@@ -3,29 +3,25 @@ package com.wouterbreukink.onedrive.sync;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.io.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributeView;
-import java.nio.file.attribute.FileTime;
 
 public class DownloadTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
-    private final OneDriveAPI api;
     private final File parent;
     private final Item file;
     private final boolean replace;
 
-    public DownloadTask(TaskQueue queue, OneDriveAPI api, File parent, Item file, boolean replace) {
+    public DownloadTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, File parent, Item file, boolean replace) {
 
-        super(queue);
+        super(queue, api, fileSystem);
 
-        this.api = Preconditions.checkNotNull(api);
         this.parent = Preconditions.checkNotNull(parent);
         this.file = Preconditions.checkNotNull(file);
         this.replace = replace;
@@ -48,22 +44,19 @@ public class DownloadTask extends Task {
     protected void taskBody() throws IOException, OneDriveAPIException {
 
         if (file.isFolder()) {
-            File newParent = new File(parent, file.getName());
 
-            if (newParent.mkdir()) {
-                for (Item item : api.getChildren(file)) {
-                    queue.add(new DownloadTask(queue, api, newParent, item, false));
-                }
-            } else {
-                log.error("Unable to download folder - could not create local directory");
+            File newParent = fileSystem.createFolder(parent, file.getName());
+
+            for (Item item : api.getChildren(file)) {
+                queue.add(new DownloadTask(queue, api, fileSystem, newParent, item, false));
             }
+
         } else {
             long startTime = System.currentTimeMillis();
 
-            File targetFile = new File(parent, file.getName() + (replace ? ".tmp" : ""));
-            targetFile.deleteOnExit();
+            File downloadFile = fileSystem.createFile(parent, file.getName() + ".tmp");
 
-            api.download(file, targetFile);
+            api.download(file, downloadFile);
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
@@ -75,31 +68,16 @@ public class DownloadTask extends Task {
                     file.getFullName()));
 
             // Do a CRC check on the downloaded file
-            long remoteCrc = file.getFile().getHashes().getCrc32();
-            long localCrc = Utils.getChecksum(targetFile);
-            boolean crcMatches = remoteCrc == localCrc;
-
-            if (!crcMatches) {
-                throw new IllegalStateException("Download failed");
+            if (!fileSystem.verifyCrc(downloadFile, file.getFile().getHashes().getCrc32())) {
+                throw new IOException(String.format("Download of file '%s' failed", file.getFullName()));
             }
 
-            // Set the attributes
-            BasicFileAttributeView attributes = Files.getFileAttributeView(targetFile.toPath(), BasicFileAttributeView.class);
-            FileTime lastModified = FileTime.fromMillis(file.getFileSystemInfo().getLastModifiedDateTime().getTime());
-            FileTime created = FileTime.fromMillis(file.getFileSystemInfo().getCreatedDateTime().getTime());
-            attributes.setTimes(lastModified, lastModified, created);
+            fileSystem.setAttributes(
+                    downloadFile,
+                    file.getFileSystemInfo().getCreatedDateTime(),
+                    file.getFileSystemInfo().getLastModifiedDateTime());
 
-            if (replace) {
-                File originalFile = new File(parent, file.getName());
-
-                if (!originalFile.delete()) {
-                    throw new IOException("Unable to replace local file" + file.getFullName());
-                }
-
-                if (!targetFile.renameTo(originalFile)) {
-                    throw new IOException("Unable to replace local file" + file.getFullName());
-                }
-            }
+            fileSystem.replaceFile(new File(parent, file.getName()), downloadFile);
         }
     }
 }

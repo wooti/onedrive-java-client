@@ -1,6 +1,8 @@
 package com.wouterbreukink.onedrive.sync;
 
+import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.wouterbreukink.onedrive.io.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,13 +18,18 @@ public abstract class Task implements Runnable, Comparable<Task> {
     private static AtomicInteger taskIdCounter = new AtomicInteger(1);
 
     protected final TaskQueue queue;
+    protected final OneDriveAPI api;
+    protected final FileSystemProvider fileSystem;
+
     private final int id;
     private int attempt;
 
-    public Task(TaskQueue queue) {
+    public Task(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem) {
+        this.queue = Preconditions.checkNotNull(queue);
+        this.api = Preconditions.checkNotNull(api);
+        this.fileSystem = Preconditions.checkNotNull(fileSystem);
         this.id = taskIdCounter.getAndIncrement();
         this.attempt = 0;
-        this.queue = Preconditions.checkNotNull(queue);
     }
 
     protected abstract int priority();

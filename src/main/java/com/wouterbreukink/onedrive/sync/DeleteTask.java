@@ -3,77 +3,38 @@ package com.wouterbreukink.onedrive.sync;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.io.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 
 public class DeleteTask extends Task {
 
     private static final Logger log = LogManager.getLogger(DeleteTask.class.getName());
-
-    private final OneDriveAPI api;
     private final Item remoteFile;
     private final File localFile;
 
-    public DeleteTask(TaskQueue queue, OneDriveAPI api, Item remoteFile) {
+    public DeleteTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, Item remoteFile) {
 
-        super(queue);
+        super(queue, api, fileSystem);
 
-        this.api = Preconditions.checkNotNull(api);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.localFile = null;
     }
 
-    public DeleteTask(TaskQueue queue, OneDriveAPI api, File localFile) {
+    public DeleteTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, File localFile) {
 
-        super(queue);
+        super(queue, api, fileSystem);
 
-        this.api = Preconditions.checkNotNull(api);
         this.localFile = Preconditions.checkNotNull(localFile);
         this.remoteFile = null;
     }
 
-    public static void removeRecursive(Path path) throws IOException {
-        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                    throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                // try to delete the file anyway, even if its attributes
-                // could not be read, since delete-only access is
-                // theoretically possible
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                if (exc == null) {
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                } else {
-                    // directory iteration failed; propagate exception
-                    throw exc;
-                }
-            }
-        });
-    }
-
     public int priority() {
-        return 60;
+        return 25;
     }
 
     @Override
@@ -88,7 +49,7 @@ public class DeleteTask extends Task {
     @Override
     protected void taskBody() throws IOException, OneDriveAPIException {
         if (localFile != null) {
-            removeRecursive(localFile.toPath());
+            fileSystem.delete(localFile);
         } else {
             api.delete(remoteFile);
         }
