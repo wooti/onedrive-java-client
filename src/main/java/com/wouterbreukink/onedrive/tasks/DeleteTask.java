@@ -1,5 +1,6 @@
-package com.wouterbreukink.onedrive.sync;
+package com.wouterbreukink.onedrive.tasks;
 
+import com.wouterbreukink.onedrive.TaskQueue;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;

@@ -1,4 +1,6 @@
-package com.wouterbreukink.onedrive.sync;
+package com.wouterbreukink.onedrive;
+
+import com.wouterbreukink.onedrive.tasks.Task;
 
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
