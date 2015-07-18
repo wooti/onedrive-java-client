@@ -126,7 +126,7 @@ public class CheckTask extends Task {
 
         // If the crc matches but the timestamps do not we won't upload the content again
         if (crcMatches && !(modifiedMatches || !createdMatches)) {
-            queue.add(new UpdateFileDatesTask(queue, api, fileSystem, remoteFile, localFile));
+            queue.add(new UpdatePropertiesTask(queue, api, fileSystem, remoteFile, localFile));
         }
 
         return remoteCrc == localCrc;

@@ -19,13 +19,13 @@ import java.util.concurrent.TimeUnit;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
-public class UpdateFileDatesTask extends Task {
+public class UpdatePropertiesTask extends Task {
 
-    private static final Logger log = LogManager.getLogger(UpdateFileDatesTask.class.getName());
+    private static final Logger log = LogManager.getLogger(UpdatePropertiesTask.class.getName());
     private final Item remoteFile;
     private final File localFile;
 
-    public UpdateFileDatesTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, Item remoteFile, File localFile) {
+    public UpdatePropertiesTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, Item remoteFile, File localFile) {
 
         super(queue, api, fileSystem);
 
