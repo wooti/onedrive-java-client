@@ -58,6 +58,11 @@ public class DownloadTask extends Task {
                 return;
             }
 
+            // Skip if ignored
+            if (isIgnored(file)) {
+                return;
+            }
+
             long startTime = System.currentTimeMillis();
 
             File downloadFile = fileSystem.createFile(parent, file.getName() + ".tmp");

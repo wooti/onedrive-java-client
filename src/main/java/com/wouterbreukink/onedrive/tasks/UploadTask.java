@@ -61,6 +61,10 @@ public class UploadTask extends Task {
                 return;
             }
 
+            if (isIgnored(file)) {
+                return;
+            }
+
             long startTime = System.currentTimeMillis();
 
             OneDriveItem response;

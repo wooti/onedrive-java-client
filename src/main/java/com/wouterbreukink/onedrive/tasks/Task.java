@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
@@ -33,6 +34,52 @@ public abstract class Task implements Runnable, Comparable<Task> {
         this.fileSystem = Preconditions.checkNotNull(fileSystem);
         this.id = taskIdCounter.getAndIncrement();
         this.attempt = 0;
+    }
+
+    protected static boolean isSizeInvalid(File localFile) {
+        return isSizeInvalid(localFile.getPath(), localFile.length());
+    }
+
+    protected static boolean isSizeInvalid(Item remoteFile) {
+        return isSizeInvalid(remoteFile.getFullName(), remoteFile.getSize());
+    }
+
+    private static boolean isSizeInvalid(String filename, long size) {
+        int maxSizeKb = getCommandLineOpts().getMaxSizeKb();
+        if (maxSizeKb > 0 && size > maxSizeKb * 1024) {
+            log.info(String.format("Skipping file %s - size is %dKB (bigger than maximum of %dKB)",
+                    filename,
+                    size / 1024,
+                    maxSizeKb));
+            return true;
+        }
+
+        return false;
+    }
+
+    protected static boolean isIgnored(Item remoteFile) {
+        boolean ignored = isIgnored(remoteFile.getName() + (remoteFile.isFolder() ? "/" : ""));
+
+        if (ignored) {
+            log.info(String.format("Skipping ignored remote file %s", remoteFile.getFullName()));
+        }
+
+        return ignored;
+    }
+
+    protected static boolean isIgnored(File localFile) {
+        boolean ignored = isIgnored(localFile.getName() + (localFile.isDirectory() ? "/" : ""));
+
+        if (ignored) {
+            log.info(String.format("Skipping ignored local file %s", localFile.getPath()));
+        }
+
+        return ignored;
+    }
+
+    private static boolean isIgnored(String name) {
+        Set<String> ignoredSet = getCommandLineOpts().getIgnored();
+        return ignoredSet != null && ignoredSet.contains(name);
     }
 
     protected abstract int priority();
@@ -79,27 +126,6 @@ public abstract class Task implements Runnable, Comparable<Task> {
         } else {
             log.error(String.format("Task %d did not complete - %s", id, this.toString()));
         }
-    }
-
-    protected boolean isSizeInvalid(File localFile) {
-        return isSizeInvalid(localFile.getPath(), localFile.length());
-    }
-
-    protected boolean isSizeInvalid(Item remoteFile) {
-        return isSizeInvalid(remoteFile.getFullName(), remoteFile.getSize());
-    }
-
-    private boolean isSizeInvalid(String filename, long size) {
-        int maxSizeKb = getCommandLineOpts().getMaxSizeKb();
-        if (maxSizeKb > 0 && size > maxSizeKb * 1024) {
-            log.info(String.format("Skipping file %s - size is %dKB (bigger than maximum of %dKB)",
-                    filename,
-                    size / 1024,
-                    maxSizeKb));
-            return true;
-        }
-
-        return false;
     }
 
     @SuppressWarnings("NullableProblems")

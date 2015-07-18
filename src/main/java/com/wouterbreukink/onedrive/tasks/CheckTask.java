@@ -1,6 +1,5 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.CommandLineOpts;
 import com.wouterbreukink.onedrive.TaskQueue;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
@@ -8,13 +7,11 @@ import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Map;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
@@ -68,17 +65,18 @@ public class CheckTask extends Task {
         } else if (localFile.isFile() && !remoteFile.isFolder()) { // If we are syncing files
 
             // Skip if the file size is too big
-            if (getCommandLineOpts().getDirection() == CommandLineOpts.Direction.UP && isSizeInvalid(localFile)) {
-                return;
-            }
+            switch (getCommandLineOpts().getDirection()) {
+                case UP:
+                    if (isSizeInvalid(localFile) || isIgnored(localFile)) {
+                        return;
+                    }
+                    break;
+                case DOWN:
+                    if (isSizeInvalid(remoteFile) || isIgnored(remoteFile)) {
+                        return;
+                    }
+                    break;
 
-            if (getCommandLineOpts().getDirection() == CommandLineOpts.Direction.DOWN && isSizeInvalid(remoteFile)) {
-                return;
-            }
-
-            // Skip if the file is ignored
-            if (isIgnored(localFile, remoteFile)) {
-                return;
             }
 
             // Check if the remote file matches the local file
@@ -131,11 +129,6 @@ public class CheckTask extends Task {
         boolean remoteOnly = localFile == null;
         boolean localOnly = remoteFile == null;
 
-        // Skip if ignored
-        if (isIgnored(localFile, remoteFile)) {
-            return;
-        }
-
         // Case 1: We only have the file remotely
         if (remoteOnly) {
             switch (getCommandLineOpts().getDirection()) {
@@ -168,15 +161,5 @@ public class CheckTask extends Task {
         else {
             queue.add(new CheckTask(queue, api, fileSystem, remoteFile, localFile));
         }
-    }
-
-    private boolean isIgnored(File localFile, Item remoteFile) {
-
-        // TODO: Implement and Config this out
-        String filename = "";
-
-        HashSet<String> ignored = Sets.newHashSet("Thumbs.db", ".picasa.ini", "._.DS_Store", ".DS_Store");
-        return ignored.contains(filename);
-
     }
 }

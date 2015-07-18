@@ -103,7 +103,7 @@ public class Item implements OneDriveItem {
     }
 
     public String getFullName() {
-        return parentReference.getFullName() + "/" + name;
+        return parentReference.getFullName() + "/" + name + (isFolder() ? "/" : "");
     }
 
     public Item[] getChildren() {

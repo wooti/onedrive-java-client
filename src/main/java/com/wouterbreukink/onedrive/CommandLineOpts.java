@@ -1,11 +1,15 @@
 package com.wouterbreukink.onedrive;
 
+import jersey.repackaged.com.google.common.collect.Sets;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 public class CommandLineOpts {
 
@@ -32,6 +36,7 @@ public class CommandLineOpts {
     private boolean dryRun = false;
     private String logFile = null;
     private int splitAfter = 5;
+    private Set<String> ignored = null;
 
     public static CommandLineOpts getCommandLineOpts() {
         if (!opts.isInitialised) {
@@ -101,6 +106,19 @@ public class CommandLineOpts {
             }
         }
 
+        if (line.hasOption("ignore")) {
+            Path ignoreFile = Paths.get(line.getOptionValue("ignore"));
+            if (!Files.exists(ignoreFile)) {
+                throw new ParseException("specified ignore file does not exist");
+            }
+
+            try {
+                opts.ignored = Sets.newHashSet(Files.readAllLines(ignoreFile));
+            } catch (IOException e) {
+                throw new ParseException(e.getMessage());
+            }
+        }
+
         opts.isInitialised = true;
     }
 
@@ -121,6 +139,13 @@ public class CommandLineOpts {
         Option help = Option.builder("h")
                 .longOpt("help")
                 .desc("print this message")
+                .build();
+
+        Option ignore = Option.builder("i")
+                .longOpt("ignore")
+                .hasArg()
+                .argName("ignore_file")
+                .desc("ignores entries from the given ignore_file")
                 .build();
 
         Option keyFile = Option.builder("k")
@@ -207,6 +232,7 @@ public class CommandLineOpts {
                 .addOption(hash)
                 .addOption(direction)
                 .addOption(help)
+                .addOption(ignore)
                 .addOption(keyFile)
                 .addOption(logLevel)
                 .addOption(localPath)
@@ -282,9 +308,12 @@ public class CommandLineOpts {
         return splitAfter;
     }
 
+    public Set<String> getIgnored() {
+        return ignored;
+    }
+
     public enum Direction {
         UP,
         DOWN
     }
-
 }
