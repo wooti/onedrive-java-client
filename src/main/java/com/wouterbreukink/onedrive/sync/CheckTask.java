@@ -12,12 +12,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
@@ -67,6 +63,7 @@ public class CheckTask extends Task {
             for (File localFile : localFileCache.values()) {
                 processChild(null, localFile);
             }
+
         } else if (localFile.isFile() && !remoteFile.isFolder()) { // If we are syncing files
             if (isSizeInvalid(localFile, remoteFile)) {
                 return;
@@ -76,18 +73,31 @@ public class CheckTask extends Task {
                 return;
             }
 
-            if (!filesMatch(remoteFile, localFile)) {
-                switch (getCommandLineOpts().getDirection()) {
-                    case UP:
-                        queue.add(new UploadTask(queue, api, fileSystem, remoteFile.getParentReference(), localFile, true));
-                        break;
-                    case DOWN:
-                        queue.add(new DownloadTask(queue, api, fileSystem, localFile.getParentFile(), remoteFile, true));
-                        break;
-                    default:
-                        throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());
-                }
+            // Check if the remote file matches the local file
+            FileSystemProvider.FileMatch match = fileSystem.verifyMatch(
+                    localFile, remoteFile.getFile().getHashes().getCrc32(),
+                    remoteFile.getSize(),
+                    remoteFile.getFileSystemInfo().getCreatedDateTime(),
+                    remoteFile.getFileSystemInfo().getLastModifiedDateTime());
+
+            switch (match) {
+                case NO:
+                    switch (getCommandLineOpts().getDirection()) {
+                        case UP:
+                            queue.add(new UploadTask(queue, api, fileSystem, remoteFile.getParentReference(), localFile, true));
+                            break;
+                        case DOWN:
+                            queue.add(new DownloadTask(queue, api, fileSystem, localFile.getParentFile(), remoteFile, true));
+                            break;
+                        default:
+                            throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());
+                    }
+                    break;
+                case CRC:
+                    queue.add(new UpdatePropertiesTask(queue, api, fileSystem, remoteFile, localFile));
+                    break;
             }
+
         } else { // // Resolve cases where remote and local disagree over whether the item is a file or folder
             switch (getCommandLineOpts().getDirection()) {
                 case UP:
@@ -102,34 +112,6 @@ public class CheckTask extends Task {
                     throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());
             }
         }
-    }
-
-    private boolean filesMatch(Item remoteFile, File localFile) throws IOException {
-        BasicFileAttributes attr = Files.readAttributes(localFile.toPath(), BasicFileAttributes.class);
-
-        // Timestamp rounded to the nearest second
-        Date localCreatedDate = new Date(attr.creationTime().to(TimeUnit.SECONDS) * 1000);
-        Date localModifiedDate = new Date(attr.lastModifiedTime().to(TimeUnit.SECONDS) * 1000);
-
-        boolean sizeMatches = remoteFile.getSize() == localFile.length();
-        boolean createdMatches = remoteFile.getFileSystemInfo().getCreatedDateTime().equals(localCreatedDate);
-        boolean modifiedMatches = remoteFile.getFileSystemInfo().getLastModifiedDateTime().equals(localModifiedDate);
-
-        if (!getCommandLineOpts().useHash() && sizeMatches && createdMatches && modifiedMatches) {
-            // Close enough!
-            return true;
-        }
-
-        long remoteCrc = remoteFile.getFile().getHashes().getCrc32();
-        long localCrc = fileSystem.getChecksum(localFile);
-        boolean crcMatches = remoteCrc == localCrc;
-
-        // If the crc matches but the timestamps do not we won't upload the content again
-        if (crcMatches && !(modifiedMatches || !createdMatches)) {
-            queue.add(new UpdatePropertiesTask(queue, api, fileSystem, remoteFile, localFile));
-        }
-
-        return remoteCrc == localCrc;
     }
 
     private void processChild(Item remoteFile, File localFile) {

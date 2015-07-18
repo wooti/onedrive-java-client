@@ -11,9 +11,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -54,10 +52,7 @@ public class UpdatePropertiesTask extends Task {
                 api.updateFile(remoteFile, localCreatedDate, localModifiedDate);
 
             case DOWN:
-                BasicFileAttributeView attributes = Files.getFileAttributeView(localFile.toPath(), BasicFileAttributeView.class);
-                FileTime lastModified = FileTime.fromMillis(remoteFile.getFileSystemInfo().getLastModifiedDateTime().getTime());
-                FileTime created = FileTime.fromMillis(remoteFile.getFileSystemInfo().getCreatedDateTime().getTime());
-                attributes.setTimes(lastModified, lastModified, created);
+                fileSystem.setAttributes(localFile, remoteFile.getFileSystemInfo().getCreatedDateTime(), remoteFile.getFileSystemInfo().getLastModifiedDateTime());
                 break;
             default:
                 throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());

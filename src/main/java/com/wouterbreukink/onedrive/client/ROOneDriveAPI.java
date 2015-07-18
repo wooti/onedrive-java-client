@@ -3,15 +3,11 @@ package com.wouterbreukink.onedrive.client;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.ItemSet;
-import com.wouterbreukink.onedrive.client.resources.WriteItem;
-import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
 import jersey.repackaged.com.google.common.collect.Lists;
 
 import javax.ws.rs.client.Client;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -98,13 +94,6 @@ public class ROOneDriveAPI implements OneDriveAPI {
         if (!parent.isFolder()) {
             throw new IllegalArgumentException("Parent is not a folder");
         }
-
-        // Generate the update item
-        BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-        FileSystemInfoFacet fsi = new FileSystemInfoFacet();
-        fsi.setLastModifiedDateTime(new Date(attr.lastModifiedTime().toMillis()));
-        fsi.setCreatedDateTime(new Date(attr.creationTime().toMillis()));
-        WriteItem itemToWrite = new WriteItem(file.getName(), fsi, true);
 
         return OneDriveItem.FACTORY.create(parent, file.getName());
     }

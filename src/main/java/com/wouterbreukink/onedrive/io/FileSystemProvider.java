@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Date;
 
 public interface FileSystemProvider {
+
     void delete(File file) throws IOException;
 
     File createFolder(File file, String name) throws IOException;
@@ -17,6 +18,8 @@ public interface FileSystemProvider {
 
     boolean verifyCrc(File file, long crc) throws IOException;
 
+    FileMatch verifyMatch(File file, long crc, long fileSize, Date created, Date lastModified) throws IOException;
+
     /**
      * Get the CRC32 Checksum for a file
      *
@@ -25,4 +28,10 @@ public interface FileSystemProvider {
      * @throws IOException
      */
     long getChecksum(File file) throws IOException;
+
+    enum FileMatch {
+        YES,
+        CRC,
+        NO
+    }
 }
