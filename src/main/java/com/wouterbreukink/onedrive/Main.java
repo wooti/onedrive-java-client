@@ -45,7 +45,8 @@ public class Main {
         }
 
         if (getCommandLineOpts().version()) {
-            log.info("onedrive-java-client version 0.1");
+            String version = getCommandLineOpts().getClass().getPackage().getImplementationVersion();
+            log.info("onedrive-java-client version " + (version != null ? version : "DEVELOPMENT"));
             return;
         }
 
