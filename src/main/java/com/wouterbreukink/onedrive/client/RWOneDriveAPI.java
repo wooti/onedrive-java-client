@@ -10,10 +10,8 @@ import com.wouterbreukink.onedrive.client.resources.facets.MultiPartItem;
 import javax.ws.rs.client.Client;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Arrays;
 import java.util.Date;
 
 public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
@@ -63,8 +61,7 @@ public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
     }
 
     @Override
-    public OneDriveItem uploadFileInChunks(OneDriveItem parent, File file, int chunkSize) throws OneDriveAPIException, IOException {
-
+    public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + parent.getId() + ":/" + file.getName() + ":/upload.createSession")
                 .payloadJson(MultiPartItem.create(file.getName()))
@@ -73,44 +70,36 @@ public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
 
         UploadSession session = request.getResponse(UploadSession.class);
 
-        int uploaded = 0;
-        String uploadUrl = session.getUploadUrl();
-        byte[] chunk = new byte[chunkSize];
-        RandomAccessFile raf = new RandomAccessFile(file, "r");
-        Item item = null;
+        return new OneDriveUploadSession(parent, file, session.getUploadUrl(), session.getNextExpectedRanges());
+    }
 
-        while (session.getNextExpectedRanges() != null && session.getNextExpectedRanges().length > 0) {
+    @Override
+    public void uploadChunk(OneDriveUploadSession session) throws OneDriveAPIException, IOException {
 
-            // Send the next chunk the server has asked for
-            String nextRange = session.getNextExpectedRanges()[0];
-            long nextChunk = Long.parseLong(nextRange.substring(0, nextRange.indexOf('-')));
+        byte[] bytesToUpload = session.getChunk();
+        long length = session.getFile().length();
+        Item item;
 
-            raf.seek(nextChunk);
-            int read = raf.read(chunk);
+        OneDriveRequest uploadPart = getDefaultRequest()
+                .target(session.getUploadUrl())
+                .payloadBinary(bytesToUpload)
+                .header("Content-Range", String.format("bytes %d-%d/%d", session.getTotalUploaded(), session.getTotalUploaded() + bytesToUpload.length - 1, length))
+                .method("PUT");
 
-            if (read < chunkSize) {
-                chunk = Arrays.copyOf(chunk, read);
-            }
-
-            OneDriveRequest uploadPart = getDefaultRequest()
-                    .target(uploadUrl)
-                    .payloadBinary(chunk)
-                    .header("Content-Range", String.format("bytes %d-%d/%d", uploaded, uploaded + chunk.length - 1, file.length()))
-                    .method("PUT");
-
-            if (read == chunkSize && uploaded + read < file.length()) {
-                session = uploadPart.getResponse(UploadSession.class);
-            } else {
-                item = uploadPart.getResponse(Item.class);
-                break;
-            }
-
-            uploaded += read;
+        if (session.getTotalUploaded() + bytesToUpload.length < length) {
+            UploadSession response = uploadPart.getResponse(UploadSession.class);
+            session.setRanges(response.getNextExpectedRanges());
+            return;
+        } else {
+            item = uploadPart.getResponse(Item.class);
         }
 
-        // Now update the item
-        BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-        return updateFile(item, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis()));
+        // If this is the final chunk then set the properties
+        BasicFileAttributes attr = Files.readAttributes(session.getFile().toPath(), BasicFileAttributes.class);
+        item = updateFile(item, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis()));
+
+        // Upload session is now complete
+        session.setComplete(item);
     }
 
     public Item updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {

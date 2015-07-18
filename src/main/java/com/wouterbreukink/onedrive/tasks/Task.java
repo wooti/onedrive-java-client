@@ -39,6 +39,10 @@ public abstract class Task implements Runnable, Comparable<Task> {
 
     protected abstract void taskBody() throws IOException, OneDriveAPIException;
 
+    protected String getId() {
+        return this.id + ":" + this.attempt;
+    }
+
     public void run() {
         attempt++;
         try {
@@ -49,18 +53,25 @@ public abstract class Task implements Runnable, Comparable<Task> {
 
             switch (ex.getCode()) {
                 case 401:
-                    log.warn(String.format("Task %d:%d encountered 401 (Unauthorised) response", id, attempt));
+                    log.warn(String.format("Task %s encountered %s", getId(), ex.getMessage()));
+                    break;
+                case 500:
+                case 502:
                 case 503:
-                    log.warn(String.format("Task %d:%d encountered 503 (Temporarily Unavailable) - sleeping 10 seconds", id, attempt));
+                case 504:
+                    log.warn(String.format("Task %s encountered %s - sleeping 10 seconds", getId(), ex.getMessage()));
                     queue.suspend(10);
+                    break;
+                case 429:
                 case 509:
-                    log.warn(String.format("Task %d:%d encountered error 509 (Bandwidth Limit Exceeded) - sleeping 60 seconds", id, attempt));
+                    log.warn(String.format("Task %s encountered %s - sleeping 60 seconds", getId(), ex.getMessage()));
                     queue.suspend(60);
+                    break;
                 default:
-                    log.warn(String.format("Task %d:%d encountered %s", id, attempt, ex.getMessage()));
+                    log.warn(String.format("Task %s encountered %s", getId(), ex.getMessage()));
             }
         } catch (Exception ex) {
-            log.error(String.format("Task %d:%d encountered exception", id, attempt), ex);
+            log.error(String.format("Task %s encountered exception", getId()), ex);
         }
 
         if (attempt < getCommandLineOpts().getTries()) {

@@ -4,6 +4,7 @@ import com.wouterbreukink.onedrive.TaskQueue;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
@@ -17,9 +18,6 @@ import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 public class UploadTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
-
-    // Upload in chunks of 5MB as per MS recommendation
-    private static final int CHUNK_SIZE = 5 * 1024 * 1024;
 
     private final OneDriveItem parent;
     private final File file;
@@ -67,7 +65,51 @@ public class UploadTask extends Task {
 
             OneDriveItem response;
             if (file.length() > getCommandLineOpts().getSplitAfter() * 1024 * 1024) {
-                response = api.uploadFileInChunks(parent, file, CHUNK_SIZE);
+
+                OneDriveUploadSession session = api.startUploadSession(parent, file);
+
+                while (!session.isComplete()) {
+                    long startTimeInner = System.currentTimeMillis();
+
+                    // Attempt each chunk 10x
+                    for (int i = 0; i < 10; i++) {
+                        try {
+                            startTimeInner = System.currentTimeMillis();
+                            api.uploadChunk(session);
+                            break;
+                        } catch (OneDriveAPIException ex) {
+                            switch (ex.getCode()) {
+                                case 401:
+                                case 500:
+                                case 502:
+                                case 503:
+                                case 504:
+                                    log.warn(String.format("Multipart Upload Task %s encountered %s - sleeping 10 seconds", getId(), ex.getMessage()));
+                                    sleep(10);
+                                    break;
+                                case 429:
+                                case 509:
+                                    log.warn(String.format("Multipart Upload Task %s encountered %s - sleeping 60 seconds", getId(), ex.getMessage()));
+                                    sleep(60);
+                                    break;
+                                default:
+                                    throw ex;
+                            }
+                        }
+                    }
+
+                    long elapsedTimeInner = System.currentTimeMillis() - startTimeInner;
+
+                    log.info(String.format("Uploaded chunk of %d KB (%.1f%%) in %dms (%.2f KB/s) for file %s",
+                            session.getLastUploaded() / 1024,
+                            ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
+                            elapsedTimeInner,
+                            elapsedTimeInner > 0 ? ((session.getLastUploaded() / 1024d) / (elapsedTimeInner / 1000d)) : 0,
+                            parent.getFullName() + "/" + file.getName()));
+                }
+
+                response = session.getItem();
+
             } else {
                 response = replace ? api.replaceFile(parent, file) : api.uploadFile(parent, file);
             }
@@ -80,6 +122,14 @@ public class UploadTask extends Task {
                     elapsedTime > 0 ? ((file.length() / 1024d) / (elapsedTime / 1000d)) : 0,
                     replace ? "replace" : "new",
                     response.getFullName()));
+        }
+    }
+
+    private void sleep(int i) {
+        try {
+            Thread.sleep(i * 1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }

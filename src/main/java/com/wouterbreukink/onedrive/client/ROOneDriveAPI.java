@@ -93,8 +93,14 @@ public class ROOneDriveAPI implements OneDriveAPI {
         return OneDriveItem.FACTORY.create(parent, file.getName());
     }
 
-    public OneDriveItem uploadFileInChunks(OneDriveItem parent, File file, int chunkSize) throws OneDriveAPIException, IOException {
-        return OneDriveItem.FACTORY.create(parent, file.getName());
+    @Override
+    public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
+        return new OneDriveUploadSession(parent, file, null, new String[0]);
+    }
+
+    @Override
+    public void uploadChunk(OneDriveUploadSession session) throws OneDriveAPIException, IOException {
+        session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getFile().getName()));
     }
 
     public OneDriveItem updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {

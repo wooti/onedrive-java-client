@@ -25,7 +25,9 @@ public interface OneDriveAPI {
 
     OneDriveItem uploadFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException;
 
-    OneDriveItem uploadFileInChunks(OneDriveItem parent, File file, int chunkSize) throws OneDriveAPIException, IOException;
+    OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws OneDriveAPIException, IOException;
+
+    void uploadChunk(OneDriveUploadSession session) throws OneDriveAPIException, IOException;
 
     OneDriveItem updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException;
 
