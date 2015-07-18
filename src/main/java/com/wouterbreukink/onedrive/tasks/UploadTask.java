@@ -1,11 +1,8 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.TaskQueue;
-import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
-import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,9 +20,9 @@ public class UploadTask extends Task {
     private final File file;
     private final boolean replace;
 
-    public UploadTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, OneDriveItem parent, File file, boolean replace) {
+    public UploadTask(TaskOptions options, OneDriveItem parent, File file, boolean replace) {
 
-        super(queue, api, fileSystem);
+        super(options);
 
         this.parent = Preconditions.checkNotNull(parent);
         this.file = Preconditions.checkNotNull(file);
@@ -53,7 +50,7 @@ public class UploadTask extends Task {
 
             //noinspection ConstantConditions
             for (File f : file.listFiles()) {
-                queue.add(new UploadTask(queue, api, fileSystem, newParent, f, false));
+                queue.add(new UploadTask(getTaskOptions(), newParent, f, false));
             }
         } else {
 

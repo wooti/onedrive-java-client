@@ -20,18 +20,16 @@ public abstract class Task implements Runnable, Comparable<Task> {
 
     private static final Logger log = LogManager.getLogger(Task.class.getName());
     private static AtomicInteger taskIdCounter = new AtomicInteger(1);
-
     protected final TaskQueue queue;
     protected final OneDriveAPI api;
     protected final FileSystemProvider fileSystem;
-
     private final int id;
     private int attempt;
 
-    public Task(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem) {
-        this.queue = Preconditions.checkNotNull(queue);
-        this.api = Preconditions.checkNotNull(api);
-        this.fileSystem = Preconditions.checkNotNull(fileSystem);
+    protected Task(TaskOptions options) {
+        this.queue = Preconditions.checkNotNull(options.getQueue());
+        this.api = Preconditions.checkNotNull(options.getApi());
+        this.fileSystem = Preconditions.checkNotNull(options.getFileSystem());
         this.id = taskIdCounter.getAndIncrement();
         this.attempt = 0;
     }
@@ -80,6 +78,10 @@ public abstract class Task implements Runnable, Comparable<Task> {
     private static boolean isIgnored(String name) {
         Set<String> ignoredSet = getCommandLineOpts().getIgnored();
         return ignoredSet != null && ignoredSet.contains(name);
+    }
+
+    protected TaskOptions getTaskOptions() {
+        return new TaskOptions(queue, api, fileSystem);
     }
 
     protected abstract int priority();
@@ -131,5 +133,30 @@ public abstract class Task implements Runnable, Comparable<Task> {
     @SuppressWarnings("NullableProblems")
     public int compareTo(Task o) {
         return o.priority() - priority();
+    }
+
+    public static class TaskOptions {
+
+        private final TaskQueue queue;
+        private final OneDriveAPI api;
+        private final FileSystemProvider fileSystem;
+
+        public TaskOptions(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem) {
+            this.queue = queue;
+            this.api = api;
+            this.fileSystem = fileSystem;
+        }
+
+        public TaskQueue getQueue() {
+            return queue;
+        }
+
+        public OneDriveAPI getApi() {
+            return api;
+        }
+
+        public FileSystemProvider getFileSystem() {
+            return fileSystem;
+        }
     }
 }

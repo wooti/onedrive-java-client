@@ -99,7 +99,7 @@ public class Main {
 
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
-        queue.add(new CheckTask(queue, api, fileSystem, rootFolder, new File(getCommandLineOpts().getLocalPath())));
+        queue.add(new CheckTask(new Task.TaskOptions(queue, api, fileSystem), rootFolder, new File(getCommandLineOpts().getLocalPath())));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());

@@ -1,7 +1,5 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.TaskQueue;
-import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
@@ -22,8 +20,8 @@ public class CheckTask extends Task {
     private final Item remoteFile;
     private final File localFile;
 
-    public CheckTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, Item remoteFile, File localFile) {
-        super(queue, api, fileSystem);
+    public CheckTask(TaskOptions options, Item remoteFile, File localFile) {
+        super(options);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.localFile = Preconditions.checkNotNull(localFile);
     }
@@ -90,29 +88,29 @@ public class CheckTask extends Task {
                 case NO:
                     switch (getCommandLineOpts().getDirection()) {
                         case UP:
-                            queue.add(new UploadTask(queue, api, fileSystem, remoteFile.getParentReference(), localFile, true));
+                            queue.add(new UploadTask(getTaskOptions(), remoteFile.getParentReference(), localFile, true));
                             break;
                         case DOWN:
-                            queue.add(new DownloadTask(queue, api, fileSystem, localFile.getParentFile(), remoteFile, true));
+                            queue.add(new DownloadTask(getTaskOptions(), localFile.getParentFile(), remoteFile, true));
                             break;
                         default:
                             throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());
                     }
                     break;
                 case CRC:
-                    queue.add(new UpdatePropertiesTask(queue, api, fileSystem, remoteFile, localFile));
+                    queue.add(new UpdatePropertiesTask(getTaskOptions(), remoteFile, localFile));
                     break;
             }
 
         } else { // // Resolve cases where remote and local disagree over whether the item is a file or folder
             switch (getCommandLineOpts().getDirection()) {
                 case UP:
-                    new DeleteTask(queue, api, fileSystem, remoteFile).taskBody(); // Execute immediately
-                    queue.add(new UploadTask(queue, api, fileSystem, remoteFile.getParentReference(), localFile, true));
+                    new DeleteTask(getTaskOptions(), remoteFile).taskBody(); // Execute immediately
+                    queue.add(new UploadTask(getTaskOptions(), remoteFile.getParentReference(), localFile, true));
                     break;
                 case DOWN:
-                    new DeleteTask(queue, api, fileSystem, localFile).taskBody(); // Execute immediately
-                    queue.add(new DownloadTask(queue, api, fileSystem, localFile.getParentFile(), remoteFile, true));
+                    new DeleteTask(getTaskOptions(), localFile).taskBody(); // Execute immediately
+                    queue.add(new DownloadTask(getTaskOptions(), localFile.getParentFile(), remoteFile, true));
                     break;
                 default:
                     throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());
@@ -133,10 +131,10 @@ public class CheckTask extends Task {
         if (remoteOnly) {
             switch (getCommandLineOpts().getDirection()) {
                 case UP:
-                    queue.add(new DeleteTask(queue, api, fileSystem, remoteFile));
+                    queue.add(new DeleteTask(getTaskOptions(), remoteFile));
                     break;
                 case DOWN:
-                    queue.add(new DownloadTask(queue, api, fileSystem, this.localFile, remoteFile, false));
+                    queue.add(new DownloadTask(getTaskOptions(), this.localFile, remoteFile, false));
                     break;
                 default:
                     throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());
@@ -147,10 +145,10 @@ public class CheckTask extends Task {
         else if (localOnly) {
             switch (getCommandLineOpts().getDirection()) {
                 case UP:
-                    queue.add(new UploadTask(queue, api, fileSystem, this.remoteFile, localFile, false));
+                    queue.add(new UploadTask(getTaskOptions(), this.remoteFile, localFile, false));
                     break;
                 case DOWN:
-                    queue.add(new DeleteTask(queue, api, fileSystem, localFile));
+                    queue.add(new DeleteTask(getTaskOptions(), localFile));
                     break;
                 default:
                     throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());
@@ -159,7 +157,7 @@ public class CheckTask extends Task {
 
         // Case 3: We have the file in both locations
         else {
-            queue.add(new CheckTask(queue, api, fileSystem, remoteFile, localFile));
+            queue.add(new CheckTask(getTaskOptions(), remoteFile, localFile));
         }
     }
 }

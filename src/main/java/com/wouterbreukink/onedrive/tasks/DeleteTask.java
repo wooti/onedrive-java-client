@@ -1,10 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.TaskQueue;
-import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
-import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,17 +15,17 @@ public class DeleteTask extends Task {
     private final Item remoteFile;
     private final File localFile;
 
-    public DeleteTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, Item remoteFile) {
+    public DeleteTask(TaskOptions options, Item remoteFile) {
 
-        super(queue, api, fileSystem);
+        super(options);
 
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.localFile = null;
     }
 
-    public DeleteTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, File localFile) {
+    public DeleteTask(TaskOptions options, File localFile) {
 
-        super(queue, api, fileSystem);
+        super(options);
 
         this.localFile = Preconditions.checkNotNull(localFile);
         this.remoteFile = null;

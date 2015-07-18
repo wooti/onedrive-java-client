@@ -1,10 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.TaskQueue;
-import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
-import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,9 +16,9 @@ public class DownloadTask extends Task {
     private final Item file;
     private final boolean replace;
 
-    public DownloadTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, File parent, Item file, boolean replace) {
+    public DownloadTask(TaskOptions options, File parent, Item file, boolean replace) {
 
-        super(queue, api, fileSystem);
+        super(options);
 
         this.parent = Preconditions.checkNotNull(parent);
         this.file = Preconditions.checkNotNull(file);
@@ -49,7 +46,7 @@ public class DownloadTask extends Task {
             File newParent = fileSystem.createFolder(parent, file.getName());
 
             for (Item item : api.getChildren(file)) {
-                queue.add(new DownloadTask(queue, api, fileSystem, newParent, item, false));
+                queue.add(new DownloadTask(getTaskOptions(), newParent, item, false));
             }
 
         } else {
