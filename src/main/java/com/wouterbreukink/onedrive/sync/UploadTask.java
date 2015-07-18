@@ -51,6 +51,11 @@ public class UploadTask extends Task {
                 queue.add(new UploadTask(queue, api, fileSystem, newParent, f, false));
             }
         } else {
+
+            if (isSizeInvalid(file)) {
+                return;
+            }
+
             long startTime = System.currentTimeMillis();
             OneDriveItem response = replace ? api.replaceFile(parent, file) : api.uploadFile(parent, file);
 

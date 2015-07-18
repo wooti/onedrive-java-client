@@ -52,6 +52,11 @@ public class DownloadTask extends Task {
             }
 
         } else {
+
+            if (isSizeInvalid(file)) {
+                return;
+            }
+
             long startTime = System.currentTimeMillis();
 
             File downloadFile = fileSystem.createFile(parent, file.getName() + ".tmp");

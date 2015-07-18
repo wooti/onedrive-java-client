@@ -1,5 +1,6 @@
 package com.wouterbreukink.onedrive.sync;
 
+import com.wouterbreukink.onedrive.CommandLineOpts;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
@@ -65,10 +66,17 @@ public class CheckTask extends Task {
             }
 
         } else if (localFile.isFile() && !remoteFile.isFolder()) { // If we are syncing files
-            if (isSizeInvalid(localFile, remoteFile)) {
+
+            // Skip if the file size is too big
+            if (getCommandLineOpts().getDirection() == CommandLineOpts.Direction.UP && isSizeInvalid(localFile)) {
                 return;
             }
 
+            if (getCommandLineOpts().getDirection() == CommandLineOpts.Direction.DOWN && isSizeInvalid(remoteFile)) {
+                return;
+            }
+
+            // Skip if the file is ignored
             if (isIgnored(localFile, remoteFile)) {
                 return;
             }
@@ -161,11 +169,6 @@ public class CheckTask extends Task {
             queue.add(new CheckTask(queue, api, fileSystem, remoteFile, localFile));
         }
     }
-
-    private boolean isSizeInvalid(File localFile, Item remoteFile) {
-        return false;
-    }
-
 
     private boolean isIgnored(File localFile, Item remoteFile) {
 
