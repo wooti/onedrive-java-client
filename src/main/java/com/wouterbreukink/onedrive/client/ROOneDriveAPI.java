@@ -81,11 +81,6 @@ public class ROOneDriveAPI implements OneDriveAPI {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
-        OneDriveRequest request = getDefaultRequest()
-                .path("/drive/items/" + parent.getId() + ":/" + file.getName() + ":/content")
-                .payloadFile(file)
-                .method("PUT");
-
         return OneDriveItem.FACTORY.create(parent, file.getName());
     }
 
@@ -95,6 +90,10 @@ public class ROOneDriveAPI implements OneDriveAPI {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
+        return OneDriveItem.FACTORY.create(parent, file.getName());
+    }
+
+    public OneDriveItem uploadFileInChunks(OneDriveItem parent, File file, int chunkSize) throws OneDriveAPIException, IOException {
         return OneDriveItem.FACTORY.create(parent, file.getName());
     }
 
@@ -116,7 +115,7 @@ public class ROOneDriveAPI implements OneDriveAPI {
         // Do nothing
     }
 
-    private OneDriveRequest getDefaultRequest() {
-        return new OneDriveRequest(client, authoriser);
+    protected OneDriveRequest getDefaultRequest() {
+        return new OneDriveRequest(client, authoriser, "https://api.onedrive.com/v1.0");
     }
 }

@@ -31,6 +31,7 @@ public class CommandLineOpts {
     private Path keyFile = Paths.get("keyFile.txt");
     private boolean dryRun = false;
     private String logFile = null;
+    private int splitAfter = 5;
 
     public static CommandLineOpts getCommandLineOpts() {
         if (!opts.isInitialised) {
@@ -90,6 +91,14 @@ public class CommandLineOpts {
 
         if (line.hasOption("logfile")) {
             opts.logFile = line.getOptionValue("logfile");
+        }
+
+        if (line.hasOption("split-after")) {
+            opts.splitAfter = Integer.parseInt(line.getOptionValue("split-after"));
+
+            if (opts.splitAfter > 60) {
+                throw new ParseException("maximum permissible value for split-after is 60");
+            }
         }
 
         opts.isInitialised = true;
@@ -168,6 +177,13 @@ public class CommandLineOpts {
                 .required()
                 .build();
 
+        Option splitAfter = Option.builder("s")
+                .longOpt("split-after")
+                .hasArg()
+                .argName("size_in_MB")
+                .desc("use multi-part upload for big files")
+                .build();
+
         Option threads = Option.builder("t")
                 .longOpt("threads")
                 .hasArg()
@@ -199,6 +215,7 @@ public class CommandLineOpts {
                 .addOption(dryRun)
                 .addOption(recursive)
                 .addOption(remotePath)
+                .addOption(splitAfter)
                 .addOption(threads)
                 .addOption(version)
                 .addOption(retries);
@@ -259,6 +276,10 @@ public class CommandLineOpts {
 
     public String getLogFile() {
         return logFile;
+    }
+
+    public int getSplitAfter() {
+        return splitAfter;
     }
 
     public enum Direction {

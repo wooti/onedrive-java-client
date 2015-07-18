@@ -64,6 +64,8 @@ public class Main {
         // Workaround to be able to submit PATCH requests
         client.property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true);
 
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+
         // Initialise the OneDrive Authoriser
         OneDriveAuth authoriser = new OneDriveAuth(client);
         if (!authoriser.initialise(getCommandLineOpts().getKeyFile())) {

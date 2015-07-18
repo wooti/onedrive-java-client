@@ -1,15 +1,19 @@
 package com.wouterbreukink.onedrive.client;
 
 import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.client.resources.UploadSession;
 import com.wouterbreukink.onedrive.client.resources.WriteFolder;
 import com.wouterbreukink.onedrive.client.resources.WriteItem;
 import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.MultiPartItem;
 
 import javax.ws.rs.client.Client;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.Date;
 
 public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
@@ -26,7 +30,7 @@ public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
 
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + parent.getId() + ":/" + file.getName() + ":/content")
-                .payloadFile(file)
+                .payloadBinary(Files.readAllBytes(file.toPath()))
                 .method("PUT");
 
         Item item = request.getResponse(Item.class);
@@ -52,10 +56,64 @@ public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + parent.getId() + "/children")
                 .payloadJson(itemToWrite)
-                .payloadFile(file)
+                .payloadBinary(Files.readAllBytes(file.toPath()))
                 .method("POST");
 
         return request.getResponse(Item.class);
+    }
+
+    @Override
+    public OneDriveItem uploadFileInChunks(OneDriveItem parent, File file, int chunkSize) throws OneDriveAPIException, IOException {
+
+        OneDriveRequest request = getDefaultRequest()
+                .path("/drive/items/" + parent.getId() + ":/" + file.getName() + ":/upload.createSession")
+                .payloadJson(MultiPartItem.create(file.getName()))
+                .length(file.length())
+                .method("POST");
+
+        UploadSession session = request.getResponse(UploadSession.class);
+
+        int uploaded = 0;
+        String uploadUrl = session.getUploadUrl();
+
+        // Reading 6MB at a time (this is a multiple of 320KB as recommended my MS)
+        byte[] chunk = new byte[chunkSize];
+
+        RandomAccessFile raf = new RandomAccessFile(file, "r");
+        Item item = null;
+
+        while (session.getNextExpectedRanges() != null && session.getNextExpectedRanges().length > 0) {
+
+            // Send the next chunk the server has asked for
+            String nextRange = session.getNextExpectedRanges()[0];
+            long nextChunk = Long.parseLong(nextRange.substring(0, nextRange.indexOf('-')));
+
+            raf.seek(nextChunk);
+            int read = raf.read(chunk);
+
+            if (read < chunkSize) {
+                chunk = Arrays.copyOf(chunk, read);
+            }
+
+            OneDriveRequest uploadPart = getDefaultRequest()
+                    .target(uploadUrl)
+                    .payloadBinary(chunk)
+                    .range(uploaded, uploaded + chunk.length - 1, file.length())
+                    .method("PUT");
+
+            if (read == chunkSize && uploaded + read < file.length()) {
+                session = uploadPart.getResponse(UploadSession.class);
+            } else {
+                item = uploadPart.getResponse(Item.class);
+                break;
+            }
+
+            uploaded += read;
+        }
+
+        // Now update the item
+        BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+        return updateFile(item, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis()));
     }
 
     public Item updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {
@@ -99,9 +157,5 @@ public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
                 .method("DELETE");
 
         request.getResponse(null);
-    }
-
-    private OneDriveRequest getDefaultRequest() {
-        return new OneDriveRequest(client, authoriser);
     }
 }

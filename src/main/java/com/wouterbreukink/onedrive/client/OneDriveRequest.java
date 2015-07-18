@@ -12,7 +12,10 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -22,17 +25,28 @@ public class OneDriveRequest {
     private final OneDriveAuth authoriser;
     private final Client client;
 
+    private String target;
     private String path;
     private String method;
     private String skipToken;
     private boolean withChildren;
+    private long start;
+    private long end;
+    private long length;
+    private long totalLength;
 
     private Object payloadJson;
-    private File payloadFile;
-    
-    public OneDriveRequest(Client client, OneDriveAuth authoriser) {
+    private byte[] payloadBinary;
+
+    public OneDriveRequest(Client client, OneDriveAuth authoriser, String target) {
         this.client = client;
         this.authoriser = authoriser;
+        this.target = target;
+    }
+
+    public OneDriveRequest target(String target) {
+        this.target = target;
+        return this;
     }
 
     public OneDriveRequest path(String path) {
@@ -55,13 +69,25 @@ public class OneDriveRequest {
         return this;
     }
 
-    public OneDriveRequest payloadFile(File payloadFile) {
-        this.payloadFile = payloadFile;
+    public OneDriveRequest payloadBinary(byte[] payloadBinary) {
+        this.payloadBinary = payloadBinary;
         return this;
     }
 
     public OneDriveRequest payloadJson(Object payloadJson) {
         this.payloadJson = payloadJson;
+        return this;
+    }
+
+    public OneDriveRequest range(long start, long end, long totalLength) {
+        this.start = start;
+        this.end = end;
+        this.totalLength = totalLength;
+        return this;
+    }
+
+    public OneDriveRequest length(long length) {
+        this.length = length;
         return this;
     }
 
@@ -86,9 +112,12 @@ public class OneDriveRequest {
     private Response getResponse() {
 
         WebTarget requestTarget = client
-                .target("https://api.onedrive.com/v1.0")
-                .path(path)
+                .target(target)
                 .queryParam("access_token", authoriser.getAccessToken());
+
+        if (path != null) {
+            requestTarget = requestTarget.path(path);
+        }
 
         if (skipToken != null) {
             requestTarget = requestTarget.queryParam("$skiptoken", skipToken);
@@ -100,12 +129,20 @@ public class OneDriveRequest {
 
         Invocation.Builder builder = requestTarget.request(MediaType.TEXT_PLAIN_TYPE);
 
+        if (totalLength > 0) {
+            builder = builder.header("Content-Range", String.format("bytes %d-%d/%d", start, end, totalLength));
+        }
+
+        if (length > 0) {
+            builder = builder.header("Content-Length", length);
+        }
+
         Entity<?> entity = null;
         try {
-            if (payloadFile != null && payloadJson != null) {
+            if (payloadBinary != null && payloadJson != null) {
                 entity = generateMultipartEntity();
-            } else if (payloadFile != null) {
-                entity = Entity.entity(new FileInputStream(payloadFile), MediaType.APPLICATION_OCTET_STREAM);
+            } else if (payloadBinary != null) {
+                entity = Entity.entity(payloadBinary, MediaType.APPLICATION_OCTET_STREAM);
             } else if (payloadJson != null) {
                 entity = Entity.json(payloadJson);
             }
@@ -124,7 +161,7 @@ public class OneDriveRequest {
         jsonPart.getHeaders().putSingle("Content-ID", "<metadata>");
         multiPart.bodyPart(jsonPart);
 
-        BodyPart filePart = new BodyPart(new FileInputStream(payloadFile), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        BodyPart filePart = new BodyPart(payloadBinary, MediaType.APPLICATION_OCTET_STREAM_TYPE);
         filePart.getHeaders().putSingle("Content-ID", "<content>");
         multiPart.bodyPart(filePart);
 
@@ -137,14 +174,13 @@ public class OneDriveRequest {
             return null;
         }
 
-        StringBuilder msgBuilder = new StringBuilder().append("Error Code ").append(response.getStatus());
+        StringBuilder msgBuilder = new StringBuilder().append("error code ").append(response.getStatus());
 
-        ErrorSet error;
-
-        if ((error = response.readEntity(ErrorSet.class)) != null) {
+        try {
+            ErrorSet error = response.readEntity(ErrorSet.class);
             msgBuilder.append(": ").append(error.getError().getCode());
             msgBuilder.append(" (").append(error.getError().getMessage()).append(")");
-        } else {
+        } catch (Exception e) {
             msgBuilder.append(": unknown error");
         }
 

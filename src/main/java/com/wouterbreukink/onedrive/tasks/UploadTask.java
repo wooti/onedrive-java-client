@@ -12,9 +12,15 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
+
 public class UploadTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
+
+    // Upload in chunks of 5MB as per MS recommendation
+    private static final int CHUNK_SIZE = 5 * 1024 * 1024;
+
     private final OneDriveItem parent;
     private final File file;
     private final boolean replace;
@@ -58,7 +64,13 @@ public class UploadTask extends Task {
             }
 
             long startTime = System.currentTimeMillis();
-            OneDriveItem response = replace ? api.replaceFile(parent, file) : api.uploadFile(parent, file);
+
+            OneDriveItem response;
+            if (file.length() > getCommandLineOpts().getSplitAfter() * 1024 * 1024) {
+                response = api.uploadFileInChunks(parent, file, CHUNK_SIZE);
+            } else {
+                response = replace ? api.replaceFile(parent, file) : api.uploadFile(parent, file);
+            }
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
