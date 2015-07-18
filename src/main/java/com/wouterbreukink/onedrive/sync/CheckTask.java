@@ -4,7 +4,7 @@ import com.wouterbreukink.onedrive.CommandLineOpts;
 import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Item;
-import com.wouterbreukink.onedrive.io.FileSystemProvider;
+import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -23,7 +23,6 @@ public class CheckTask extends Task {
     private static final Logger log = LogManager.getLogger(CheckTask.class.getName());
     private final Item remoteFile;
     private final File localFile;
-
 
     public CheckTask(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, Item remoteFile, File localFile) {
         super(queue, api, fileSystem);

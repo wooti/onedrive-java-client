@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.io;
+package com.wouterbreukink.onedrive.fs;
 
 import java.io.File;
 import java.io.FileInputStream;
