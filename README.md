@@ -37,12 +37,24 @@ mvn clean package -DskipTests
 ```
 
 (3) Authorise the application
+We need to get a security token to allow the application to access your OneDrive account. Run the following command to generate the authorisation URL
+```
+java -jar target/onedrive-java-client.jar --authorise
+```
+Open the URL in your brower, and wait for it to redirect you to a blank page. Copy and paste the result into your keyfile (default file ``onedrive.key``).
+
+(4) Start synchronising folders
+```
+java -jar target/onedrive-java-client.jar --direction UP --local . --remote /MyTargetFolder
+```
 
 ## Synchronisation Modes
 
 The application currently supports one-way mirroring of data, so it will create, update and delete files as necessary to make the target side match the source side.
 * ``--direction UP`` - Mirrors a local folder to a remote OneDrive folder
 * ``--direction DOWN`` - Mirrors a remote OneDrive folder to a local folder
+
+Note that the local and target folder must both exist for this to work.
 
 ### Moving / Renaming Files
 

@@ -33,7 +33,7 @@ public class CommandLineOpts {
     private boolean version = false;
     private boolean recursive = false;
     private int maxSizeKb = 0;
-    private Path keyFile = Paths.get("keyFile.txt");
+    private Path keyFile = Paths.get("onedrive.key");
     private boolean dryRun = false;
     private String logFile = null;
     private int splitAfter = 5;
