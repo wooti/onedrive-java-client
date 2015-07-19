@@ -2,6 +2,8 @@
 
 A cross-platform command line client for Microsoft OneDrive written in Java 7.
 
+__This application is currently in BETA - use with caution__
+
 ## Installation
 
 (1) Grab the latest source code
@@ -93,4 +95,5 @@ The following key features are currently planned / under development:
 ## License
 
 (C) 2015 Wouter Breukink
+
 See [license](LICENSE.md).
