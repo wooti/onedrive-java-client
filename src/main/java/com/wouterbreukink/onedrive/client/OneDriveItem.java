@@ -25,7 +25,7 @@ public interface OneDriveItem {
                 }
 
                 public String getFullName() {
-                    return parent.getFullName() + "/" + name;
+                    return parent.getFullName() + name;
                 }
             };
         }
