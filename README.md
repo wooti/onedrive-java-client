@@ -25,7 +25,7 @@ Open the URL in your browser, and wait for it to redirect you to a blank page. C
 
 (4) Start synchronising folders
 ```
-java -jar target/onedrive-java-client.jar --direction UP --local . --remote /MyTargetFolder
+java -jar target/onedrive-java-client.jar --direction UP --local . --remote MyTargetFolder/
 ```
 
 ## Usage
