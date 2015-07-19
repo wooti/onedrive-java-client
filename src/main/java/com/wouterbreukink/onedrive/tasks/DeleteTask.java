@@ -38,7 +38,7 @@ public class DeleteTask extends Task {
     @Override
     public String toString() {
         if (localFile != null) {
-            return "Delete local file " + localFile.getName();
+            return "Delete local file " + localFile.getPath();
         } else {
             return "Delete remote file " + remoteFile.getFullName();
         }
@@ -49,9 +49,11 @@ public class DeleteTask extends Task {
         if (localFile != null) {
             fileSystem.delete(localFile);
             reporter.localDeleted();
+            log.info("Deleted local file " + localFile.getPath());
         } else {
             api.delete(remoteFile);
             reporter.remoteDeleted();
+            log.info("Deleted remote file " + remoteFile.getFullName());
         }
     }
 }

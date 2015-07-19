@@ -107,7 +107,7 @@ public class UploadTask extends Task {
                     log.info(String.format("(%.1f%%) Uploaded chunk of %s (%s/s) for file %s",
                             ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
                             readableFileSize(session.getLastUploaded()),
-                            elapsedTimeInner > 0 ? readableFileSize(localFile.length() / (elapsedTimeInner / 1000d)) : 0,
+                            elapsedTimeInner > 0 ? readableFileSize(session.getLastUploaded() / (elapsedTimeInner / 1000d)) : 0,
                             parent.getFullName() + localFile.getName()));
                 }
 

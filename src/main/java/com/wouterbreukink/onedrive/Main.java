@@ -180,7 +180,7 @@ public class Main {
         }
 
         queue.waitForCompletion();
-        log.info("Synchronisation complete - summary:");
+        log.info("Synchronisation complete");
         reporter.report();
 
         System.exit(0);
