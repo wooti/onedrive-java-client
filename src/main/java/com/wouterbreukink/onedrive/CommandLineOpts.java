@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -113,7 +114,7 @@ public class CommandLineOpts {
             }
 
             try {
-                opts.ignored = Sets.newHashSet(Files.readAllLines(ignoreFile));
+                opts.ignored = Sets.newHashSet(Files.readAllLines(ignoreFile, Charset.defaultCharset()));
             } catch (IOException e) {
                 throw new ParseException(e.getMessage());
             }

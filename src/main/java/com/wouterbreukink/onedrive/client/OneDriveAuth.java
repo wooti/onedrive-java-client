@@ -12,6 +12,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -175,7 +176,7 @@ public class OneDriveAuth {
 
     private String[] readToken() {
         try {
-            return Files.readAllLines(keyFile).toArray(new String[1]);
+            return Files.readAllLines(keyFile, Charset.defaultCharset()).toArray(new String[1]);
         } catch (IOException e) {
             log.error("Unable to read key file", e);
         }
@@ -186,7 +187,7 @@ public class OneDriveAuth {
     private void saveToken() {
         try {
             String[] content = new String[]{clientId, authorisation.getRefreshToken()};
-            Files.write(keyFile, Arrays.asList(content));
+            Files.write(keyFile, Arrays.asList(content), Charset.defaultCharset());
         } catch (IOException e) {
             log.error("Unable to write to key file ", e);
         }
