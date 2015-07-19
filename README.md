@@ -2,9 +2,35 @@
 
 A cross-platform command line client for Microsoft OneDrive written in Java 7.
 
+## Installation
+
+(1) Grab the latest source code
+```
+git clone https://github.com/wooti/onedrive-java-client.git
+cd onedrive-java-client
+```
+
+(2) Build the application using [Maven](http://maven.apache.org/)
+```
+mvn clean package -DskipTests
+```
+
+(3) Authorise the application
+An authorisation token must be created to grant the application secure access to OneDrive. Run the following command to generate the authorisation URL:
+```
+java -jar target/onedrive-java-client.jar --authorise
+```
+Open the URL in your browser, and wait for it to redirect you to a blank page. Copy and paste the result into your keyfile (default file ``onedrive.key``).
+
+(4) Start synchronising folders
+```
+java -jar target/onedrive-java-client.jar --direction UP --local . --remote /MyTargetFolder
+```
+
 ## Usage
 ```bash
 usage: onedrive-java-syncer
+ -a,--authorise                  show authorisation url
  -c,--hash-compare               always compare files by hash
     --direction <up|down>        direction of synchronisation.
  -h,--help                       print this message
@@ -21,31 +47,6 @@ usage: onedrive-java-syncer
  -t,--threads <count>            number of threads to use
  -v,--version                    print the version information and exit
  -y,--tries <count>              try each service request <count> times
-```
-
-## Installation
-
-(1) Grab the latest source code
-```
-git clone https://github.com/wooti/onedrive-java-client.git
-cd onedrive-java-client
-```
-
-(2) Build the application using [Maven](http://maven.apache.org/)
-```
-mvn clean package -DskipTests
-```
-
-(3) Authorise the application
-We need to get a security token to allow the application to access your OneDrive account. Run the following command to generate the authorisation URL
-```
-java -jar target/onedrive-java-client.jar --authorise
-```
-Open the URL in your brower, and wait for it to redirect you to a blank page. Copy and paste the result into your keyfile (default file ``onedrive.key``).
-
-(4) Start synchronising folders
-```
-java -jar target/onedrive-java-client.jar --direction UP --local . --remote /MyTargetFolder
 ```
 
 ## Synchronisation Modes
