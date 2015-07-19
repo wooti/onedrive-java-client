@@ -88,10 +88,25 @@ public class Main {
 
         System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
 
-        // Initialise the OneDrive Authoriser
+        // Prepare the authoriser
         OneDriveAuth authoriser = new OneDriveAuth(client);
+
+        if (getCommandLineOpts().isAuthorise()) {
+            authoriser.printAuthInstructions(true);
+            return;
+        }
+
+        if (getCommandLineOpts().getLocalPath() == null
+                || getCommandLineOpts().getRemotePath() == null
+                || getCommandLineOpts().getDirection() == null) {
+            log.error("Must specify --local, --remote and --direction");
+            CommandLineOpts.printHelp();
+            return;
+        }
+
+        // Try initialise the authoriser
         if (!authoriser.initialise(getCommandLineOpts().getKeyFile())) {
-            authoriser.printAuthInstructions();
+            authoriser.printAuthInstructions(false);
             return;
         }
 

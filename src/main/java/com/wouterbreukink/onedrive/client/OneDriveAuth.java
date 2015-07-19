@@ -99,7 +99,7 @@ public class OneDriveAuth {
         }
     }
 
-    public void printAuthInstructions() {
+    public void printAuthInstructions(boolean expected) {
 
         WebTarget target = ClientBuilder
                 .newClient()
@@ -110,9 +110,14 @@ public class OneDriveAuth {
                 .queryParam("client_secret", clientSecret)
                 .queryParam("redirect_uri", "https://login.live.com/oauth20_desktop.srf");
 
-        log.error("Unable to authenticate. Please re-create your key file.");
-        log.error("Open the following in a browser, sign on, wait until you are redirected to a blank page and then store the code returned in the address bar in your key file.");
-        log.error("Authorisation URL: " + target.getUri());
+        if (expected) {
+            log.info("You must generate an authorisation token to use this application");
+            log.info("Authorisation URL: " + target.getUri());
+        } else {
+            log.error("Unable to authenticate. Please re-create your key file.");
+            log.error("Open the following in a browser, sign on, wait until you are redirected to a blank page and then store the code returned in the address bar in your key file.");
+            log.error("Authorisation URL: " + target.getUri());
+        }
     }
 
     private boolean getTokenFromCode(String code) {

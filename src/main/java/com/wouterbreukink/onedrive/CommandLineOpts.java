@@ -38,6 +38,7 @@ public class CommandLineOpts {
     private String logFile = null;
     private int splitAfter = 5;
     private Set<String> ignored = null;
+    private boolean authorise = false;
 
     public static CommandLineOpts getCommandLineOpts() {
         if (!opts.isInitialised) {
@@ -62,6 +63,7 @@ public class CommandLineOpts {
         opts.version = line.hasOption("version");
         opts.recursive = line.hasOption("recursive");
         opts.dryRun = line.hasOption("dry-run");
+        opts.authorise = line.hasOption("authorise");
 
         if (line.hasOption("local")) {
             opts.localPath = line.getOptionValue("local");
@@ -124,6 +126,11 @@ public class CommandLineOpts {
     }
 
     private static Options buildOptions() {
+        Option authorise = Option.builder("a")
+                .longOpt("authorise")
+                .desc("generate authorisation url")
+                .build();
+
         Option hash = Option.builder("c")
                 .longOpt("hash-compare")
                 .desc("always compare files by hash")
@@ -134,7 +141,6 @@ public class CommandLineOpts {
                 .hasArg()
                 .argName("up|down")
                 .desc("direction of synchronisation.")
-                .required()
                 .build();
 
         Option help = Option.builder("h")
@@ -168,7 +174,6 @@ public class CommandLineOpts {
                 .hasArg()
                 .argName("path")
                 .desc("the local path")
-                .required()
                 .build();
 
         Option logFile = Option.builder()
@@ -200,7 +205,6 @@ public class CommandLineOpts {
                 .hasArg()
                 .argName("path")
                 .desc("the remote path on OneDrive")
-                .required()
                 .build();
 
         Option splitAfter = Option.builder("s")
@@ -230,6 +234,7 @@ public class CommandLineOpts {
                 .build();
 
         return new Options()
+                .addOption(authorise)
                 .addOption(hash)
                 .addOption(direction)
                 .addOption(help)
@@ -311,6 +316,10 @@ public class CommandLineOpts {
 
     public Set<String> getIgnored() {
         return ignored;
+    }
+
+    public boolean isAuthorise() {
+        return authorise;
     }
 
     public enum Direction {
