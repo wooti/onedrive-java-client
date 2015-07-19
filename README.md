@@ -16,6 +16,7 @@ mvn clean package -DskipTests
 ```
 
 (3) Authorise the application
+
 An authorisation token must be created to grant the application secure access to OneDrive. Run the following command to generate the authorisation URL:
 ```
 java -jar target/onedrive-java-client.jar --authorise
