@@ -4,6 +4,7 @@ import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
 import com.wouterbreukink.onedrive.client.ROOneDriveAPI;
 import com.wouterbreukink.onedrive.client.RWOneDriveAPI;
+import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import com.wouterbreukink.onedrive.fs.ROFileSystemProvider;
@@ -124,6 +125,17 @@ public class Main {
 
         // Report on progress
         TaskReporter reporter = new TaskReporter();
+
+        // Get the primary drive
+        Drive primary = api.getDefaultDrive();
+
+        // Report quotas
+        log.info(String.format("Using drive '%s' (%s). Usage %d of %d (%.2f%%)",
+                primary.getId(),
+                primary.getDriveType(),
+                primary.getQuota().getUsed(),
+                primary.getQuota().getTotal(),
+                ((double) primary.getQuota().getUsed() / primary.getQuota().getTotal()) * 100));
 
         // Check the given root folder
         Item rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
