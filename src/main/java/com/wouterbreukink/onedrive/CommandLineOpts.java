@@ -145,7 +145,7 @@ public class CommandLineOpts {
                 .longOpt("ignore")
                 .hasArg()
                 .argName("ignore_file")
-                .desc("ignores entries from the given ignore_file")
+                .desc("ignore entry file")
                 .build();
 
         Option keyFile = Option.builder("k")
