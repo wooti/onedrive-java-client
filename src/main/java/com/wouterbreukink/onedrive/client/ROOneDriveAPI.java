@@ -81,7 +81,7 @@ public class ROOneDriveAPI implements OneDriveAPI {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
-        return OneDriveItem.FACTORY.create(parent, file.getName());
+        return OneDriveItem.FACTORY.create(parent, file.getName(), file.isDirectory());
     }
 
     public OneDriveItem uploadFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
@@ -90,7 +90,7 @@ public class ROOneDriveAPI implements OneDriveAPI {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
-        return OneDriveItem.FACTORY.create(parent, file.getName());
+        return OneDriveItem.FACTORY.create(parent, file.getName(), file.isDirectory());
     }
 
     @Override
@@ -100,7 +100,7 @@ public class ROOneDriveAPI implements OneDriveAPI {
 
     @Override
     public void uploadChunk(OneDriveUploadSession session) throws OneDriveAPIException, IOException {
-        session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getFile().getName()));
+        session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getFile().getName(), session.getFile().isDirectory()));
     }
 
     public OneDriveItem updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {

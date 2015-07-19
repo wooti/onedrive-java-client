@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
+import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
 
 /***
  * OneDrive Java Client
@@ -130,11 +131,11 @@ public class Main {
         Drive primary = api.getDefaultDrive();
 
         // Report quotas
-        log.info(String.format("Using drive '%s' (%s). Usage %d of %d (%.2f%%)",
+        log.info(String.format("Using drive with id '%s' (%s). Usage %s of %s (%.2f%%)",
                 primary.getId(),
                 primary.getDriveType(),
-                primary.getQuota().getUsed(),
-                primary.getQuota().getTotal(),
+                readableFileSize(primary.getQuota().getUsed()),
+                readableFileSize(primary.getQuota().getTotal()),
                 ((double) primary.getQuota().getUsed() / primary.getQuota().getTotal()) * 100));
 
         // Check the given root folder
@@ -170,7 +171,6 @@ public class Main {
                                     queue.done(taskToRun);
                                 }
                             }
-
                         }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();

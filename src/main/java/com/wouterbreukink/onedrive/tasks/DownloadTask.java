@@ -9,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 
+import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
+
 public class DownloadTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
@@ -70,10 +72,10 @@ public class DownloadTask extends Task {
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
-            log.info(String.format("Downloaded %d KB in %dms (%.2f KB/s) to %s file %s",
-                    remoteFile.getSize() / 1024,
+            log.info(String.format("Downloaded %s in %dms (%s/s) to %s file %s",
+                    readableFileSize(remoteFile.getSize()),
                     elapsedTime,
-                    elapsedTime > 0 ? ((remoteFile.getSize() / 1024d) / (elapsedTime / 1000d)) : 0,
+                    elapsedTime > 0 ? readableFileSize(remoteFile.getSize() / (elapsedTime / 1000d)) : 0,
                     replace ? "replace" : "new",
                     remoteFile.getFullName()));
 

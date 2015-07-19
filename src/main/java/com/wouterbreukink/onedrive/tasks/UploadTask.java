@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
+import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
 
 public class UploadTask extends Task {
 
@@ -103,11 +104,10 @@ public class UploadTask extends Task {
 
                     long elapsedTimeInner = System.currentTimeMillis() - startTimeInner;
 
-                    log.info(String.format("Uploaded chunk of %d KB (%.1f%%) in %dms (%.2f KB/s) for file %s",
-                            session.getLastUploaded() / 1024,
+                    log.info(String.format("(%.1f%%) Uploaded chunk of %s (%s/s) for file %s",
                             ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
-                            elapsedTimeInner,
-                            elapsedTimeInner > 0 ? ((session.getLastUploaded() / 1024d) / (elapsedTimeInner / 1000d)) : 0,
+                            readableFileSize(session.getLastUploaded()),
+                            elapsedTimeInner > 0 ? readableFileSize(localFile.length() / (elapsedTimeInner / 1000d)) : 0,
                             parent.getFullName() + localFile.getName()));
                 }
 
@@ -119,10 +119,10 @@ public class UploadTask extends Task {
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
-            log.info(String.format("Uploaded %d KB in %dms (%.2f KB/s) to %s file %s",
-                    localFile.length() / 1024,
+            log.info(String.format("Uploaded %s in %dms (%s/s) to %s file %s",
+                    readableFileSize(localFile.length()),
                     elapsedTime,
-                    elapsedTime > 0 ? ((localFile.length() / 1024d) / (elapsedTime / 1000d)) : 0,
+                    elapsedTime > 0 ? readableFileSize(localFile.length() / (elapsedTime / 1000d)) : 0,
                     replace ? "replace" : "new",
                     response.getFullName()));
 

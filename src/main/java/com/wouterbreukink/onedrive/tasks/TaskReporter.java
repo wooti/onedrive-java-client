@@ -3,6 +3,8 @@ package com.wouterbreukink.onedrive.tasks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
+
 public class TaskReporter {
 
     private static final Logger log = LogManager.getLogger(TaskReporter.class.getName());
@@ -95,29 +97,29 @@ public class TaskReporter {
         }
 
         if (newUploaded > 0 || replaceUploaded > 0) {
-            log.info(String.format("Uploaded %d file%s (%.2fMB) - %d new file%s (%.2fMB), %d replaced file%s (%.2fMB)",
+            log.info(String.format("Uploaded %d file%s (%s) - %d new file%s (%s), %d replaced file%s (%s)",
                     newUploaded + replaceUploaded,
                     plural(newUploaded + replaceUploaded),
-                    (double) (newUploadedSize + replaceUploadedSize) / 1024 / 1024,
+                    readableFileSize(newUploadedSize + replaceUploadedSize),
                     newUploaded,
                     plural(newUploaded),
-                    (double) newUploadedSize / 1024 / 1024,
+                    readableFileSize(newUploadedSize),
                     replaceUploaded,
                     plural(replaceUploaded),
-                    (double) replaceUploadedSize / 1024 / 1024));
+                    readableFileSize(replaceUploadedSize)));
         }
 
         if (newDownloaded > 0 || replaceDownloaded > 0) {
-            log.info(String.format("Uploaded %d file%s (%.2fMB) - %d new file%s (%.2fMB), %d replaced file%s (%.2fMB)",
+            log.info(String.format("Uploaded %d file%s (%s) - %d new file%s (%s), %d replaced file%s (%s)",
                     newDownloaded + replaceDownloaded,
                     plural(newDownloaded + replaceDownloaded),
-                    (double) (newDownloadedSize + replaceDownloadedSize) / 1024 / 1024,
+                    readableFileSize(newDownloadedSize + replaceDownloadedSize),
                     newDownloaded,
                     plural(newDownloaded),
-                    (double) newDownloadedSize / 1024 / 1024,
+                    readableFileSize(newDownloadedSize),
                     replaceDownloaded,
                     plural(replaceDownloaded),
-                    (double) replaceDownloadedSize / 1024 / 1024));
+                    readableFileSize(replaceDownloadedSize)));
         }
     }
 

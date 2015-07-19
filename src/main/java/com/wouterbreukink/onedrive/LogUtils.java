@@ -9,10 +9,22 @@ import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.Serializable;
+import java.text.DecimalFormat;
 
 public class LogUtils {
 
     private LogUtils() {
+    }
+
+    public static String readableFileSize(double size) {
+        return readableFileSize((long) size);
+    }
+
+    public static String readableFileSize(long size) {
+        if (size <= 0) return "0";
+        final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 
     public static String addFileLogger(String logFile) {

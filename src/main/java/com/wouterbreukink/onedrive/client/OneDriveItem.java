@@ -9,11 +9,7 @@ public interface OneDriveItem {
 
     class FACTORY {
 
-        public static OneDriveItem create(OneDriveItem parent, String name) {
-            return create(parent, name, false);
-        }
-
-        public static OneDriveItem create(final OneDriveItem parent, final String name, final boolean isFolder) {
+        public static OneDriveItem create(final OneDriveItem parent, final String name, final boolean isDirectory) {
 
             return new OneDriveItem() {
                 public String getId() {
@@ -21,11 +17,11 @@ public interface OneDriveItem {
                 }
 
                 public boolean isDirectory() {
-                    return isFolder;
+                    return isDirectory;
                 }
 
                 public String getFullName() {
-                    return parent.getFullName() + name;
+                    return parent.getFullName() + name + (isDirectory ? "/" : "");
                 }
             };
         }
