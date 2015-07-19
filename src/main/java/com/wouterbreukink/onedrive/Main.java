@@ -128,23 +128,26 @@ public class Main {
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());
 
         for (int i = 0; i < getCommandLineOpts().getThreads(); i++) {
-            executorService.submit(() -> {
-                try {
-                    //noinspection InfiniteLoopStatement
-                    while (true) {
-                        Task taskToRun = null;
-                        try {
-                            taskToRun = queue.take();
-                            taskToRun.run();
-                        } finally {
-                            if (taskToRun != null) {
-                                queue.done(taskToRun);
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        //noinspection InfiniteLoopStatement
+                        while (true) {
+                            Task taskToRun = null;
+                            try {
+                                taskToRun = queue.take();
+                                taskToRun.run();
+                            } finally {
+                                if (taskToRun != null) {
+                                    queue.done(taskToRun);
+                                }
                             }
-                        }
 
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                     }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
                 }
             });
         }
