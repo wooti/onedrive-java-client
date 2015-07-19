@@ -52,11 +52,13 @@ public class DownloadTask extends Task {
         } else {
 
             if (isSizeInvalid(file)) {
+                reporter.skipped();
                 return;
             }
 
             // Skip if ignored
             if (isIgnored(file)) {
+                reporter.skipped();
                 return;
             }
 
@@ -86,6 +88,7 @@ public class DownloadTask extends Task {
                     file.getFileSystemInfo().getLastModifiedDateTime());
 
             fileSystem.replaceFile(new File(parent, file.getName()), downloadFile);
+            reporter.fileDownloaded(replace, file.getSize());
         }
     }
 }

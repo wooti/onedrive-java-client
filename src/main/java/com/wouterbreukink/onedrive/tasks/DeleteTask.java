@@ -48,8 +48,10 @@ public class DeleteTask extends Task {
     protected void taskBody() throws IOException, OneDriveAPIException {
         if (localFile != null) {
             fileSystem.delete(localFile);
+            reporter.localDeleted();
         } else {
             api.delete(remoteFile);
+            reporter.remoteDeleted();
         }
     }
 }

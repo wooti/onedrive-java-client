@@ -55,6 +55,8 @@ public class UpdatePropertiesTask extends Task {
             default:
                 throw new IllegalStateException("Unsupported direction " + getCommandLineOpts().getDirection());
         }
+
+        reporter.propertiesUpdated();
     }
 }
 

@@ -10,6 +10,7 @@ import com.wouterbreukink.onedrive.fs.ROFileSystemProvider;
 import com.wouterbreukink.onedrive.fs.RWFileSystemProvider;
 import com.wouterbreukink.onedrive.tasks.CheckTask;
 import com.wouterbreukink.onedrive.tasks.Task;
+import com.wouterbreukink.onedrive.tasks.TaskReporter;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,6 +88,9 @@ public class Main {
             fileSystem = new RWFileSystemProvider();
         }
 
+        // Report on progress
+        TaskReporter reporter = new TaskReporter();
+
         // Check the given root folder
         Item rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
 
@@ -99,7 +103,7 @@ public class Main {
 
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
-        queue.add(new CheckTask(new Task.TaskOptions(queue, api, fileSystem), rootFolder, new File(getCommandLineOpts().getLocalPath())));
+        queue.add(new CheckTask(new Task.TaskOptions(queue, api, fileSystem, reporter), rootFolder, new File(getCommandLineOpts().getLocalPath())));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());
@@ -127,7 +131,8 @@ public class Main {
         }
 
         queue.waitForCompletion();
-        log.info("Finished.");
+        log.info("Synchronisation complete - summary:");
+        reporter.report();
 
         System.exit(0);
     }

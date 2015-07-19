@@ -23,6 +23,8 @@ public abstract class Task implements Runnable, Comparable<Task> {
     protected final TaskQueue queue;
     protected final OneDriveAPI api;
     protected final FileSystemProvider fileSystem;
+    protected final TaskReporter reporter;
+
     private final int id;
     private int attempt;
 
@@ -30,6 +32,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
         this.queue = Preconditions.checkNotNull(options.getQueue());
         this.api = Preconditions.checkNotNull(options.getApi());
         this.fileSystem = Preconditions.checkNotNull(options.getFileSystem());
+        this.reporter = Preconditions.checkNotNull(options.getReporter());
         this.id = taskIdCounter.getAndIncrement();
         this.attempt = 0;
     }
@@ -81,7 +84,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
     }
 
     protected TaskOptions getTaskOptions() {
-        return new TaskOptions(queue, api, fileSystem);
+        return new TaskOptions(queue, api, fileSystem, reporter);
     }
 
     protected abstract int priority();
@@ -126,6 +129,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
         if (attempt < getCommandLineOpts().getTries()) {
             queue.add(this);
         } else {
+            reporter.error();
             log.error(String.format("Task %d did not complete - %s", id, this.toString()));
         }
     }
@@ -140,11 +144,13 @@ public abstract class Task implements Runnable, Comparable<Task> {
         private final TaskQueue queue;
         private final OneDriveAPI api;
         private final FileSystemProvider fileSystem;
+        private final TaskReporter reporter;
 
-        public TaskOptions(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem) {
+        public TaskOptions(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, TaskReporter reporter) {
             this.queue = queue;
             this.api = api;
             this.fileSystem = fileSystem;
+            this.reporter = reporter;
         }
 
         public TaskQueue getQueue() {
@@ -157,6 +163,10 @@ public abstract class Task implements Runnable, Comparable<Task> {
 
         public FileSystemProvider getFileSystem() {
             return fileSystem;
+        }
+
+        public TaskReporter getReporter() {
+            return reporter;
         }
     }
 }

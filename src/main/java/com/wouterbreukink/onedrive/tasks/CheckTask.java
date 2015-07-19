@@ -32,7 +32,7 @@ public class CheckTask extends Task {
 
     @Override
     public String toString() {
-        return "Checking file " + remoteFile.getFullName();
+        return String.format("Checking %s %s", remoteFile.isFolder() ? "folder" : "file", remoteFile.getFullName());
     }
 
     @Override
@@ -60,22 +60,27 @@ public class CheckTask extends Task {
                 processChild(null, localFile);
             }
 
-        } else if (localFile.isFile() && !remoteFile.isFolder()) { // If we are syncing files
+            return;
 
-            // Skip if the file size is too big
-            switch (getCommandLineOpts().getDirection()) {
-                case UP:
-                    if (isSizeInvalid(localFile) || isIgnored(localFile)) {
-                        return;
-                    }
-                    break;
-                case DOWN:
-                    if (isSizeInvalid(remoteFile) || isIgnored(remoteFile)) {
-                        return;
-                    }
-                    break;
+        }
 
-            }
+        // Skip if the file size is too big or if the file is ignored
+        switch (getCommandLineOpts().getDirection()) {
+            case UP:
+                if (isSizeInvalid(localFile) || isIgnored(localFile)) {
+                    reporter.skipped();
+                    return;
+                }
+                break;
+            case DOWN:
+                if (isSizeInvalid(remoteFile) || isIgnored(remoteFile)) {
+                    reporter.skipped();
+                    return;
+                }
+                break;
+        }
+
+        if (localFile.isFile() && !remoteFile.isFolder()) { // If we are syncing files
 
             // Check if the remote file matches the local file
             FileSystemProvider.FileMatch match = fileSystem.verifyMatch(
@@ -100,9 +105,12 @@ public class CheckTask extends Task {
                 case CRC:
                     queue.add(new UpdatePropertiesTask(getTaskOptions(), remoteFile, localFile));
                     break;
+                case YES:
+                    reporter.same();
+                    break;
             }
 
-        } else { // // Resolve cases where remote and local disagree over whether the item is a file or folder
+        } else { // Resolve cases where remote and local disagree over whether the item is a file or folder
             switch (getCommandLineOpts().getDirection()) {
                 case UP:
                     new DeleteTask(getTaskOptions(), remoteFile).taskBody(); // Execute immediately

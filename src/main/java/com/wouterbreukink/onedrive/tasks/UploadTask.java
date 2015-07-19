@@ -39,7 +39,7 @@ public class UploadTask extends Task {
 
     @Override
     public String toString() {
-        return "Upload " + parent.getFullName() + "/" + file.getName();
+        return "Upload " + parent.getFullName() + file.getName();
     }
 
     @Override
@@ -55,10 +55,12 @@ public class UploadTask extends Task {
         } else {
 
             if (isSizeInvalid(file)) {
+                reporter.skipped();
                 return;
             }
 
             if (isIgnored(file)) {
+                reporter.skipped();
                 return;
             }
 
@@ -106,7 +108,7 @@ public class UploadTask extends Task {
                             ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
                             elapsedTimeInner,
                             elapsedTimeInner > 0 ? ((session.getLastUploaded() / 1024d) / (elapsedTimeInner / 1000d)) : 0,
-                            parent.getFullName() + "/" + file.getName()));
+                            parent.getFullName() + file.getName()));
                 }
 
                 response = session.getItem();
@@ -123,6 +125,8 @@ public class UploadTask extends Task {
                     elapsedTime > 0 ? ((file.length() / 1024d) / (elapsedTime / 1000d)) : 0,
                     replace ? "replace" : "new",
                     response.getFullName()));
+
+            reporter.fileUploaded(replace, file.length());
         }
     }
 
