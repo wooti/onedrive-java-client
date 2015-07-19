@@ -1,7 +1,6 @@
-onedrive-java-client
-==========
+# onedrive-java-client
 
-A Microsoft OneDrive command line client written in Java 7.
+A cross-platform command line client for Microsoft OneDrive written in Java 7.
 
 ## Usage
 ```bash
@@ -24,19 +23,26 @@ usage: onedrive-java-syncer
  -y,--tries <count>              try each service request <count> times
 ```
 
-## Setup
+## Installation
 
-(1) Ensure you have a Java Runtime installed
+(1) Grab the latest source code
+```
+git clone https://github.com/wooti/onedrive-java-client.git
+cd onedrive-java-client
+```
 
-(2) Download the latest release
+(2) Build the application using [Maven](http://maven.apache.org/)
+```
+mvn clean package -DskipTests
+```
 
 (3) Authorise the application
 
 ## Synchronisation Modes
 
 The application currently supports one-way mirroring of data, so it will create, update and delete files as necessary to make the target side match the source side.
-* UP - Mirrors a local folder to a OneDrive folder
-* DOWN - Mirrors a OneDrive folder to a local folder
+* ``--direction UP`` - Mirrors a local folder to a remote OneDrive folder
+* ``--direction DOWN`` - Mirrors a remote OneDrive folder to a local folder
 
 ### Moving / Renaming Files
 
@@ -52,7 +58,9 @@ By default files are compared by looking at the size, created date and last modi
 
 The ``--dry-run`` option can be used to test the synchronisation operation, this executes the operation without applying any changes.
 
-## Libraries Used
+## References
+
+The OneDrive API documentation can be found [here](https://dev.onedrive.com/README.htm)
 
 The following libraries have been used
 * [Jersey](https://jersey.java.net/) - HTTP REST Client
@@ -61,6 +69,14 @@ The following libraries have been used
 * [Apache Log4j2](http://logging.apache.org/log4j/2.x/) - Logging framework
 * [Guava](https://github.com/google/guava) - Google core libraries
 
+## Future Plans
+
+The following key features are currently planned / under development:
+* Full two-way synchronisation support (with use of a local state database)
+* Support for OneDrive for Business
+* Improvements to the ``--ignore`` file
+
 ## License
 
-See [license](LICENSE.md) license.
+(C) 2015 Wouter Breukink
+See [license](LICENSE.md).
