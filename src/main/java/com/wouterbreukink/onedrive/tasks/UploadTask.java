@@ -17,15 +17,15 @@ public class UploadTask extends Task {
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
 
     private final OneDriveItem parent;
-    private final File file;
+    private final File localFile;
     private final boolean replace;
 
-    public UploadTask(TaskOptions options, OneDriveItem parent, File file, boolean replace) {
+    public UploadTask(TaskOptions options, OneDriveItem parent, File localFile, boolean replace) {
 
         super(options);
 
         this.parent = Preconditions.checkNotNull(parent);
-        this.file = Preconditions.checkNotNull(file);
+        this.localFile = Preconditions.checkNotNull(localFile);
         this.replace = replace;
 
         if (!parent.isFolder()) {
@@ -39,27 +39,27 @@ public class UploadTask extends Task {
 
     @Override
     public String toString() {
-        return "Upload " + parent.getFullName() + file.getName();
+        return "Upload " + parent.getFullName() + localFile.getName();
     }
 
     @Override
     protected void taskBody() throws IOException, OneDriveAPIException {
 
-        if (file.isDirectory()) {
-            OneDriveItem newParent = api.createFolder(parent, file.getName());
+        if (localFile.isDirectory()) {
+            OneDriveItem newParent = api.createFolder(parent, localFile.getName());
 
             //noinspection ConstantConditions
-            for (File f : file.listFiles()) {
+            for (File f : localFile.listFiles()) {
                 queue.add(new UploadTask(getTaskOptions(), newParent, f, false));
             }
         } else {
 
-            if (isSizeInvalid(file)) {
+            if (isSizeInvalid(localFile)) {
                 reporter.skipped();
                 return;
             }
 
-            if (isIgnored(file)) {
+            if (isIgnored(localFile)) {
                 reporter.skipped();
                 return;
             }
@@ -67,9 +67,9 @@ public class UploadTask extends Task {
             long startTime = System.currentTimeMillis();
 
             OneDriveItem response;
-            if (file.length() > getCommandLineOpts().getSplitAfter() * 1024 * 1024) {
+            if (localFile.length() > getCommandLineOpts().getSplitAfter() * 1024 * 1024) {
 
-                OneDriveUploadSession session = api.startUploadSession(parent, file);
+                OneDriveUploadSession session = api.startUploadSession(parent, localFile);
 
                 while (!session.isComplete()) {
                     long startTimeInner = System.currentTimeMillis();
@@ -108,25 +108,25 @@ public class UploadTask extends Task {
                             ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
                             elapsedTimeInner,
                             elapsedTimeInner > 0 ? ((session.getLastUploaded() / 1024d) / (elapsedTimeInner / 1000d)) : 0,
-                            parent.getFullName() + file.getName()));
+                            parent.getFullName() + localFile.getName()));
                 }
 
                 response = session.getItem();
 
             } else {
-                response = replace ? api.replaceFile(parent, file) : api.uploadFile(parent, file);
+                response = replace ? api.replaceFile(parent, localFile) : api.uploadFile(parent, localFile);
             }
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
             log.info(String.format("Uploaded %d KB in %dms (%.2f KB/s) to %s file %s",
-                    file.length() / 1024,
+                    localFile.length() / 1024,
                     elapsedTime,
-                    elapsedTime > 0 ? ((file.length() / 1024d) / (elapsedTime / 1000d)) : 0,
+                    elapsedTime > 0 ? ((localFile.length() / 1024d) / (elapsedTime / 1000d)) : 0,
                     replace ? "replace" : "new",
                     response.getFullName()));
 
-            reporter.fileUploaded(replace, file.length());
+            reporter.fileUploaded(replace, localFile.length());
         }
     }
 

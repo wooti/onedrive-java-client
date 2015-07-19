@@ -13,15 +13,15 @@ public class DownloadTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
     private final File parent;
-    private final Item file;
+    private final Item remoteFile;
     private final boolean replace;
 
-    public DownloadTask(TaskOptions options, File parent, Item file, boolean replace) {
+    public DownloadTask(TaskOptions options, File parent, Item remoteFile, boolean replace) {
 
         super(options);
 
         this.parent = Preconditions.checkNotNull(parent);
-        this.file = Preconditions.checkNotNull(file);
+        this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.replace = replace;
 
         if (!parent.isDirectory()) {
@@ -35,60 +35,60 @@ public class DownloadTask extends Task {
 
     @Override
     public String toString() {
-        return "Download " + file.getFullName();
+        return "Download " + remoteFile.getFullName();
     }
 
     @Override
     protected void taskBody() throws IOException, OneDriveAPIException {
 
-        if (file.isFolder()) {
+        if (remoteFile.isFolder()) {
 
-            File newParent = fileSystem.createFolder(parent, file.getName());
+            File newParent = fileSystem.createFolder(parent, remoteFile.getName());
 
-            for (Item item : api.getChildren(file)) {
+            for (Item item : api.getChildren(remoteFile)) {
                 queue.add(new DownloadTask(getTaskOptions(), newParent, item, false));
             }
 
         } else {
 
-            if (isSizeInvalid(file)) {
+            if (isSizeInvalid(remoteFile)) {
                 reporter.skipped();
                 return;
             }
 
             // Skip if ignored
-            if (isIgnored(file)) {
+            if (isIgnored(remoteFile)) {
                 reporter.skipped();
                 return;
             }
 
             long startTime = System.currentTimeMillis();
 
-            File downloadFile = fileSystem.createFile(parent, file.getName() + ".tmp");
+            File downloadFile = fileSystem.createFile(parent, remoteFile.getName() + ".tmp");
 
-            api.download(file, downloadFile);
+            api.download(remoteFile, downloadFile);
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
             log.info(String.format("Downloaded %d KB in %dms (%.2f KB/s) to %s file %s",
-                    file.getSize() / 1024,
+                    remoteFile.getSize() / 1024,
                     elapsedTime,
-                    elapsedTime > 0 ? ((file.getSize() / 1024d) / (elapsedTime / 1000d)) : 0,
+                    elapsedTime > 0 ? ((remoteFile.getSize() / 1024d) / (elapsedTime / 1000d)) : 0,
                     replace ? "replace" : "new",
-                    file.getFullName()));
+                    remoteFile.getFullName()));
 
             // Do a CRC check on the downloaded file
-            if (!fileSystem.verifyCrc(downloadFile, file.getFile().getHashes().getCrc32())) {
-                throw new IOException(String.format("Download of file '%s' failed", file.getFullName()));
+            if (!fileSystem.verifyCrc(downloadFile, remoteFile.getFile().getHashes().getCrc32())) {
+                throw new IOException(String.format("Download of file '%s' failed", remoteFile.getFullName()));
             }
 
             fileSystem.setAttributes(
                     downloadFile,
-                    file.getFileSystemInfo().getCreatedDateTime(),
-                    file.getFileSystemInfo().getLastModifiedDateTime());
+                    remoteFile.getFileSystemInfo().getCreatedDateTime(),
+                    remoteFile.getFileSystemInfo().getLastModifiedDateTime());
 
-            fileSystem.replaceFile(new File(parent, file.getName()), downloadFile);
-            reporter.fileDownloaded(replace, file.getSize());
+            fileSystem.replaceFile(new File(parent, remoteFile.getName()), downloadFile);
+            reporter.fileDownloaded(replace, remoteFile.getSize());
         }
     }
 }
