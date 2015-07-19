@@ -48,7 +48,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
     private static boolean isSizeInvalid(String filename, long size) {
         int maxSizeKb = getCommandLineOpts().getMaxSizeKb();
         if (maxSizeKb > 0 && size > maxSizeKb * 1024) {
-            log.info(String.format("Skipping file %s - size is %dKB (bigger than maximum of %dKB)",
+            log.debug(String.format("Skipping file %s - size is %dKB (bigger than maximum of %dKB)",
                     filename,
                     size / 1024,
                     maxSizeKb));
@@ -62,7 +62,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
         boolean ignored = isIgnored(remoteFile.getName() + (remoteFile.isDirectory() ? "/" : ""));
 
         if (ignored) {
-            log.info(String.format("Skipping ignored remote file %s", remoteFile.getFullName()));
+            log.debug(String.format("Skipping ignored remote file %s", remoteFile.getFullName()));
         }
 
         return ignored;
@@ -72,7 +72,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
         boolean ignored = isIgnored(localFile.getName() + (localFile.isDirectory() ? "/" : ""));
 
         if (ignored) {
-            log.info(String.format("Skipping ignored local file %s", localFile.getPath()));
+            log.debug(String.format("Skipping ignored local file %s", localFile.getPath()));
         }
 
         return ignored;
