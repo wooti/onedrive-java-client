@@ -3,7 +3,7 @@ package com.wouterbreukink.onedrive.client;
 public interface OneDriveItem {
     String getId();
 
-    boolean isFolder();
+    boolean isDirectory();
 
     String getFullName();
 
@@ -20,7 +20,7 @@ public interface OneDriveItem {
                     return null;
                 }
 
-                public boolean isFolder() {
+                public boolean isDirectory() {
                     return isFolder;
                 }
 

@@ -32,13 +32,13 @@ public class CheckTask extends Task {
 
     @Override
     public String toString() {
-        return String.format("Checking %s %s", remoteFile.isFolder() ? "folder" : "file", remoteFile.getFullName());
+        return String.format("Checking %s %s", remoteFile.isDirectory() ? "folder" : "file", remoteFile.getFullName());
     }
 
     @Override
     protected void taskBody() throws IOException, OneDriveAPIException {
 
-        if (localFile.isDirectory() && remoteFile.isFolder()) { // If we are syncing folders
+        if (localFile.isDirectory() && remoteFile.isDirectory()) { // If we are syncing folders
 
             Item[] remoteFiles = remoteFile.getChildren() != null ? remoteFile.getChildren() : api.getChildren(remoteFile);
 
@@ -51,12 +51,22 @@ public class CheckTask extends Task {
 
             // Iterate over all the remote files
             for (Item remoteFile : remoteFiles) {
+
+                if (remoteFile.isDirectory() && !getCommandLineOpts().isRecursive()) {
+                    continue;
+                }
+
                 File localFile = localFileCache.remove(remoteFile.getName());
                 processChild(remoteFile, localFile);
             }
 
             // Iterate over any local files we've not matched yet
             for (File localFile : localFileCache.values()) {
+
+                if (localFile.isDirectory() && !getCommandLineOpts().isRecursive()) {
+                    continue;
+                }
+
                 processChild(null, localFile);
             }
 
@@ -80,7 +90,7 @@ public class CheckTask extends Task {
                 break;
         }
 
-        if (localFile.isFile() && !remoteFile.isFolder()) { // If we are syncing files
+        if (localFile.isFile() && !remoteFile.isDirectory()) { // If we are syncing files
 
             // Check if the remote file matches the local file
             FileSystemProvider.FileMatch match = fileSystem.verifyMatch(

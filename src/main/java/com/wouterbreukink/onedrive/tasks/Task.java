@@ -59,7 +59,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
     }
 
     protected static boolean isIgnored(Item remoteFile) {
-        boolean ignored = isIgnored(remoteFile.getName() + (remoteFile.isFolder() ? "/" : ""));
+        boolean ignored = isIgnored(remoteFile.getName() + (remoteFile.isDirectory() ? "/" : ""));
 
         if (ignored) {
             log.info(String.format("Skipping ignored remote file %s", remoteFile.getFullName()));

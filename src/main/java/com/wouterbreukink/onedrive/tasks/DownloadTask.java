@@ -41,7 +41,7 @@ public class DownloadTask extends Task {
     @Override
     protected void taskBody() throws IOException, OneDriveAPIException {
 
-        if (remoteFile.isFolder()) {
+        if (remoteFile.isDirectory()) {
 
             File newParent = fileSystem.createFolder(parent, remoteFile.getName());
 

@@ -128,7 +128,7 @@ public class Main {
         // Check the given root folder
         Item rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
 
-        if (!rootFolder.isFolder()) {
+        if (!rootFolder.isDirectory()) {
             log.error(String.format("Specified root '%s' is not a folder", rootFolder.getFullName()));
             return;
         }

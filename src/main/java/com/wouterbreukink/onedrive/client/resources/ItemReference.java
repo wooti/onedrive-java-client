@@ -16,7 +16,7 @@ public class ItemReference implements OneDriveItem {
         return id;
     }
 
-    public boolean isFolder() {
+    public boolean isDirectory() {
         return true;
     }
 
@@ -31,6 +31,6 @@ public class ItemReference implements OneDriveItem {
         }
 
         int index = path.indexOf(':');
-        return index > 0 ? path.substring(index + 1) : path;
+        return (index > 0 ? path.substring(index + 1) : path) + (isDirectory() ? "/" : "");
     }
 }

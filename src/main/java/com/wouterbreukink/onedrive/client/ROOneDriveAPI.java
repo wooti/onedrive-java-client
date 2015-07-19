@@ -42,7 +42,7 @@ public class ROOneDriveAPI implements OneDriveAPI {
 
     public Item[] getChildren(OneDriveItem parent) throws OneDriveAPIException {
 
-        if (!parent.isFolder()) {
+        if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Specified Item is not a folder");
         }
 
@@ -77,7 +77,7 @@ public class ROOneDriveAPI implements OneDriveAPI {
 
     public OneDriveItem replaceFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
 
-        if (!parent.isFolder()) {
+        if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
@@ -86,7 +86,7 @@ public class ROOneDriveAPI implements OneDriveAPI {
 
     public OneDriveItem uploadFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
 
-        if (!parent.isFolder()) {
+        if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 

@@ -38,7 +38,7 @@ public class Item implements OneDriveItem {
         return deleted != null;
     }
 
-    public boolean isFolder() {
+    public boolean isDirectory() {
         return folder != null;
     }
 
@@ -103,7 +103,7 @@ public class Item implements OneDriveItem {
     }
 
     public String getFullName() {
-        return parentReference.getFullName() + "/" + name + (isFolder() ? "/" : "");
+        return parentReference.getFullName() + name + (isDirectory() ? "/" : "");
     }
 
     public Item[] getChildren() {

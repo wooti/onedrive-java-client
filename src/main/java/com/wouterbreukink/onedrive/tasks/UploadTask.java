@@ -28,7 +28,7 @@ public class UploadTask extends Task {
         this.localFile = Preconditions.checkNotNull(localFile);
         this.replace = replace;
 
-        if (!parent.isFolder()) {
+        if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Specified parent is not a folder");
         }
     }
