@@ -23,7 +23,7 @@ An authorisation token must be created to grant the application secure access to
 ```
 java -jar target/onedrive-java-client.jar --authorise
 ```
-Open the URL in your browser, and wait for it to redirect you to a blank page. Copy and paste the result into your keyfile (default file ``onedrive.key``).
+Open the URL in your browser, and wait for it to redirect you to a blank page. Copy and paste the address shown in your address bar into your keyfile (default file ``onedrive.key``).
 
 (4) Start synchronising folders
 ```
