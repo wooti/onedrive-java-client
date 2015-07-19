@@ -41,8 +41,11 @@ public class OneDriveUploadSession {
 
             ranges[i] = new Range(start, end);
         }
-        lastUploaded = ranges[0].start - totalUploaded;
-        totalUploaded = ranges[0].start;
+
+        if (ranges.length > 0) {
+            lastUploaded = ranges[0].start - totalUploaded;
+            totalUploaded = ranges[0].start;
+        }
     }
 
     public byte[] getChunk() throws IOException {
