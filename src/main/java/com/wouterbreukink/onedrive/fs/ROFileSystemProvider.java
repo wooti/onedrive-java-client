@@ -45,6 +45,11 @@ public class ROFileSystemProvider implements FileSystemProvider {
     }
 
     public FileMatch verifyMatch(File file, long crc, long fileSize, Date created, Date lastModified) throws IOException {
+
+        // Round to nearest second
+        created = new Date((created.getTime() / 1000) * 1000);
+        lastModified = new Date((lastModified.getTime() / 1000) * 1000);
+
         BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
 
         // Timestamp rounded to the nearest second
@@ -64,9 +69,9 @@ public class ROFileSystemProvider implements FileSystemProvider {
         boolean crcMatches = crc == localCrc;
 
         // If the crc matches but the timestamps do not we won't upload the content again
-        if (crcMatches && !(modifiedMatches || !createdMatches)) {
+        if (crcMatches && !(modifiedMatches && createdMatches)) {
             return FileMatch.CRC;
-        } else if (crcMatches && modifiedMatches && createdMatches) {
+        } else if (crcMatches) {
             return FileMatch.YES;
         } else {
             return FileMatch.NO;
