@@ -44,6 +44,11 @@ public class DownloadTask extends Task {
     @Override
     protected void taskBody() throws IOException, OneDriveAPIException {
 
+        if (isIgnored(remoteFile)) {
+            reporter.skipped();
+            return;
+        }
+
         if (remoteFile.isDirectory()) {
 
             File newParent = fileSystem.createFolder(parent, remoteFile.getName());
@@ -55,12 +60,6 @@ public class DownloadTask extends Task {
         } else {
 
             if (isSizeInvalid(remoteFile)) {
-                reporter.skipped();
-                return;
-            }
-
-            // Skip if ignored
-            if (isIgnored(remoteFile)) {
                 reporter.skipped();
                 return;
             }

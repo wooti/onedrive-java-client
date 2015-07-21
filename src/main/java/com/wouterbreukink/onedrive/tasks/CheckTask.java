@@ -142,6 +142,11 @@ public class CheckTask extends Task {
             throw new IllegalArgumentException("Must specify at least one file");
         }
 
+        if (remoteFile != null && isIgnored(remoteFile) || localFile != null && isIgnored((localFile))) {
+            reporter.skipped();
+            return;
+        }
+
         boolean remoteOnly = localFile == null;
         boolean localOnly = remoteFile == null;
 

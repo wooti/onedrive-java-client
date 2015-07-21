@@ -47,6 +47,11 @@ public class UploadTask extends Task {
     @Override
     protected void taskBody() throws IOException, OneDriveAPIException {
 
+        if (isIgnored(localFile)) {
+            reporter.skipped();
+            return;
+        }
+
         if (localFile.isDirectory()) {
             OneDriveItem newParent = api.createFolder(parent, localFile.getName());
 
@@ -57,11 +62,6 @@ public class UploadTask extends Task {
         } else {
 
             if (isSizeInvalid(localFile)) {
-                reporter.skipped();
-                return;
-            }
-
-            if (isIgnored(localFile)) {
                 reporter.skipped();
                 return;
             }
