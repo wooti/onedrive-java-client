@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
+import static com.wouterbreukink.onedrive.LogUtils.readableTime;
 
 public class DownloadTask extends Task {
 
@@ -72,9 +73,9 @@ public class DownloadTask extends Task {
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
-            log.info(String.format("Downloaded %s in %dms (%s/s) to %s file %s",
+            log.info(String.format("Downloaded %s in %s (%s/s) to %s file %s",
                     readableFileSize(remoteFile.getSize()),
-                    elapsedTime,
+                    readableTime(elapsedTime),
                     elapsedTime > 0 ? readableFileSize(remoteFile.getSize() / (elapsedTime / 1000d)) : 0,
                     replace ? "replace" : "new",
                     remoteFile.getFullName()));

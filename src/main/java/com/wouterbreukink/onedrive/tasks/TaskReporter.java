@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
+import static com.wouterbreukink.onedrive.LogUtils.readableTime;
 
 public class TaskReporter {
 
@@ -25,6 +26,12 @@ public class TaskReporter {
     private long newDownloadedSize;
     private int replaceDownloaded;
     private long replaceDownloadedSize;
+
+    private long startTime;
+
+    public TaskReporter() {
+        startTime = System.currentTimeMillis();
+    }
 
     public synchronized void same() {
         same++;
@@ -121,6 +128,9 @@ public class TaskReporter {
                     plural(replaceDownloaded),
                     readableFileSize(replaceDownloadedSize)));
         }
+
+        long elapsed = System.currentTimeMillis() - startTime;
+        log.info(String.format("Elapsed time: %s", readableTime(elapsed)));
     }
 
     private String plural(long same) {

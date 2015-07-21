@@ -12,6 +12,7 @@ import java.io.IOException;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
+import static com.wouterbreukink.onedrive.LogUtils.readableTime;
 
 public class UploadTask extends Task {
 
@@ -104,7 +105,7 @@ public class UploadTask extends Task {
 
                     long elapsedTimeInner = System.currentTimeMillis() - startTimeInner;
 
-                    log.info(String.format("(%.1f%%) Uploaded chunk of %s (%s/s) for file %s",
+                    log.info(String.format("Uploaded chunk (progress %.1f%%) of %s (%s/s) for file %s",
                             ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
                             readableFileSize(session.getLastUploaded()),
                             elapsedTimeInner > 0 ? readableFileSize(session.getLastUploaded() / (elapsedTimeInner / 1000d)) : 0,
@@ -119,9 +120,9 @@ public class UploadTask extends Task {
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
-            log.info(String.format("Uploaded %s in %dms (%s/s) to %s file %s",
+            log.info(String.format("Uploaded %s in %s (%s/s) to %s file %s",
                     readableFileSize(localFile.length()),
-                    elapsedTime,
+                    readableTime(elapsedTime),
                     elapsedTime > 0 ? readableFileSize(localFile.length() / (elapsedTime / 1000d)) : 0,
                     replace ? "replace" : "new",
                     response.getFullName()));

@@ -27,6 +27,21 @@ public class LogUtils {
         return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 
+    public static String readableTime(long ms) {
+
+        if (ms < 1000) {
+            return ms + "ms";
+        } else if (ms < 60000) {
+            return String.format("%.1fs", ms / 1000d);
+        } else {
+            long seconds = ms / 1000;
+            long s = seconds % 60;
+            long m = (seconds / 60) % 60;
+            long h = (seconds / (60 * 60)) % 24;
+            return String.format("%02d:%02d:%02d", h, m, s);
+        }
+    }
+
     public static String addFileLogger(String logFile) {
 
         LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
