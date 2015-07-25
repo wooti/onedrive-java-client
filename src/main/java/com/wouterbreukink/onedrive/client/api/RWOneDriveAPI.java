@@ -1,5 +1,6 @@
-package com.wouterbreukink.onedrive.client;
+package com.wouterbreukink.onedrive.client.api;
 
+import com.wouterbreukink.onedrive.client.*;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.UploadSession;
 import com.wouterbreukink.onedrive.client.resources.WriteFolder;

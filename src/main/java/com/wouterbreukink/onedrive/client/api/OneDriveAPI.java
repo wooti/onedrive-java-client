@@ -1,5 +1,8 @@
-package com.wouterbreukink.onedrive.client;
+package com.wouterbreukink.onedrive.client.api;
 
+import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 

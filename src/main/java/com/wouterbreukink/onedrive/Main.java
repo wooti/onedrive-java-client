@@ -1,9 +1,9 @@
 package com.wouterbreukink.onedrive;
 
-import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
-import com.wouterbreukink.onedrive.client.ROOneDriveAPI;
-import com.wouterbreukink.onedrive.client.RWOneDriveAPI;
+import com.wouterbreukink.onedrive.client.api.OneDriveAPI;
+import com.wouterbreukink.onedrive.client.api.ROOneDriveAPI;
+import com.wouterbreukink.onedrive.client.api.RWOneDriveAPI;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;

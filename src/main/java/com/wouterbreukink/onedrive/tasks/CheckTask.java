@@ -5,8 +5,6 @@ import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +14,6 @@ import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
 public class CheckTask extends Task {
 
-    private static final Logger log = LogManager.getLogger(CheckTask.class.getName());
     private final Item remoteFile;
     private final File localFile;
 

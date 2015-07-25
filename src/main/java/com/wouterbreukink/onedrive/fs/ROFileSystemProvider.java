@@ -81,13 +81,21 @@ public class ROFileSystemProvider implements FileSystemProvider {
     public long getChecksum(File file) throws IOException {
 
         // Compute CRC32 checksum
-        CheckedInputStream cis = new CheckedInputStream(new FileInputStream(file), new CRC32());
-        byte[] buf = new byte[1024];
+        CheckedInputStream cis = null;
 
-        //noinspection StatementWithEmptyBody
-        while (cis.read(buf) >= 0) {
+        try {
+            cis = new CheckedInputStream(new FileInputStream(file), new CRC32());
+            byte[] buf = new byte[1024];
+
+            //noinspection StatementWithEmptyBody
+            while (cis.read(buf) >= 0) {
+            }
+
+            return cis.getChecksum().getValue();
+        } finally {
+            if (cis != null) {
+                cis.close();
+            }
         }
-
-        return cis.getChecksum().getValue();
     }
 }

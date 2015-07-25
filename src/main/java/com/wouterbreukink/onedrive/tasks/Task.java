@@ -1,8 +1,8 @@
 package com.wouterbreukink.onedrive.tasks;
 
 import com.wouterbreukink.onedrive.TaskQueue;
-import com.wouterbreukink.onedrive.client.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.wouterbreukink.onedrive.client.api.OneDriveAPI;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
