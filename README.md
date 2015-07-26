@@ -6,7 +6,7 @@ __This application is currently in BETA - use with caution__
 
 ## Installation
 
-(1) Download and extract the [latest release](./releases/download/0.1/onedrive-java-client.zip)
+(1) Download and extract the [latest release](https://github.com/wooti/onedrive-java-client/releases/download/0.1/onedrive-java-client.zip).
 
 (2) Authorise the application
 
@@ -18,7 +18,7 @@ Open the URL in your browser, and wait for it to redirect you to a blank page. C
 
 (3) Start synchronising folders
 ```
-java -jar target/onedrive-java-client.jar --direction UP --local . --remote MyTargetFolder/
+java -jar onedrive-java-client.jar --direction UP --local . --remote MyTargetFolder/
 ```
 
 ## Develop and Build
