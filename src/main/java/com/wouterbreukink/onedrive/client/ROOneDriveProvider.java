@@ -22,7 +22,6 @@ import java.util.List;
 
 class ROOneDriveProvider implements OneDriveProvider {
 
-    //static final HttpTransport HTTP_TRANSPORT = new ApacheHttpTransport.Builder().setProxy(new HttpHost("localhost", 8888)).build();
     static final HttpTransport HTTP_TRANSPORT = new ApacheHttpTransport();
     static final JsonFactory JSON_FACTORY = new GsonFactory();
 
