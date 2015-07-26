@@ -1,8 +1,9 @@
 package com.wouterbreukink.onedrive;
 
+import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveProvider;
-import com.wouterbreukink.onedrive.client.authoriser.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import com.wouterbreukink.onedrive.tasks.CheckTask;
@@ -86,11 +87,8 @@ public class Main {
 
         System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
 
-        // Prepare the authoriser
-        OneDriveAuth authoriser = new OneDriveAuth(client);
-
         if (getCommandLineOpts().isAuthorise()) {
-            authoriser.printAuthInstructions(true);
+            AuthorisationProvider.FACTORY.printAuthInstructions();
             return;
         }
 
@@ -102,9 +100,14 @@ public class Main {
             return;
         }
 
-        // Try initialise the authoriser
-        if (!authoriser.initialise(getCommandLineOpts().getKeyFile())) {
-            authoriser.printAuthInstructions(false);
+        // Initialise the OneDrive authorisation
+        AuthorisationProvider authoriser;
+        try {
+            authoriser = AuthorisationProvider.FACTORY.create(client, getCommandLineOpts().getKeyFile());
+            authoriser.getAccessToken();
+        } catch (OneDriveAPIException ex) {
+            log.error("Unable to authorise client: " + ex.getMessage());
+            log.error("Re-run the application with --authorise");
             return;
         }
 

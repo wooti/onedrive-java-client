@@ -1,6 +1,6 @@
 package com.wouterbreukink.onedrive.client;
 
-import com.wouterbreukink.onedrive.client.authoriser.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
 import com.wouterbreukink.onedrive.client.resources.ErrorSet;
 import jersey.repackaged.com.google.common.base.Throwables;
 import jersey.repackaged.com.google.common.collect.Maps;
@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class OneDriveRequest {
 
-    private final OneDriveAuth authoriser;
+    private final AuthorisationProvider authoriser;
     private final Client client;
 
     private String target;
@@ -38,7 +38,7 @@ public class OneDriveRequest {
     private Object payloadJson;
     private byte[] payloadBinary;
 
-    public OneDriveRequest(Client client, OneDriveAuth authoriser, String target) {
+    public OneDriveRequest(Client client, AuthorisationProvider authoriser, String target) {
         this.client = client;
         this.authoriser = authoriser;
         this.target = target;
@@ -103,7 +103,7 @@ public class OneDriveRequest {
         }
     }
 
-    private Response getResponse() {
+    private Response getResponse() throws OneDriveAPIException {
 
         WebTarget requestTarget = client.target(target);
 

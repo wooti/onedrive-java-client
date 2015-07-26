@@ -1,6 +1,6 @@
 package com.wouterbreukink.onedrive.client;
 
-import com.wouterbreukink.onedrive.client.authoriser.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 
 import javax.ws.rs.client.Client;
@@ -40,11 +40,11 @@ public interface OneDriveProvider {
 
     class FACTORY {
 
-        public static OneDriveProvider readOnlyApi(Client client, OneDriveAuth authoriser) {
+        public static OneDriveProvider readOnlyApi(Client client, AuthorisationProvider authoriser) {
             return new ROOneDriveProvider(client, authoriser);
         }
 
-        public static OneDriveProvider readWriteApi(Client client, OneDriveAuth authoriser) {
+        public static OneDriveProvider readWriteApi(Client client, AuthorisationProvider authoriser) {
             return new RWOneDriveProvider(client, authoriser);
         }
     }

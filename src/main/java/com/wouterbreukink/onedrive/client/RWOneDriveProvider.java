@@ -2,7 +2,7 @@ package com.wouterbreukink.onedrive.client;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wouterbreukink.onedrive.client.authoriser.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
 import com.wouterbreukink.onedrive.client.facets.FileFacet;
 import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.client.facets.FolderFacet;
@@ -18,7 +18,7 @@ import java.util.Date;
 
 class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider {
 
-    public RWOneDriveProvider(Client client, OneDriveAuth authoriser) {
+    public RWOneDriveProvider(Client client, AuthorisationProvider authoriser) {
         super(client, authoriser);
     }
 

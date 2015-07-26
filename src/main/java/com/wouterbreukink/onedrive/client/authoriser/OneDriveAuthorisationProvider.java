@@ -1,5 +1,6 @@
 package com.wouterbreukink.onedrive.client.authoriser;
 
+import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Authorisation;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
@@ -20,33 +21,29 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OneDriveAuth {
+public class OneDriveAuthorisationProvider implements AuthorisationProvider {
 
-    private static final Logger log = LogManager.getLogger(OneDriveAuth.class.getName());
+    private static final Logger log = LogManager.getLogger(OneDriveAuthorisationProvider.class.getName());
     private static final String clientSecret = "to8fZAGMvD7Jr-NSdY1eVm4V7eaAtV5B";
     private static final String clientId = "000000004015B68A";
     private final Client client;
     private Path keyFile;
     private Authorisation authorisation;
 
-    public OneDriveAuth(Client client) {
+    public OneDriveAuthorisationProvider(Client client, Path keyFile) throws OneDriveAPIException {
         this.client = client;
-    }
 
-    public boolean initialise(Path keyFile) {
         this.keyFile = Preconditions.checkNotNull(keyFile);
 
         if (!Files.exists(keyFile) || !Files.isRegularFile(keyFile)) {
-            log.error(String.format("Specified key file '%s' cannot be found.", keyFile));
-            return false;
+            throw new OneDriveAPIException(401, String.format("Specified key file '%s' cannot be found.", keyFile));
         }
 
         String[] keyFileContents = readToken();
 
         switch (keyFileContents.length) {
             case 0:
-                log.error("Key file is empty");
-                return false;
+                throw new OneDriveAPIException(401, String.format("Key file '%s' is empty.", keyFile));
             case 1:
                 String authCode = keyFileContents[0];
 
@@ -58,31 +55,44 @@ public class OneDriveAuth {
                     authCode = m.group(1);
                 }
 
-                return getTokenFromCode(authCode);
+                getTokenFromCode(authCode);
+                break;
             case 2:
                 if (keyFileContents[0].equals(clientId)) {
-                    return getTokenFromRefreshToken(keyFileContents[1]);
+                    getTokenFromRefreshToken(keyFileContents[1]);
                 } else {
-                    log.error("Key file does not match this application version. Please re-create.");
-                    return false;
+                    throw new OneDriveAPIException(401, "Key file does not match this application version.");
                 }
+                break;
             default:
-                log.error("Expected key file with code and/or refresh token");
-                return false;
+                throw new OneDriveAPIException(401, "Expected key file with code and/or refresh token");
         }
     }
 
-    public String getAccessToken() {
+    public static void printAuthInstructions() {
+
+        WebTarget target = ClientBuilder.newClient()
+                .target("https://login.live.com/oauth20_authorize.srf")
+                .queryParam("client_id", clientId)
+                .queryParam("response_type", "code")
+                .queryParam("scope", "wl.signin wl.offline_access onedrive.readwrite")
+                .queryParam("client_secret", clientSecret)
+                .queryParam("redirect_uri", "https://login.live.com/oauth20_desktop.srf");
+
+        log.info("To authorise this application ou must generate an authorisation token");
+        log.info("Open the following in a browser, sign on, wait until you are redirected to a blank page and then store the url in the address bar in your key file.");
+        log.info("Authorisation URL: " + target.getUri());
+    }
+
+    @Override
+    public String getAccessToken() throws OneDriveAPIException {
         if (authorisation != null) {
 
             // Refresh if we know it is needed
             if (authorisation.getTokenExpiryDate().before(new Date())) {
                 log.info("Authorisation token has expired - refreshing");
-                if (!getTokenFromRefreshToken(authorisation.getRefreshToken())) {
-                    log.warn("Unable to refresh authorisation token");
-                } else {
-                    saveToken();
-                }
+                getTokenFromRefreshToken(authorisation.getRefreshToken());
+                saveToken();
             }
 
             return authorisation.getAccessToken();
@@ -91,36 +101,12 @@ public class OneDriveAuth {
         }
     }
 
-    public void refresh() {
-        if (!getTokenFromRefreshToken(authorisation.getRefreshToken())) {
-            log.warn("Unable to refresh authorisation token");
-        } else {
-            saveToken();
-        }
+    public void refresh() throws OneDriveAPIException {
+        getTokenFromRefreshToken(authorisation.getRefreshToken());
+        saveToken();
     }
 
-    public void printAuthInstructions(boolean expected) {
-
-        WebTarget target = ClientBuilder
-                .newClient()
-                .target("https://login.live.com/oauth20_authorize.srf")
-                .queryParam("client_id", clientId)
-                .queryParam("response_type", "code")
-                .queryParam("scope", "wl.signin wl.offline_access onedrive.readwrite")
-                .queryParam("client_secret", clientSecret)
-                .queryParam("redirect_uri", "https://login.live.com/oauth20_desktop.srf");
-
-        if (expected) {
-            log.info("You must generate an authorisation token to use this application");
-            log.info("Authorisation URL: " + target.getUri());
-        } else {
-            log.error("Unable to authenticate. Please re-create your key file.");
-            log.error("Open the following in a browser, sign on, wait until you are redirected to a blank page and then store the code returned in the address bar in your key file.");
-            log.error("Authorisation URL: " + target.getUri());
-        }
-    }
-
-    private boolean getTokenFromCode(String code) {
+    private void getTokenFromCode(String code) throws OneDriveAPIException {
 
         log.debug("Fetching authorisation token using authorisation code");
 
@@ -135,10 +121,10 @@ public class OneDriveAuth {
         Invocation.Builder invocationBuilder =
                 tokenTarget.request(MediaType.TEXT_PLAIN_TYPE);
 
-        return processResponse(invocationBuilder.get());
+        processResponse(invocationBuilder.get());
     }
 
-    private boolean getTokenFromRefreshToken(String refreshToken) {
+    private void getTokenFromRefreshToken(String refreshToken) throws OneDriveAPIException {
 
         log.debug("Fetching authorisation token using refresh token");
 
@@ -153,30 +139,23 @@ public class OneDriveAuth {
         Invocation.Builder invocationBuilder =
                 tokenTarget.request(MediaType.TEXT_PLAIN_TYPE);
 
-        return processResponse(invocationBuilder.get());
+        processResponse(invocationBuilder.get());
     }
 
-    private boolean processResponse(Response response) {
-        try {
-            authorisation = response.readEntity(Authorisation.class);
+    private void processResponse(Response response) throws OneDriveAPIException {
+        authorisation = response.readEntity(Authorisation.class);
 
-            // Check for failures
-            if (response.getStatus() != 200 || authorisation.getError() != null) {
-                log.error(String.format("Error code %d - %s (%s)",
-                        response.getStatus(),
-                        authorisation.getError(),
-                        authorisation.getErrorDescription()));
-                return false;
-            }
-
-            log.info("Fetched new authorisation token and refresh token for user " + authorisation.getUserId());
-            saveToken();
-            return true;
-
-        } catch (Exception ex) {
-            log.error("Unable to retrieve authorisation token", ex);
-            return false;
+        // Check for failures
+        if (response.getStatus() != 200 || authorisation.getError() != null) {
+            throw new OneDriveAPIException(response.getStatus(),
+                    String.format("Error code %d - %s (%s)",
+                            response.getStatus(),
+                            authorisation.getError(),
+                    authorisation.getErrorDescription()));
         }
+
+        log.info("Fetched new authorisation token and refresh token for user " + authorisation.getUserId());
+        saveToken();
     }
 
     private String[] readToken() {
@@ -189,7 +168,7 @@ public class OneDriveAuth {
         return new String[0];
     }
 
-    private void saveToken() {
+    private void saveToken() throws OneDriveAPIException {
         try {
             String[] content = new String[]{clientId, authorisation.getRefreshToken()};
             Files.write(keyFile, Arrays.asList(content), Charset.defaultCharset());

@@ -1,6 +1,6 @@
 package com.wouterbreukink.onedrive.client;
 
-import com.wouterbreukink.onedrive.client.authoriser.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.ItemSet;
@@ -15,9 +15,9 @@ import java.util.List;
 class ROOneDriveProvider implements OneDriveProvider {
 
     protected final Client client;
-    protected final OneDriveAuth authoriser;
+    protected final AuthorisationProvider authoriser;
 
-    public ROOneDriveProvider(Client client, OneDriveAuth authoriser) {
+    public ROOneDriveProvider(Client client, AuthorisationProvider authoriser) {
         this.authoriser = authoriser;
         this.client = client;
     }
