@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OneDriveAuthorisationProvider implements AuthorisationProvider {
+class OneDriveAuthorisationProvider implements AuthorisationProvider {
 
     private static final Logger log = LogManager.getLogger(OneDriveAuthorisationProvider.class.getName());
     private static final String clientSecret = "to8fZAGMvD7Jr-NSdY1eVm4V7eaAtV5B";
