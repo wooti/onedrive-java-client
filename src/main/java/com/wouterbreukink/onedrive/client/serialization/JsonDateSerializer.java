@@ -16,6 +16,7 @@ public class JsonDateSerializer {
 
     static {
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        df2.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     public synchronized String serialize(Date value) {
