@@ -1,6 +1,9 @@
 package com.wouterbreukink.onedrive.client.api;
 
-import com.wouterbreukink.onedrive.client.*;
+import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.wouterbreukink.onedrive.client.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.OneDriveRequest;
+import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.ItemSet;
@@ -9,7 +12,6 @@ import jersey.repackaged.com.google.common.collect.Lists;
 import javax.ws.rs.client.Client;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -32,22 +34,22 @@ class ROOneDriveProvider implements OneDriveProvider {
         return request.getResponse(Drive.class);
     }
 
-    public Item getRoot() throws OneDriveAPIException {
+    public OneDriveItem getRoot() throws OneDriveAPIException {
 
         OneDriveRequest request = getDefaultRequest()
                 .path("drive/root")
                 .method("GET");
 
-        return request.getResponse(Item.class);
+        return OneDriveItem.FACTORY.create(request.getResponse(Item.class));
     }
 
-    public Item[] getChildren(OneDriveItem parent) throws OneDriveAPIException {
+    public OneDriveItem[] getChildren(OneDriveItem parent) throws OneDriveAPIException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Specified Item is not a folder");
         }
 
-        List<Item> itemsToReturn = Lists.newArrayList();
+        List<OneDriveItem> itemsToReturn = Lists.newArrayList();
 
         String token = null;
 
@@ -58,22 +60,26 @@ class ROOneDriveProvider implements OneDriveProvider {
                     .method("GET");
 
             ItemSet items = request.getResponse(ItemSet.class);
-            Collections.addAll(itemsToReturn, items.getValue());
+
+            for (Item i : items.getValue()) {
+                itemsToReturn.add(OneDriveItem.FACTORY.create(i));
+            }
+
             token = items.getNextToken();
 
         } while (token != null); // If we have a token for the next page we need to keep going
 
-        return itemsToReturn.toArray(new Item[itemsToReturn.size()]);
+        return itemsToReturn.toArray(new OneDriveItem[itemsToReturn.size()]);
     }
 
-    public Item getPath(String path) throws OneDriveAPIException {
+    public OneDriveItem getPath(String path) throws OneDriveAPIException {
 
         OneDriveRequest request = getDefaultRequest()
                 .path("drive/root:/" + path)
                 .withChildren()
                 .method("GET");
 
-        return request.getResponse(Item.class);
+        return OneDriveItem.FACTORY.create(request.getResponse(Item.class));
     }
 
     public OneDriveItem replaceFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
@@ -104,7 +110,7 @@ class ROOneDriveProvider implements OneDriveProvider {
         session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getFile().getName(), session.getFile().isDirectory()));
     }
 
-    public OneDriveItem updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {
+    public OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {
         // Do nothing, just return the unmodified item
         return item;
     }
@@ -114,11 +120,11 @@ class ROOneDriveProvider implements OneDriveProvider {
         return OneDriveItem.FACTORY.create(parent, name, true);
     }
 
-    public void download(Item item, File target) throws OneDriveAPIException {
+    public void download(OneDriveItem item, File target) throws OneDriveAPIException {
         // Do nothing
     }
 
-    public void delete(Item remoteFile) throws OneDriveAPIException {
+    public void delete(OneDriveItem remoteFile) throws OneDriveAPIException {
         // Do nothing
     }
 

@@ -1,7 +1,6 @@
 package com.wouterbreukink.onedrive.client.resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.resources.facets.DeletedFacet;
 import com.wouterbreukink.onedrive.client.resources.facets.FileFacet;
 import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
@@ -10,7 +9,7 @@ import com.wouterbreukink.onedrive.client.resources.facets.FolderFacet;
 import java.util.Date;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Item implements OneDriveItem {
+public class Item {
 
     private String id;
     private String name;
@@ -33,14 +32,6 @@ public class Item implements OneDriveItem {
     //private	VideoFacet	video
     //private	LocationFacet	location
     private DeletedFacet deleted;
-
-    public boolean isDeleted() {
-        return deleted != null;
-    }
-
-    public boolean isDirectory() {
-        return folder != null;
-    }
 
     public String getId() {
         return id;
@@ -100,10 +91,6 @@ public class Item implements OneDriveItem {
 
     public DeletedFacet getDeleted() {
         return deleted;
-    }
-
-    public String getFullName() {
-        return parentReference.getFullName() + name + (isDirectory() ? "/" : "");
     }
 
     public Item[] getChildren() {

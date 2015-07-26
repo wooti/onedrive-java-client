@@ -1,7 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
-import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.client.api.OneDriveItem;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
@@ -14,10 +14,10 @@ import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
 public class CheckTask extends Task {
 
-    private final Item remoteFile;
+    private final OneDriveItem remoteFile;
     private final File localFile;
 
-    public CheckTask(TaskOptions options, Item remoteFile, File localFile) {
+    public CheckTask(TaskOptions options, OneDriveItem remoteFile, File localFile) {
         super(options);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.localFile = Preconditions.checkNotNull(localFile);
@@ -37,7 +37,7 @@ public class CheckTask extends Task {
 
         if (localFile.isDirectory() && remoteFile.isDirectory()) { // If we are syncing folders
 
-            Item[] remoteFiles = remoteFile.getChildren() != null ? remoteFile.getChildren() : api.getChildren(remoteFile);
+            OneDriveItem[] remoteFiles = api.getChildren(remoteFile);
 
             // Index the local files
             Map<String, File> localFileCache = Maps.newHashMap();
@@ -47,7 +47,7 @@ public class CheckTask extends Task {
             }
 
             // Iterate over all the remote files
-            for (Item remoteFile : remoteFiles) {
+            for (OneDriveItem remoteFile : remoteFiles) {
 
                 if (remoteFile.isDirectory() && !getCommandLineOpts().isRecursive()) {
                     continue;
@@ -91,16 +91,16 @@ public class CheckTask extends Task {
 
             // Check if the remote file matches the local file
             FileSystemProvider.FileMatch match = fileSystem.verifyMatch(
-                    localFile, remoteFile.getFile().getHashes().getCrc32(),
+                    localFile, remoteFile.getCrc32(),
                     remoteFile.getSize(),
-                    remoteFile.getFileSystemInfo().getCreatedDateTime(),
-                    remoteFile.getFileSystemInfo().getLastModifiedDateTime());
+                    remoteFile.getCreatedDateTime(),
+                    remoteFile.getLastModifiedDateTime());
 
             switch (match) {
                 case NO:
                     switch (getCommandLineOpts().getDirection()) {
                         case UP:
-                            queue.add(new UploadTask(getTaskOptions(), remoteFile.getParentReference(), localFile, true));
+                            queue.add(new UploadTask(getTaskOptions(), remoteFile.getParent(), localFile, true));
                             break;
                         case DOWN:
                             queue.add(new DownloadTask(getTaskOptions(), localFile.getParentFile(), remoteFile, true));
@@ -121,7 +121,7 @@ public class CheckTask extends Task {
             switch (getCommandLineOpts().getDirection()) {
                 case UP:
                     new DeleteTask(getTaskOptions(), remoteFile).taskBody(); // Execute immediately
-                    queue.add(new UploadTask(getTaskOptions(), remoteFile.getParentReference(), localFile, true));
+                    queue.add(new UploadTask(getTaskOptions(), remoteFile.getParent(), localFile, true));
                     break;
                 case DOWN:
                     new DeleteTask(getTaskOptions(), localFile).taskBody(); // Execute immediately
@@ -133,7 +133,7 @@ public class CheckTask extends Task {
         }
     }
 
-    private void processChild(Item remoteFile, File localFile) {
+    private void processChild(OneDriveItem remoteFile, File localFile) {
 
         if (remoteFile == null && localFile == null) {
             throw new IllegalArgumentException("Must specify at least one file");

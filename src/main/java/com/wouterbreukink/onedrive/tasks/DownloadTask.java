@@ -1,7 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
-import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.client.api.OneDriveItem;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,10 +16,10 @@ public class DownloadTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
     private final File parent;
-    private final Item remoteFile;
+    private final OneDriveItem remoteFile;
     private final boolean replace;
 
-    public DownloadTask(TaskOptions options, File parent, Item remoteFile, boolean replace) {
+    public DownloadTask(TaskOptions options, File parent, OneDriveItem remoteFile, boolean replace) {
 
         super(options);
 
@@ -53,7 +53,7 @@ public class DownloadTask extends Task {
 
             File newParent = fileSystem.createFolder(parent, remoteFile.getName());
 
-            for (Item item : api.getChildren(remoteFile)) {
+            for (OneDriveItem item : api.getChildren(remoteFile)) {
                 queue.add(new DownloadTask(getTaskOptions(), newParent, item, false));
             }
 
@@ -80,14 +80,14 @@ public class DownloadTask extends Task {
                     remoteFile.getFullName()));
 
             // Do a CRC check on the downloaded file
-            if (!fileSystem.verifyCrc(downloadFile, remoteFile.getFile().getHashes().getCrc32())) {
+            if (!fileSystem.verifyCrc(downloadFile, remoteFile.getCrc32())) {
                 throw new IOException(String.format("Download of file '%s' failed", remoteFile.getFullName()));
             }
 
             fileSystem.setAttributes(
                     downloadFile,
-                    remoteFile.getFileSystemInfo().getCreatedDateTime(),
-                    remoteFile.getFileSystemInfo().getLastModifiedDateTime());
+                    remoteFile.getCreatedDateTime(),
+                    remoteFile.getLastModifiedDateTime());
 
             fileSystem.replaceFile(new File(parent, remoteFile.getName()), downloadFile);
             reporter.fileDownloaded(replace, remoteFile.getSize());

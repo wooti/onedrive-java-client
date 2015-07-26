@@ -1,9 +1,5 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-/**
- * Copyright Wouter Breukink 2015
- */
-
 public class ErrorFacet {
 
     private String code;

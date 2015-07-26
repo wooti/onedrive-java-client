@@ -1,7 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
-import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.client.api.OneDriveItem;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,10 +12,10 @@ import java.io.IOException;
 public class DeleteTask extends Task {
 
     private static final Logger log = LogManager.getLogger(DeleteTask.class.getName());
-    private final Item remoteFile;
+    private final OneDriveItem remoteFile;
     private final File localFile;
 
-    public DeleteTask(TaskOptions options, Item remoteFile) {
+    public DeleteTask(TaskOptions options, OneDriveItem remoteFile) {
 
         super(options);
 

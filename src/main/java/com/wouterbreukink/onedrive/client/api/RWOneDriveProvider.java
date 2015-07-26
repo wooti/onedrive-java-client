@@ -1,11 +1,16 @@
 package com.wouterbreukink.onedrive.client.api;
 
-import com.wouterbreukink.onedrive.client.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.wouterbreukink.onedrive.client.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.OneDriveRequest;
+import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.UploadSession;
-import com.wouterbreukink.onedrive.client.resources.WriteFolder;
-import com.wouterbreukink.onedrive.client.resources.WriteItem;
+import com.wouterbreukink.onedrive.client.resources.facets.FileFacet;
 import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
+import com.wouterbreukink.onedrive.client.resources.facets.FolderFacet;
 import com.wouterbreukink.onedrive.client.resources.facets.MultiPartItem;
 
 import javax.ws.rs.client.Client;
@@ -32,14 +37,14 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
                 .payloadBinary(Files.readAllBytes(file.toPath()))
                 .method("PUT");
 
-        Item item = request.getResponse(Item.class);
+        OneDriveItem item = OneDriveItem.FACTORY.create(request.getResponse(Item.class));
 
         // Now update the item
         BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
         return updateFile(item, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis()));
     }
 
-    public Item uploadFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
+    public OneDriveItem uploadFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
@@ -50,7 +55,7 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
         FileSystemInfoFacet fsi = new FileSystemInfoFacet();
         fsi.setLastModifiedDateTime(new Date(attr.lastModifiedTime().toMillis()));
         fsi.setCreatedDateTime(new Date(attr.creationTime().toMillis()));
-        WriteItem itemToWrite = new WriteItem(file.getName(), fsi, true);
+        WriteableItem itemToWrite = new WriteableItem(file.getName(), fsi, true);
 
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + parent.getId() + "/children")
@@ -58,7 +63,7 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
                 .payloadBinary(Files.readAllBytes(file.toPath()))
                 .method("POST");
 
-        return request.getResponse(Item.class);
+        return OneDriveItem.FACTORY.create(request.getResponse(Item.class));
     }
 
     @Override
@@ -79,7 +84,7 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
 
         byte[] bytesToUpload = session.getChunk();
         long length = session.getFile().length();
-        Item item;
+        OneDriveItem item;
 
         OneDriveRequest uploadPart = getDefaultRequest()
                 .target(session.getUploadUrl())
@@ -92,7 +97,7 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
             session.setRanges(response.getNextExpectedRanges());
             return;
         } else {
-            item = uploadPart.getResponse(Item.class);
+            item = OneDriveItem.FACTORY.create(uploadPart.getResponse(Item.class));
         }
 
         // If this is the final chunk then set the properties
@@ -103,9 +108,9 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
         session.setComplete(item);
     }
 
-    public Item updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {
+    public OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {
 
-        WriteItem updateItem = new WriteItem(item.getName(), new FileSystemInfoFacet(), false);
+        WriteableItem updateItem = new WriteableItem(item.getName(), new FileSystemInfoFacet(), false);
 
         updateItem.getFileSystemInfo().setCreatedDateTime(createdDate);
         updateItem.getFileSystemInfo().setLastModifiedDateTime(modifiedDate);
@@ -115,22 +120,22 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
                 .payloadJson(updateItem)
                 .method("PATCH");
 
-        return request.getResponse(Item.class);
+        return OneDriveItem.FACTORY.create(request.getResponse(Item.class));
     }
 
-    public Item createFolder(OneDriveItem parent, String name) throws OneDriveAPIException {
+    public OneDriveItem createFolder(OneDriveItem parent, String name) throws OneDriveAPIException {
 
-        WriteFolder newFolder = new WriteFolder(name);
+        WriteableFolder newFolder = new WriteableFolder(name);
 
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + parent.getId() + "/children")
                 .payloadJson(newFolder)
                 .method("POST");
 
-        return request.getResponse(Item.class);
+        return OneDriveItem.FACTORY.create(request.getResponse(Item.class));
     }
 
-    public void download(Item item, File target) throws OneDriveAPIException {
+    public void download(OneDriveItem item, File target) throws OneDriveAPIException {
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + item.getId() + "/content")
                 .method("GET");
@@ -138,11 +143,66 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
         request.getFile(target);
     }
 
-    public void delete(Item remoteFile) throws OneDriveAPIException {
+    public void delete(OneDriveItem remoteFile) throws OneDriveAPIException {
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + remoteFile.getId())
                 .method("DELETE");
 
         request.getResponse(null);
+    }
+
+    private class WriteableFolder {
+        private String name;
+        private FolderFacet folder;
+
+        public WriteableFolder(String name) {
+            this.name = name;
+            this.folder = new FolderFacet();
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public FolderFacet getFolder() {
+            return folder;
+        }
+    }
+
+    private class WriteableItem {
+        private final FileSystemInfoFacet fileSystemInfo;
+        private String name;
+        private FileFacet file = new FileFacet();
+        private boolean multipart;
+
+        public WriteableItem(String name, FileSystemInfoFacet fileSystemInfo, boolean multipart) {
+            this.name = name;
+            this.fileSystemInfo = fileSystemInfo;
+            this.multipart = multipart;
+        }
+
+        public FileSystemInfoFacet getFileSystemInfo() {
+            return fileSystemInfo;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public FileFacet getFile() {
+            return file;
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonProperty("@content.sourceUrl")
+        public String getSourceUrl() {
+            return multipart ? "cid:content" : null;
+        }
+
+        //@JsonInclude(JsonInclude.Include.NON_NULL)
+        //@JsonProperty("@name.conflictBehavior")
+        //public String getConflictBehaviour() {
+        //    return "replace";
+        //}
     }
 }

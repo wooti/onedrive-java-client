@@ -1,7 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
-import com.wouterbreukink.onedrive.client.resources.Item;
+import com.wouterbreukink.onedrive.client.api.OneDriveItem;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,10 +18,10 @@ import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 public class UpdatePropertiesTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UpdatePropertiesTask.class.getName());
-    private final Item remoteFile;
+    private final OneDriveItem remoteFile;
     private final File localFile;
 
-    public UpdatePropertiesTask(TaskOptions options, Item remoteFile, File localFile) {
+    public UpdatePropertiesTask(TaskOptions options, OneDriveItem remoteFile, File localFile) {
 
         super(options);
 
@@ -54,7 +54,7 @@ public class UpdatePropertiesTask extends Task {
 
                 break;
             case DOWN:
-                fileSystem.setAttributes(localFile, remoteFile.getFileSystemInfo().getCreatedDateTime(), remoteFile.getFileSystemInfo().getLastModifiedDateTime());
+                fileSystem.setAttributes(localFile, remoteFile.getCreatedDateTime(), remoteFile.getLastModifiedDateTime());
                 log.info("Updated local timestamps for item " + remoteFile.getFullName());
                 break;
             default:

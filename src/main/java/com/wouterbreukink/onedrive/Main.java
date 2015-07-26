@@ -1,9 +1,9 @@
 package com.wouterbreukink.onedrive;
 
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.api.OneDriveItem;
 import com.wouterbreukink.onedrive.client.api.OneDriveProvider;
 import com.wouterbreukink.onedrive.client.resources.Drive;
-import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import com.wouterbreukink.onedrive.tasks.CheckTask;
 import com.wouterbreukink.onedrive.tasks.Task;
@@ -135,14 +135,14 @@ public class Main {
                 ((double) primary.getQuota().getUsed() / primary.getQuota().getTotal()) * 100));
 
         // Check the given root folder
-        Item rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
+        OneDriveItem rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
 
         if (!rootFolder.isDirectory()) {
             log.error(String.format("Specified root '%s' is not a folder", rootFolder.getFullName()));
             return;
         }
 
-        log.info(String.format("Fetched root folder '%s' - found %d items", rootFolder.getFullName(), rootFolder.getFolder().getChildCount()));
+        log.info(String.format("Starting at root folder '%s'", rootFolder.getFullName()));
 
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();

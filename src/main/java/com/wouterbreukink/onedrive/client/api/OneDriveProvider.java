@@ -2,10 +2,8 @@ package com.wouterbreukink.onedrive.client.api;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
-import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
 import com.wouterbreukink.onedrive.client.resources.Drive;
-import com.wouterbreukink.onedrive.client.resources.Item;
 
 import javax.ws.rs.client.Client;
 import java.io.File;
@@ -18,11 +16,11 @@ public interface OneDriveProvider {
 
     Drive getDefaultDrive() throws OneDriveAPIException;
 
-    Item getRoot() throws OneDriveAPIException;
+    OneDriveItem getRoot() throws OneDriveAPIException;
 
-    Item[] getChildren(OneDriveItem parent) throws OneDriveAPIException;
+    OneDriveItem[] getChildren(OneDriveItem parent) throws OneDriveAPIException;
 
-    Item getPath(String path) throws OneDriveAPIException;
+    OneDriveItem getPath(String path) throws OneDriveAPIException;
 
     // Write operations
 
@@ -34,13 +32,13 @@ public interface OneDriveProvider {
 
     void uploadChunk(OneDriveUploadSession session) throws OneDriveAPIException, IOException;
 
-    OneDriveItem updateFile(Item item, Date createdDate, Date modifiedDate) throws OneDriveAPIException;
+    OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws OneDriveAPIException;
 
     OneDriveItem createFolder(OneDriveItem parent, String name) throws OneDriveAPIException;
 
-    void download(Item item, File target) throws OneDriveAPIException;
+    void download(OneDriveItem item, File target) throws OneDriveAPIException;
 
-    void delete(Item remoteFile) throws OneDriveAPIException;
+    void delete(OneDriveItem remoteFile) throws OneDriveAPIException;
 
     class FACTORY {
 

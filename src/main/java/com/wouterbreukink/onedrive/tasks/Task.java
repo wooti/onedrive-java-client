@@ -2,8 +2,8 @@ package com.wouterbreukink.onedrive.tasks;
 
 import com.wouterbreukink.onedrive.TaskQueue;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.wouterbreukink.onedrive.client.api.OneDriveItem;
 import com.wouterbreukink.onedrive.client.api.OneDriveProvider;
-import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
@@ -41,7 +41,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
         return isSizeInvalid(localFile.getPath(), localFile.length());
     }
 
-    protected static boolean isSizeInvalid(Item remoteFile) {
+    protected static boolean isSizeInvalid(OneDriveItem remoteFile) {
         return isSizeInvalid(remoteFile.getFullName(), remoteFile.getSize());
     }
 
@@ -58,7 +58,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
         return false;
     }
 
-    protected static boolean isIgnored(Item remoteFile) {
+    protected static boolean isIgnored(OneDriveItem remoteFile) {
         boolean ignored = isIgnored(remoteFile.getName() + (remoteFile.isDirectory() ? "/" : ""));
 
         if (ignored) {
