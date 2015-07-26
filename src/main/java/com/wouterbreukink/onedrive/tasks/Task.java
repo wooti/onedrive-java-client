@@ -4,7 +4,7 @@ import com.wouterbreukink.onedrive.TaskQueue;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveProvider;
-import com.wouterbreukink.onedrive.fs.FileSystemProvider;
+import com.wouterbreukink.onedrive.filesystem.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -2,7 +2,7 @@ package com.wouterbreukink.onedrive.tasks;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
-import com.wouterbreukink.onedrive.fs.FileSystemProvider;
+import com.wouterbreukink.onedrive.filesystem.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
 import jersey.repackaged.com.google.common.collect.Maps;
 

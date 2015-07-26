@@ -5,7 +5,7 @@ import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveProvider;
 import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
 import com.wouterbreukink.onedrive.client.resources.Drive;
-import com.wouterbreukink.onedrive.fs.FileSystemProvider;
+import com.wouterbreukink.onedrive.filesystem.FileSystemProvider;
 import com.wouterbreukink.onedrive.tasks.CheckTask;
 import com.wouterbreukink.onedrive.tasks.Task;
 import com.wouterbreukink.onedrive.tasks.TaskReporter;
