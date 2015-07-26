@@ -1,10 +1,10 @@
 package com.wouterbreukink.onedrive.client.resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.wouterbreukink.onedrive.client.resources.facets.DeletedFacet;
-import com.wouterbreukink.onedrive.client.resources.facets.FileFacet;
-import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
-import com.wouterbreukink.onedrive.client.resources.facets.FolderFacet;
+import com.wouterbreukink.onedrive.client.facets.DeletedFacet;
+import com.wouterbreukink.onedrive.client.facets.FileFacet;
+import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
+import com.wouterbreukink.onedrive.client.facets.FolderFacet;
 
 import java.util.Date;
 

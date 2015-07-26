@@ -1,8 +1,8 @@
 package com.wouterbreukink.onedrive;
 
-import com.wouterbreukink.onedrive.client.OneDriveAuth;
-import com.wouterbreukink.onedrive.client.api.OneDriveItem;
-import com.wouterbreukink.onedrive.client.api.OneDriveProvider;
+import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.client.OneDriveProvider;
+import com.wouterbreukink.onedrive.client.authoriser.OneDriveAuth;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import com.wouterbreukink.onedrive.tasks.CheckTask;

@@ -1,16 +1,13 @@
-package com.wouterbreukink.onedrive.client.api;
+package com.wouterbreukink.onedrive.client;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wouterbreukink.onedrive.client.OneDriveAPIException;
-import com.wouterbreukink.onedrive.client.OneDriveAuth;
-import com.wouterbreukink.onedrive.client.OneDriveRequest;
-import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
+import com.wouterbreukink.onedrive.client.authoriser.OneDriveAuth;
+import com.wouterbreukink.onedrive.client.facets.FileFacet;
+import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
+import com.wouterbreukink.onedrive.client.facets.FolderFacet;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.UploadSession;
-import com.wouterbreukink.onedrive.client.resources.facets.FileFacet;
-import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
-import com.wouterbreukink.onedrive.client.resources.facets.FolderFacet;
 
 import javax.ws.rs.client.Client;
 import java.io.File;

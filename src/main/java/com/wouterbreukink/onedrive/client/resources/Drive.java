@@ -1,7 +1,7 @@
 package com.wouterbreukink.onedrive.client.resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.wouterbreukink.onedrive.client.resources.facets.QuotaFacet;
+import com.wouterbreukink.onedrive.client.facets.QuotaFacet;
 
 @JsonIgnoreProperties(value = "@odata.context")
 public class Drive {

@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.client;
+package com.wouterbreukink.onedrive.client.authoriser;
 
 import com.wouterbreukink.onedrive.client.resources.Authorisation;
 import jersey.repackaged.com.google.common.base.Preconditions;

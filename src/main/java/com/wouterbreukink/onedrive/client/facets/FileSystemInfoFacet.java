@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.client.resources.facets;
+package com.wouterbreukink.onedrive.client.facets;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.wouterbreukink.onedrive.client.serialization.JsonDateSerializer;

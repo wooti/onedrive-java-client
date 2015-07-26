@@ -1,4 +1,4 @@
-package com.wouterbreukink.onedrive.client.resources.facets;
+package com.wouterbreukink.onedrive.client.facets;
 
 public class FolderFacet {
 

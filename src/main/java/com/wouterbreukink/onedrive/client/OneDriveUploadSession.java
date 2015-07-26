@@ -1,7 +1,5 @@
 package com.wouterbreukink.onedrive.client;
 
-import com.wouterbreukink.onedrive.client.api.OneDriveItem;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;

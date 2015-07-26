@@ -1,5 +1,6 @@
 package com.wouterbreukink.onedrive.client;
 
+import com.wouterbreukink.onedrive.client.authoriser.OneDriveAuth;
 import com.wouterbreukink.onedrive.client.resources.ErrorSet;
 import jersey.repackaged.com.google.common.base.Throwables;
 import jersey.repackaged.com.google.common.collect.Maps;
@@ -194,8 +195,6 @@ public class OneDriveRequest {
             fos.close();
         } catch (MalformedURLException e) {
             throw new OneDriveAPIException(0, "Unable to download file", e);
-        } catch (FileNotFoundException e) {
-            throw new OneDriveAPIException(0, "Unable to download file");
         } catch (IOException e) {
             throw new OneDriveAPIException(0, "Unable to download file");
         }
