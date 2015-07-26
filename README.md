@@ -6,6 +6,23 @@ __This application is currently in BETA - use with caution__
 
 ## Installation
 
+(1) Download and extract the [latest release](./releases/download/0.1/onedrive-java-client.zip)
+
+(2) Authorise the application
+
+An authorisation token must be created to grant the application secure access to OneDrive. Run the following command to generate the authorisation URL:
+```
+java -jar onedrive-java-client.jar --authorise
+```
+Open the URL in your browser, and wait for it to redirect you to a blank page. Copy and paste the address shown in your address bar into your keyfile (default file ``onedrive.key``).
+
+(3) Start synchronising folders
+```
+java -jar target/onedrive-java-client.jar --direction UP --local . --remote MyTargetFolder/
+```
+
+## Develop and Build
+
 (1) Grab the latest source code
 ```
 git clone https://github.com/wooti/onedrive-java-client.git
@@ -15,19 +32,6 @@ cd onedrive-java-client
 (2) Build the application using [Maven](http://maven.apache.org/)
 ```
 mvn clean package -DskipTests
-```
-
-(3) Authorise the application
-
-An authorisation token must be created to grant the application secure access to OneDrive. Run the following command to generate the authorisation URL:
-```
-java -jar target/onedrive-java-client.jar --authorise
-```
-Open the URL in your browser, and wait for it to redirect you to a blank page. Copy and paste the address shown in your address bar into your keyfile (default file ``onedrive.key``).
-
-(4) Start synchronising folders
-```
-java -jar target/onedrive-java-client.jar --direction UP --local . --remote MyTargetFolder/
 ```
 
 ## Usage
