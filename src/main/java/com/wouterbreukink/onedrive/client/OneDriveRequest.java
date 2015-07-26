@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Map;
@@ -193,10 +192,8 @@ public class OneDriveRequest {
 
             rbc.close();
             fos.close();
-        } catch (MalformedURLException e) {
-            throw new OneDriveAPIException(0, "Unable to download file", e);
         } catch (IOException e) {
-            throw new OneDriveAPIException(0, "Unable to download file");
+            throw new OneDriveAPIException(0, "Unable to download file", e);
         }
     }
 }
