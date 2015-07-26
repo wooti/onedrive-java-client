@@ -6,7 +6,7 @@ import com.google.api.client.util.Key;
 class OneDriveUrl extends GenericUrl {
 
     private static final String rootUrl = "https://api.onedrive.com/v1.0";
-    @Key("$skipToken")
+    @Key("$skiptoken")
     private String token;
 
     public OneDriveUrl(String encodedUrl) {

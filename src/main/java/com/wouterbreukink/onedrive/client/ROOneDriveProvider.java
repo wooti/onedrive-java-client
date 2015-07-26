@@ -68,7 +68,10 @@ class ROOneDriveProvider implements OneDriveProvider {
         do {
 
             OneDriveUrl url = OneDriveUrl.children(parent.getId());
-            url.setToken(token);
+
+            if (token != null) {
+                url.setToken(token);
+            }
 
             HttpRequest request = requestFactory.buildGetRequest(url);
             ItemSet items = request.execute().parseAs(ItemSet.class);
