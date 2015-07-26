@@ -12,7 +12,7 @@ import java.util.zip.CheckedInputStream;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
-public class ROFileSystemProvider implements FileSystemProvider {
+class ROFileSystemProvider implements FileSystemProvider {
 
     public void delete(File file) throws IOException {
         // Do nothing

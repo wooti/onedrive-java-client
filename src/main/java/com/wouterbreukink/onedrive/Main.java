@@ -1,14 +1,10 @@
 package com.wouterbreukink.onedrive;
 
 import com.wouterbreukink.onedrive.client.OneDriveAuth;
-import com.wouterbreukink.onedrive.client.api.OneDriveAPI;
-import com.wouterbreukink.onedrive.client.api.ROOneDriveAPI;
-import com.wouterbreukink.onedrive.client.api.RWOneDriveAPI;
+import com.wouterbreukink.onedrive.client.api.OneDriveProvider;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
-import com.wouterbreukink.onedrive.fs.ROFileSystemProvider;
-import com.wouterbreukink.onedrive.fs.RWFileSystemProvider;
 import com.wouterbreukink.onedrive.tasks.CheckTask;
 import com.wouterbreukink.onedrive.tasks.Task;
 import com.wouterbreukink.onedrive.tasks.TaskReporter;
@@ -112,16 +108,16 @@ public class Main {
             return;
         }
 
-        // Initialise the OneDrive API
-        OneDriveAPI api;
+        // Initialise the providers
+        OneDriveProvider api;
         FileSystemProvider fileSystem;
         if (getCommandLineOpts().isDryRun()) {
             log.warn("This is a dry run - no changes will be made");
-            api = new ROOneDriveAPI(client, authoriser);
-            fileSystem = new ROFileSystemProvider();
+            api = OneDriveProvider.FACTORY.readOnlyApi(client, authoriser);
+            fileSystem = FileSystemProvider.FACTORY.readOnlyProvider();
         } else {
-            api = new RWOneDriveAPI(client, authoriser);
-            fileSystem = new RWFileSystemProvider();
+            api = OneDriveProvider.FACTORY.readWriteApi(client, authoriser);
+            fileSystem = FileSystemProvider.FACTORY.readWriteProvider();
         }
 
         // Report on progress

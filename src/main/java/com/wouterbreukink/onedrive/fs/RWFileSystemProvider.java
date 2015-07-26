@@ -11,7 +11,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.Date;
 
-public class RWFileSystemProvider extends ROFileSystemProvider implements FileSystemProvider {
+class RWFileSystemProvider extends ROFileSystemProvider implements FileSystemProvider {
 
     private static void removeRecursive(Path path) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {

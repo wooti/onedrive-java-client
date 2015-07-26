@@ -2,7 +2,7 @@ package com.wouterbreukink.onedrive.tasks;
 
 import com.wouterbreukink.onedrive.TaskQueue;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
-import com.wouterbreukink.onedrive.client.api.OneDriveAPI;
+import com.wouterbreukink.onedrive.client.api.OneDriveProvider;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.fs.FileSystemProvider;
 import jersey.repackaged.com.google.common.base.Preconditions;
@@ -21,7 +21,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
     private static final Logger log = LogManager.getLogger(Task.class.getName());
     private static AtomicInteger taskIdCounter = new AtomicInteger(1);
     protected final TaskQueue queue;
-    protected final OneDriveAPI api;
+    protected final OneDriveProvider api;
     protected final FileSystemProvider fileSystem;
     protected final TaskReporter reporter;
 
@@ -142,11 +142,11 @@ public abstract class Task implements Runnable, Comparable<Task> {
     public static class TaskOptions {
 
         private final TaskQueue queue;
-        private final OneDriveAPI api;
+        private final OneDriveProvider api;
         private final FileSystemProvider fileSystem;
         private final TaskReporter reporter;
 
-        public TaskOptions(TaskQueue queue, OneDriveAPI api, FileSystemProvider fileSystem, TaskReporter reporter) {
+        public TaskOptions(TaskQueue queue, OneDriveProvider api, FileSystemProvider fileSystem, TaskReporter reporter) {
             this.queue = queue;
             this.api = api;
             this.fileSystem = fileSystem;
@@ -157,7 +157,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
             return queue;
         }
 
-        public OneDriveAPI getApi() {
+        public OneDriveProvider getApi() {
             return api;
         }
 

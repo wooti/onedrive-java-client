@@ -34,4 +34,16 @@ public interface FileSystemProvider {
         CRC,
         NO
     }
+
+    class FACTORY {
+
+        public static FileSystemProvider readOnlyProvider() {
+            return new ROFileSystemProvider();
+        }
+
+        public static FileSystemProvider readWriteProvider() {
+            return new RWFileSystemProvider();
+        }
+    }
+
 }

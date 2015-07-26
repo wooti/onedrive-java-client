@@ -13,12 +13,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-public class ROOneDriveAPI implements OneDriveAPI {
+class ROOneDriveProvider implements OneDriveProvider {
 
     protected final Client client;
     protected final OneDriveAuth authoriser;
 
-    public ROOneDriveAPI(Client client, OneDriveAuth authoriser) {
+    public ROOneDriveProvider(Client client, OneDriveAuth authoriser) {
         this.authoriser = authoriser;
         this.client = client;
     }

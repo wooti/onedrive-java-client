@@ -15,9 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 
-public class RWOneDriveAPI extends ROOneDriveAPI implements OneDriveAPI {
+class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider {
 
-    public RWOneDriveAPI(Client client, OneDriveAuth authoriser) {
+    public RWOneDriveProvider(Client client, OneDriveAuth authoriser) {
         super(client, authoriser);
     }
 

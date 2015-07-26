@@ -1,16 +1,18 @@
 package com.wouterbreukink.onedrive.client.api;
 
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.wouterbreukink.onedrive.client.OneDriveAuth;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 
+import javax.ws.rs.client.Client;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
-public interface OneDriveAPI {
+public interface OneDriveProvider {
 
     // Read only operations
 
@@ -39,4 +41,15 @@ public interface OneDriveAPI {
     void download(Item item, File target) throws OneDriveAPIException;
 
     void delete(Item remoteFile) throws OneDriveAPIException;
+
+    class FACTORY {
+
+        public static OneDriveProvider readOnlyApi(Client client, OneDriveAuth authoriser) {
+            return new ROOneDriveProvider(client, authoriser);
+        }
+
+        public static OneDriveProvider readWriteApi(Client client, OneDriveAuth authoriser) {
+            return new RWOneDriveProvider(client, authoriser);
+        }
+    }
 }
