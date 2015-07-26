@@ -1,28 +1,30 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Date;
+import com.google.api.client.util.Key;
 
 public class Authorisation {
 
-    private long zeroTime = System.currentTimeMillis();
-
+    @Key("token_type")
     private String tokenType;
+    @Key("expires_in")
     private int expiresIn;
+    @Key("scope")
     private String scope;
+    @Key("access_token")
     private String accessToken;
+    @Key("refresh_token")
     private String refreshToken;
+    @Key("user_id")
     private String userId;
+    @Key("error")
     private String error;
+    @Key("error_description")
     private String errorDescription;
 
-    @JsonProperty("token_type")
     public String getTokenType() {
         return tokenType;
     }
 
-    @JsonProperty("expires_in")
     public int getExpiresIn() {
         return expiresIn;
     }
@@ -31,32 +33,23 @@ public class Authorisation {
         return scope;
     }
 
-    @JsonProperty("access_token")
     public String getAccessToken() {
         return accessToken;
     }
 
-    @JsonProperty("refresh_token")
     public String getRefreshToken() {
         return refreshToken;
     }
 
-    @JsonProperty("user_id")
     public String getUserId() {
         return userId;
     }
 
-    @JsonProperty("error")
     public String getError() {
         return error;
     }
 
-    @JsonProperty("error_description")
     public String getErrorDescription() {
         return errorDescription;
-    }
-
-    public Date getTokenExpiryDate() {
-        return new Date(zeroTime + expiresIn * 1000);
     }
 }

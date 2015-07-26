@@ -1,10 +1,9 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.google.api.client.util.Maps;
+import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.filesystem.FileSystemProvider;
-import jersey.repackaged.com.google.common.base.Preconditions;
-import jersey.repackaged.com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +32,7 @@ public class CheckTask extends Task {
     }
 
     @Override
-    protected void taskBody() throws IOException, OneDriveAPIException {
+    protected void taskBody() throws IOException {
 
         if (localFile.isDirectory() && remoteFile.isDirectory()) { // If we are syncing folders
 

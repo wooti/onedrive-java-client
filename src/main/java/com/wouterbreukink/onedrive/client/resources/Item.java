@@ -1,36 +1,44 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.api.client.util.Key;
 import com.wouterbreukink.onedrive.client.facets.DeletedFacet;
 import com.wouterbreukink.onedrive.client.facets.FileFacet;
 import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.client.facets.FolderFacet;
 
-import java.util.Date;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Item {
 
+    @Key
     private String id;
+    @Key
     private String name;
+    @Key
     private String eTag;
+    @Key
     private String cTag;
+    @Key
     private IdentitySet createdBy;
+    @Key
     private IdentitySet lastModifiedBy;
-    private Date createdDateTime;
-    private Date lastModifiedDateTime;
+    @Key
+    private String createdDateTime;
+    @Key
+    private String lastModifiedDateTime;
+    @Key
     private long size;
+    @Key
     private ItemReference parentReference;
+    @Key
     private Item[] children;
+    @Key
     private String webUrl;
+    @Key
     private FolderFacet folder;
+    @Key
     private FileFacet file;
+    @Key
     private FileSystemInfoFacet fileSystemInfo;
-    //private	ImageFacet	image
-    //private	PhotoFacet	photo
-    //private	AudioFacet	audio
-    //private	VideoFacet	video
-    //private	LocationFacet	location
+    @Key
     private DeletedFacet deleted;
 
     public String getId() {
@@ -57,11 +65,11 @@ public class Item {
         return lastModifiedBy;
     }
 
-    public Date getCreatedDateTime() {
+    public String getCreatedDateTime() {
         return createdDateTime;
     }
 
-    public Date getLastModifiedDateTime() {
+    public String getLastModifiedDateTime() {
         return lastModifiedDateTime;
     }
 

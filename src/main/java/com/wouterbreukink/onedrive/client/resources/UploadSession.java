@@ -1,11 +1,12 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.api.client.util.Key;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class UploadSession {
 
+    @Key
     private String uploadUrl;
+    @Key
     private String[] nextExpectedRanges;
 
     public String getUploadUrl() {

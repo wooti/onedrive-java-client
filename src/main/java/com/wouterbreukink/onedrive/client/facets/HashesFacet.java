@@ -1,8 +1,12 @@
 package com.wouterbreukink.onedrive.client.facets;
 
+import com.google.api.client.util.Key;
+
 public class HashesFacet {
 
+    @Key
     private String sha1Hash;
+    @Key
     private String crc32Hash;
 
     public String getSha1Hash() {

@@ -1,24 +1,19 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.client.util.Key;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@JsonIgnoreProperties(value = "@odata.context")
 public class ItemSet {
 
+    @Key
     private Item[] value;
+    @Key("@odata.nextLink")
     private String nextPage;
 
     public Item[] getValue() {
         return value;
-    }
-
-    @JsonProperty("@odata.nextLink")
-    public String getNextPage() {
-        return nextPage;
     }
 
     public String getNextToken() {

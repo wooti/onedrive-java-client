@@ -1,19 +1,17 @@
 package com.wouterbreukink.onedrive.client.authoriser;
 
-import com.wouterbreukink.onedrive.client.OneDriveAPIException;
-
-import javax.ws.rs.client.Client;
+import java.io.IOException;
 import java.nio.file.Path;
 
 public interface AuthorisationProvider {
 
-    String getAccessToken() throws OneDriveAPIException;
+    String getAccessToken() throws IOException;
 
-    void refresh() throws OneDriveAPIException;
+    void refresh() throws IOException;
 
     class FACTORY {
-        public static AuthorisationProvider create(Client client, Path keyFile) throws OneDriveAPIException {
-            return new OneDriveAuthorisationProvider(client, keyFile);
+        public static AuthorisationProvider create(Path keyFile) throws IOException {
+            return new OneDriveAuthorisationProvider(keyFile);
         }
 
         public static void printAuthInstructions() {

@@ -12,12 +12,7 @@ import com.wouterbreukink.onedrive.tasks.TaskReporter;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.jersey.client.HttpUrlConnectorProvider;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -75,18 +70,6 @@ public class Main {
             log.info(String.format("Writing log output to %s", logFileName));
         }
 
-        // Initialise the client
-        Client client = ClientBuilder
-                .newClient()
-                        //.register(new LoggingFilter(Logger.getLogger(LoggingFilter.class.getName()), false))
-                .register(MultiPartFeature.class)
-                .register(JacksonFeature.class);
-
-        // Workaround to be able to submit PATCH requests
-        client.property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true);
-
-        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
-
         if (getCommandLineOpts().isAuthorise()) {
             AuthorisationProvider.FACTORY.printAuthInstructions();
             return;
@@ -103,7 +86,7 @@ public class Main {
         // Initialise the OneDrive authorisation
         AuthorisationProvider authoriser;
         try {
-            authoriser = AuthorisationProvider.FACTORY.create(client, getCommandLineOpts().getKeyFile());
+            authoriser = AuthorisationProvider.FACTORY.create(getCommandLineOpts().getKeyFile());
             authoriser.getAccessToken();
         } catch (OneDriveAPIException ex) {
             log.error("Unable to authorise client: " + ex.getMessage());
@@ -116,10 +99,10 @@ public class Main {
         FileSystemProvider fileSystem;
         if (getCommandLineOpts().isDryRun()) {
             log.warn("This is a dry run - no changes will be made");
-            api = OneDriveProvider.FACTORY.readOnlyApi(client, authoriser);
+            api = OneDriveProvider.FACTORY.readOnlyApi(authoriser);
             fileSystem = FileSystemProvider.FACTORY.readOnlyProvider();
         } else {
-            api = OneDriveProvider.FACTORY.readWriteApi(client, authoriser);
+            api = OneDriveProvider.FACTORY.readWriteApi(authoriser);
             fileSystem = FileSystemProvider.FACTORY.readWriteProvider();
         }
 

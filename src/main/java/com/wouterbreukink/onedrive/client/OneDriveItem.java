@@ -1,8 +1,9 @@
 package com.wouterbreukink.onedrive.client;
 
+import com.google.api.client.util.Throwables;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.ItemReference;
-import jersey.repackaged.com.google.common.base.Throwables;
+import com.wouterbreukink.onedrive.client.serialization.JsonDateSerializer;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -112,12 +113,12 @@ public interface OneDriveItem {
 
                 @Override
                 public Date getCreatedDateTime() {
-                    return item.getFileSystemInfo().getCreatedDateTime();
+                    return JsonDateSerializer.INSTANCE.deserialize(item.getFileSystemInfo().getCreatedDateTime());
                 }
 
                 @Override
                 public Date getLastModifiedDateTime() {
-                    return item.getFileSystemInfo().getLastModifiedDateTime();
+                    return JsonDateSerializer.INSTANCE.deserialize(item.getFileSystemInfo().getLastModifiedDateTime());
                 }
 
                 @Override

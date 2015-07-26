@@ -1,11 +1,11 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.api.client.util.Key;
 import com.wouterbreukink.onedrive.client.facets.ErrorFacet;
 
-@JsonIgnoreProperties(value = "@odata.context")
 public class ErrorSet {
 
+    @Key
     private ErrorFacet error;
 
     public ErrorFacet getError() {

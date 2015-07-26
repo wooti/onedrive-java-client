@@ -1,12 +1,14 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.api.client.util.Key;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class IdentitySet {
 
+    @Key
     private Identity user;
+    @Key
     private Identity application;
+    @Key
     private Identity device;
 
     public Identity getUser() {

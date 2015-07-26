@@ -79,11 +79,11 @@ The ``--dry-run`` option can be used to test the synchronisation operation, this
 The OneDrive API documentation can be found [here](https://dev.onedrive.com/README.htm)
 
 The following libraries have been used
-* [Jersey](https://jersey.java.net/) - HTTP REST Client
-* [Jackson](https://github.com/FasterXML/jackson) - JSON Parser
+* [Google HTTP Client](https://developers.google.com/api-client-library/java/google-http-java-client/) - HTTP REST Client
+* [Google GSON](https://sites.google.com/site/gson/gson-user-guide) - JSON Parser
 * [Apache Commons CLI](https://commons.apache.org/proper/commons-cli/) - Command line arguments parser
 * [Apache Log4j2](http://logging.apache.org/log4j/2.x/) - Logging framework
-* [Guava](https://github.com/google/guava) - Google core libraries
+* [Apache HTTPComponents](http://hc.apache.org/httpcomponents-client-ga/) - Apache HTTP Client
 
 ## Future Plans
 

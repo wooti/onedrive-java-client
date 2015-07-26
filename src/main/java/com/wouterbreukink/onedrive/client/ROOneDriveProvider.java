@@ -1,12 +1,20 @@
 package com.wouterbreukink.onedrive.client;
 
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.apache.ApacheHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.repackaged.com.google.common.base.Throwables;
+import com.google.api.client.util.Lists;
 import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.ItemSet;
-import jersey.repackaged.com.google.common.collect.Lists;
 
-import javax.ws.rs.client.Client;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -14,33 +22,41 @@ import java.util.List;
 
 class ROOneDriveProvider implements OneDriveProvider {
 
-    protected final Client client;
-    protected final AuthorisationProvider authoriser;
+    //static final HttpTransport HTTP_TRANSPORT = new ApacheHttpTransport.Builder().setProxy(new HttpHost("localhost", 8888)).build();
+    static final HttpTransport HTTP_TRANSPORT = new ApacheHttpTransport();
+    static final JsonFactory JSON_FACTORY = new GsonFactory();
 
-    public ROOneDriveProvider(Client client, AuthorisationProvider authoriser) {
-        this.authoriser = authoriser;
-        this.client = client;
+    final HttpRequestFactory requestFactory;
+
+    public ROOneDriveProvider(final AuthorisationProvider authoriser) {
+        requestFactory =
+                HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                    @Override
+                    public void initialize(HttpRequest request) {
+                        request.setParser(new JsonObjectParser(JSON_FACTORY));
+                        try {
+                            request.getHeaders().setAuthorization("bearer " + authoriser.getAccessToken());
+                        } catch (IOException e) {
+                            throw Throwables.propagate(e);
+                        }
+
+                        request.setUnsuccessfulResponseHandler(new OneDriveResponseHandler(authoriser));
+                    }
+                });
     }
 
-    public Drive getDefaultDrive() throws OneDriveAPIException {
-
-        OneDriveRequest request = getDefaultRequest()
-                .path("drive")
-                .method("GET");
-
-        return request.getResponse(Drive.class);
+    public Drive getDefaultDrive() throws IOException {
+        HttpRequest request = requestFactory.buildGetRequest(OneDriveUrl.defaultDrive());
+        return request.execute().parseAs(Drive.class);
     }
 
-    public OneDriveItem getRoot() throws OneDriveAPIException {
-
-        OneDriveRequest request = getDefaultRequest()
-                .path("drive/root")
-                .method("GET");
-
-        return OneDriveItem.FACTORY.create(request.getResponse(Item.class));
+    public OneDriveItem getRoot() throws IOException {
+        HttpRequest request = requestFactory.buildGetRequest(OneDriveUrl.driveRoot());
+        Item response = request.execute().parseAs(Item.class);
+        return OneDriveItem.FACTORY.create(response);
     }
 
-    public OneDriveItem[] getChildren(OneDriveItem parent) throws OneDriveAPIException {
+    public OneDriveItem[] getChildren(OneDriveItem parent) throws IOException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Specified Item is not a folder");
@@ -51,12 +67,12 @@ class ROOneDriveProvider implements OneDriveProvider {
         String token = null;
 
         do {
-            OneDriveRequest request = getDefaultRequest()
-                    .path("/drive/items/" + parent.getId() + "/children")
-                    .skipToken(token)
-                    .method("GET");
 
-            ItemSet items = request.getResponse(ItemSet.class);
+            OneDriveUrl url = OneDriveUrl.children(parent.getId());
+            url.setToken(token);
+
+            HttpRequest request = requestFactory.buildGetRequest(url);
+            ItemSet items = request.execute().parseAs(ItemSet.class);
 
             for (Item i : items.getValue()) {
                 itemsToReturn.add(OneDriveItem.FACTORY.create(i));
@@ -69,17 +85,13 @@ class ROOneDriveProvider implements OneDriveProvider {
         return itemsToReturn.toArray(new OneDriveItem[itemsToReturn.size()]);
     }
 
-    public OneDriveItem getPath(String path) throws OneDriveAPIException {
-
-        OneDriveRequest request = getDefaultRequest()
-                .path("drive/root:/" + path)
-                .withChildren()
-                .method("GET");
-
-        return OneDriveItem.FACTORY.create(request.getResponse(Item.class));
+    public OneDriveItem getPath(String path) throws IOException {
+        HttpRequest request = requestFactory.buildGetRequest(OneDriveUrl.getPath(path));
+        Item response = request.execute().parseAs(Item.class);
+        return OneDriveItem.FACTORY.create(response);
     }
 
-    public OneDriveItem replaceFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
+    public OneDriveItem replaceFile(OneDriveItem parent, File file) throws IOException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
@@ -88,7 +100,7 @@ class ROOneDriveProvider implements OneDriveProvider {
         return OneDriveItem.FACTORY.create(parent, file.getName(), file.isDirectory());
     }
 
-    public OneDriveItem uploadFile(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
+    public OneDriveItem uploadFile(OneDriveItem parent, File file) throws IOException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
@@ -98,34 +110,30 @@ class ROOneDriveProvider implements OneDriveProvider {
     }
 
     @Override
-    public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
+    public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws IOException {
         return new OneDriveUploadSession(parent, file, null, new String[0]);
     }
 
     @Override
-    public void uploadChunk(OneDriveUploadSession session) throws OneDriveAPIException, IOException {
+    public void uploadChunk(OneDriveUploadSession session) throws IOException {
         session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getFile().getName(), session.getFile().isDirectory()));
     }
 
-    public OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws OneDriveAPIException {
+    public OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws IOException {
         // Do nothing, just return the unmodified item
         return item;
     }
 
-    public OneDriveItem createFolder(OneDriveItem parent, String name) throws OneDriveAPIException {
+    public OneDriveItem createFolder(OneDriveItem parent, String name) throws IOException {
         // Return a dummy folder
         return OneDriveItem.FACTORY.create(parent, name, true);
     }
 
-    public void download(OneDriveItem item, File target) throws OneDriveAPIException {
+    public void download(OneDriveItem item, File target) throws IOException {
         // Do nothing
     }
 
-    public void delete(OneDriveItem remoteFile) throws OneDriveAPIException {
+    public void delete(OneDriveItem remoteFile) throws IOException {
         // Do nothing
-    }
-
-    protected OneDriveRequest getDefaultRequest() {
-        return new OneDriveRequest(client, authoriser, "https://api.onedrive.com/v1.0");
     }
 }

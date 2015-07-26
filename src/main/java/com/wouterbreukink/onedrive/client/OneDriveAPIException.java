@@ -1,6 +1,8 @@
 package com.wouterbreukink.onedrive.client;
 
-public class OneDriveAPIException extends Exception {
+import java.io.IOException;
+
+public class OneDriveAPIException extends IOException {
 
     private final int code;
 

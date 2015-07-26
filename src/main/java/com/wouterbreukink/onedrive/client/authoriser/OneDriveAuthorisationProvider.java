@@ -1,17 +1,20 @@
 package com.wouterbreukink.onedrive.client.authoriser;
 
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.apache.ApacheHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.Key;
+import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.resources.Authorisation;
-import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -23,15 +26,16 @@ import java.util.regex.Pattern;
 
 class OneDriveAuthorisationProvider implements AuthorisationProvider {
 
+    static final HttpTransport HTTP_TRANSPORT = new ApacheHttpTransport();
+    static final JsonFactory JSON_FACTORY = new GsonFactory();
     private static final Logger log = LogManager.getLogger(OneDriveAuthorisationProvider.class.getName());
     private static final String clientSecret = "to8fZAGMvD7Jr-NSdY1eVm4V7eaAtV5B";
     private static final String clientId = "000000004015B68A";
-    private final Client client;
     private Path keyFile;
     private Authorisation authorisation;
+    private Date lastFetched;
 
-    public OneDriveAuthorisationProvider(Client client, Path keyFile) throws OneDriveAPIException {
-        this.client = client;
+    public OneDriveAuthorisationProvider(Path keyFile) throws IOException {
 
         this.keyFile = Preconditions.checkNotNull(keyFile);
 
@@ -71,25 +75,24 @@ class OneDriveAuthorisationProvider implements AuthorisationProvider {
 
     public static void printAuthInstructions() {
 
-        WebTarget target = ClientBuilder.newClient()
-                .target("https://login.live.com/oauth20_authorize.srf")
-                .queryParam("client_id", clientId)
-                .queryParam("response_type", "code")
-                .queryParam("scope", "wl.signin wl.offline_access onedrive.readwrite")
-                .queryParam("client_secret", clientSecret)
-                .queryParam("redirect_uri", "https://login.live.com/oauth20_desktop.srf");
+        String authString =
+                String.format("%s?client_id=%s&response_type=code&scope=wl.signin%%20wl.offline_access%%20onedrive.readwrite&client_secret=%s&redirect_uri=%s",
+                        "https://login.live.com/oauth20_authorize.srf",
+                        clientId,
+                        clientSecret,
+                        "https://login.live.com/oauth20_desktop.srf");
 
         log.info("To authorise this application ou must generate an authorisation token");
         log.info("Open the following in a browser, sign on, wait until you are redirected to a blank page and then store the url in the address bar in your key file.");
-        log.info("Authorisation URL: " + target.getUri());
+        log.info("Authorisation URL: " + authString);
     }
 
     @Override
-    public String getAccessToken() throws OneDriveAPIException {
+    public String getAccessToken() throws IOException {
         if (authorisation != null) {
 
             // Refresh if we know it is needed
-            if (authorisation.getTokenExpiryDate().before(new Date())) {
+            if (lastFetched.after(new Date(lastFetched.getTime() + authorisation.getExpiresIn() * 1000))) {
                 log.info("Authorisation token has expired - refreshing");
                 getTokenFromRefreshToken(authorisation.getRefreshToken());
                 saveToken();
@@ -101,61 +104,71 @@ class OneDriveAuthorisationProvider implements AuthorisationProvider {
         }
     }
 
-    public void refresh() throws OneDriveAPIException {
+    public void refresh() throws IOException {
         getTokenFromRefreshToken(authorisation.getRefreshToken());
         saveToken();
     }
 
-    private void getTokenFromCode(String code) throws OneDriveAPIException {
+    private void getTokenFromCode(final String code) throws IOException {
 
         log.debug("Fetching authorisation token using authorisation code");
+        HttpRequest request =
+                HTTP_TRANSPORT.createRequestFactory().buildGetRequest(new GenericUrl("https://login.live.com/oauth20_token.srf") {
+                    @Key("client_id")
+                    private String id = clientId;
+                    @Key("client_secret")
+                    private String secret = clientSecret;
+                    @Key
+                    private String authCode = code;
+                    @Key("grant_type")
+                    private String grantType = "authorization_code";
+                    @Key("redirect_uri")
+                    private String redirect = "https://login.live.com/oauth20_desktop.srf";
+                });
 
-        WebTarget tokenTarget =
-                client.target("https://login.live.com/oauth20_token.srf")
-                        .queryParam("client_id", clientId)
-                        .queryParam("client_secret", clientSecret)
-                        .queryParam("code", code)
-                        .queryParam("grant_type", "authorization_code")
-                        .queryParam("redirect_uri", "https://login.live.com/oauth20_desktop.srf");
+        request.setParser(new JsonObjectParser(JSON_FACTORY));
 
-        Invocation.Builder invocationBuilder =
-                tokenTarget.request(MediaType.TEXT_PLAIN_TYPE);
-
-        processResponse(invocationBuilder.get());
+        processResponse(request.execute());
     }
 
-    private void getTokenFromRefreshToken(String refreshToken) throws OneDriveAPIException {
+    private void getTokenFromRefreshToken(final String refreshToken) throws IOException {
 
         log.debug("Fetching authorisation token using refresh token");
 
-        WebTarget tokenTarget =
-                client.target("https://login.live.com/oauth20_token.srf")
-                        .queryParam("client_id", clientId)
-                        .queryParam("client_secret", clientSecret)
-                        .queryParam("refresh_token", refreshToken)
-                        .queryParam("grant_type", "refresh_token")
-                        .queryParam("redirect_uri", "https://login.live.com/oauth20_desktop.srf");
+        HttpRequest request =
+                HTTP_TRANSPORT.createRequestFactory().buildGetRequest(new GenericUrl("https://login.live.com/oauth20_token.srf") {
+                    @Key("client_id")
+                    private String id = clientId;
+                    @Key("client_secret")
+                    private String secret = clientSecret;
+                    @Key("refresh_token")
+                    private String token = refreshToken;
+                    @Key("grant_type")
+                    private String grantType = "refresh_token";
+                    @Key("redirect_uri")
+                    private String redirect = "https://login.live.com/oauth20_desktop.srf";
+                });
 
-        Invocation.Builder invocationBuilder =
-                tokenTarget.request(MediaType.TEXT_PLAIN_TYPE);
+        request.setParser(new JsonObjectParser(JSON_FACTORY));
 
-        processResponse(invocationBuilder.get());
+        processResponse(request.execute());
     }
 
-    private void processResponse(Response response) throws OneDriveAPIException {
-        authorisation = response.readEntity(Authorisation.class);
+    private void processResponse(HttpResponse response) throws IOException {
+        authorisation = response.parseAs(Authorisation.class);
 
         // Check for failures
-        if (response.getStatus() != 200 || authorisation.getError() != null) {
-            throw new OneDriveAPIException(response.getStatus(),
+        if (response.getStatusCode() != 200 || authorisation.getError() != null) {
+            throw new OneDriveAPIException(response.getStatusCode(),
                     String.format("Error code %d - %s (%s)",
-                            response.getStatus(),
+                            response.getStatusCode(),
                             authorisation.getError(),
                     authorisation.getErrorDescription()));
         }
 
         log.info("Fetched new authorisation token and refresh token for user " + authorisation.getUserId());
         saveToken();
+        lastFetched = new Date();
     }
 
     private String[] readToken() {

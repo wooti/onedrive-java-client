@@ -1,11 +1,14 @@
 package com.wouterbreukink.onedrive.client.facets;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.client.util.Key;
 
 public class ErrorFacet {
 
+    @Key
     private String code;
+    @Key
     private String message;
+    @Key
     private ErrorFacet innerError;
 
     public String getCode() {
@@ -16,7 +19,6 @@ public class ErrorFacet {
         return message;
     }
 
-    @JsonProperty("innererror")
     public ErrorFacet getInnerError() {
         return innerError;
     }

@@ -1,11 +1,11 @@
 package com.wouterbreukink.onedrive.tasks;
 
+import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.TaskQueue;
 import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveProvider;
 import com.wouterbreukink.onedrive.filesystem.FileSystemProvider;
-import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -89,7 +89,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
 
     protected abstract int priority();
 
-    protected abstract void taskBody() throws IOException, OneDriveAPIException;
+    protected abstract void taskBody() throws IOException;
 
     protected String getId() {
         return this.id + ":" + this.attempt;

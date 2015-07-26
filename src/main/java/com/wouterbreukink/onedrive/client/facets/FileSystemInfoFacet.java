@@ -1,30 +1,27 @@
 package com.wouterbreukink.onedrive.client.facets;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.wouterbreukink.onedrive.client.serialization.JsonDateSerializer;
-
-import java.util.Date;
+import com.google.api.client.util.Key;
 
 public class FileSystemInfoFacet {
 
-    private Date createdDateTime;
-    private Date lastModifiedDateTime;
+    @Key
+    private String createdDateTime;
+    @Key
+    private String lastModifiedDateTime;
 
-    @JsonSerialize(using = JsonDateSerializer.class)
-    public Date getCreatedDateTime() {
+    public String getCreatedDateTime() {
         return createdDateTime;
     }
 
-    public void setCreatedDateTime(Date createdDateTime) {
+    public void setCreatedDateTime(String createdDateTime) {
         this.createdDateTime = createdDateTime;
     }
 
-    @JsonSerialize(using = JsonDateSerializer.class)
-    public Date getLastModifiedDateTime() {
+    public String getLastModifiedDateTime() {
         return lastModifiedDateTime;
     }
 
-    public void setLastModifiedDateTime(Date lastModifiedDateTime) {
+    public void setLastModifiedDateTime(String lastModifiedDateTime) {
         this.lastModifiedDateTime = lastModifiedDateTime;
     }
 }

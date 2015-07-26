@@ -1,14 +1,20 @@
 package com.wouterbreukink.onedrive.client.resources;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.api.client.util.Key;
 import com.wouterbreukink.onedrive.client.facets.QuotaFacet;
 
-@JsonIgnoreProperties(value = "@odata.context")
 public class Drive {
 
+    @Key
     private String id;
+
+    @Key
     private String driveType;
+
+    @Key
     private IdentitySet owner;
+
+    @Key
     private QuotaFacet quota;
 
     public String getId() {

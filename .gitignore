@@ -16,3 +16,5 @@ OneDrive.iml
 logs
 onedrive.key
 ignore.txt
+
+logging.properties

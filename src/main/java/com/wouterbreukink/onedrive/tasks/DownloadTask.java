@@ -1,8 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
-import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,7 +24,7 @@ public class DownloadTask extends Task {
 
         this.parent = Preconditions.checkNotNull(parent);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
-        this.replace = replace;
+        this.replace = Preconditions.checkNotNull(replace);
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Specified parent is not a folder");
@@ -42,7 +41,7 @@ public class DownloadTask extends Task {
     }
 
     @Override
-    protected void taskBody() throws IOException, OneDriveAPIException {
+    protected void taskBody() throws IOException {
 
         if (isIgnored(remoteFile)) {
             reporter.skipped();
@@ -66,31 +65,43 @@ public class DownloadTask extends Task {
 
             long startTime = System.currentTimeMillis();
 
-            File downloadFile = fileSystem.createFile(parent, remoteFile.getName() + ".tmp");
+            File downloadFile = null;
 
-            api.download(remoteFile, downloadFile);
+            try {
+                downloadFile = fileSystem.createFile(parent, remoteFile.getName() + ".tmp");
 
-            long elapsedTime = System.currentTimeMillis() - startTime;
+                api.download(remoteFile, downloadFile);
 
-            log.info(String.format("Downloaded %s in %s (%s/s) to %s file %s",
-                    readableFileSize(remoteFile.getSize()),
-                    readableTime(elapsedTime),
-                    elapsedTime > 0 ? readableFileSize(remoteFile.getSize() / (elapsedTime / 1000d)) : 0,
-                    replace ? "replace" : "new",
-                    remoteFile.getFullName()));
+                long elapsedTime = System.currentTimeMillis() - startTime;
 
-            // Do a CRC check on the downloaded file
-            if (!fileSystem.verifyCrc(downloadFile, remoteFile.getCrc32())) {
-                throw new IOException(String.format("Download of file '%s' failed", remoteFile.getFullName()));
+                log.info(String.format("Downloaded %s in %s (%s/s) to %s file %s",
+                        readableFileSize(remoteFile.getSize()),
+                        readableTime(elapsedTime),
+                        elapsedTime > 0 ? readableFileSize(remoteFile.getSize() / (elapsedTime / 1000d)) : 0,
+                        replace ? "replace" : "new",
+                        remoteFile.getFullName()));
+
+                // Do a CRC check on the downloaded file
+                if (!fileSystem.verifyCrc(downloadFile, remoteFile.getCrc32())) {
+                    throw new IOException(String.format("Download of file '%s' failed", remoteFile.getFullName()));
+                }
+
+                fileSystem.setAttributes(
+                        downloadFile,
+                        remoteFile.getCreatedDateTime(),
+                        remoteFile.getLastModifiedDateTime());
+
+                fileSystem.replaceFile(new File(parent, remoteFile.getName()), downloadFile);
+                reporter.fileDownloaded(replace, remoteFile.getSize());
+            } catch (Throwable e) {
+                if (downloadFile != null) {
+                    if (!downloadFile.delete()) {
+                        log.warn("Unable to remove temporary file " + downloadFile.getPath());
+                    }
+                }
+
+                throw e;
             }
-
-            fileSystem.setAttributes(
-                    downloadFile,
-                    remoteFile.getCreatedDateTime(),
-                    remoteFile.getLastModifiedDateTime());
-
-            fileSystem.replaceFile(new File(parent, remoteFile.getName()), downloadFile);
-            reporter.fileDownloaded(replace, remoteFile.getSize());
         }
     }
 }

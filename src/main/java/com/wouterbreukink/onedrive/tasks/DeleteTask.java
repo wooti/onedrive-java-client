@@ -1,8 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
-import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,7 +44,7 @@ public class DeleteTask extends Task {
     }
 
     @Override
-    protected void taskBody() throws IOException, OneDriveAPIException {
+    protected void taskBody() throws IOException {
         if (localFile != null) {
             fileSystem.delete(localFile);
             reporter.localDeleted();

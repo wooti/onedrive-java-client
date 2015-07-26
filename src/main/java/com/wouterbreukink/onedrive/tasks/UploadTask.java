@@ -1,9 +1,8 @@
 package com.wouterbreukink.onedrive.tasks;
 
-import com.wouterbreukink.onedrive.client.OneDriveAPIException;
+import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
-import jersey.repackaged.com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,7 +44,7 @@ public class UploadTask extends Task {
     }
 
     @Override
-    protected void taskBody() throws IOException, OneDriveAPIException {
+    protected void taskBody() throws IOException {
 
         if (isIgnored(localFile)) {
             reporter.skipped();
@@ -76,32 +75,7 @@ public class UploadTask extends Task {
                 while (!session.isComplete()) {
                     long startTimeInner = System.currentTimeMillis();
 
-                    // Attempt each chunk 10x
-                    for (int i = 0; i < 10; i++) {
-                        try {
-                            startTimeInner = System.currentTimeMillis();
-                            api.uploadChunk(session);
-                            break;
-                        } catch (OneDriveAPIException ex) {
-                            switch (ex.getCode()) {
-                                case 401:
-                                case 500:
-                                case 502:
-                                case 503:
-                                case 504:
-                                    log.warn(String.format("Multipart Upload Task %s encountered %s - sleeping 10 seconds", getId(), ex.getMessage()));
-                                    sleep(10);
-                                    break;
-                                case 429:
-                                case 509:
-                                    log.warn(String.format("Multipart Upload Task %s encountered %s - sleeping 60 seconds", getId(), ex.getMessage()));
-                                    sleep(60);
-                                    break;
-                                default:
-                                    throw ex;
-                            }
-                        }
-                    }
+                    api.uploadChunk(session);
 
                     long elapsedTimeInner = System.currentTimeMillis() - startTimeInner;
 

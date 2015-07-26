@@ -1,6 +1,6 @@
 package com.wouterbreukink.onedrive;
 
-import jersey.repackaged.com.google.common.collect.Sets;
+import com.google.api.client.util.Sets;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -116,7 +116,8 @@ public class CommandLineOpts {
             }
 
             try {
-                opts.ignored = Sets.newHashSet(Files.readAllLines(ignoreFile, Charset.defaultCharset()));
+                opts.ignored = Sets.newHashSet();
+                opts.ignored.addAll(Files.readAllLines(ignoreFile, Charset.defaultCharset()));
             } catch (IOException e) {
                 throw new ParseException(e.getMessage());
             }

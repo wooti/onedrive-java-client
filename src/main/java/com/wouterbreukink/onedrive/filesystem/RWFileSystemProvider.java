@@ -51,7 +51,7 @@ class RWFileSystemProvider extends ROFileSystemProvider implements FileSystemPro
 
     @Override
     public File createFolder(File file, String name) throws IOException {
-        File newFolder = new File(file, file.getName());
+        File newFolder = new File(file, name);
 
         if (!newFolder.mkdir()) {
             throw new IOException(String.format("Unable to create local directory '%s' in '%s'", name, file.getName()));

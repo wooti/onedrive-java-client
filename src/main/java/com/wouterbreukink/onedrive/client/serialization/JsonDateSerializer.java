@@ -1,25 +1,37 @@
 package com.wouterbreukink.onedrive.client.serialization;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.google.api.client.repackaged.com.google.common.base.Throwables;
 
-import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class JsonDateSerializer extends JsonSerializer<Date> {
+public class JsonDateSerializer {
 
+    public static final JsonDateSerializer INSTANCE = new JsonDateSerializer();
     private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     static {
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
-    @Override
-    public synchronized void serialize(Date value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        gen.writeString(df.format(value));
+    public synchronized String serialize(Date value) {
+        return df.format(value);
+    }
+
+    public synchronized Date deserialize(String value) {
+        try {
+            return df.parse(value);
+        } catch (ParseException e) {
+            try {
+                return df2.parse(value);
+            } catch (ParseException e1) {
+                throw Throwables.propagate(e);
+            }
+
+        }
     }
 }
