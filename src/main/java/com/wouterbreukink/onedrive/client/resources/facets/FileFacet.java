@@ -3,13 +3,13 @@ package com.wouterbreukink.onedrive.client.resources.facets;
 public class FileFacet {
 
     private String mimeType;
-    private Hashes hashes;
+    private HashesFacet hashes;
 
     public String getMimeType() {
         return mimeType;
     }
 
-    public Hashes getHashes() {
+    public HashesFacet getHashes() {
         return hashes;
     }
 }

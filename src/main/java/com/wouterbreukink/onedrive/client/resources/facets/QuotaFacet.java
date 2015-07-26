@@ -1,6 +1,6 @@
 package com.wouterbreukink.onedrive.client.resources.facets;
 
-public class Quota {
+public class QuotaFacet {
 
     private long total;
     private long used;

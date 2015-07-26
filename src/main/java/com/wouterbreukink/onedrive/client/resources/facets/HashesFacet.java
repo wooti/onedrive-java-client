@@ -1,6 +1,6 @@
 package com.wouterbreukink.onedrive.client.resources.facets;
 
-public class Hashes {
+public class HashesFacet {
 
     private String sha1Hash;
     private String crc32Hash;

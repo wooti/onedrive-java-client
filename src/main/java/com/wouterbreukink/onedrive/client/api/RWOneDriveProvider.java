@@ -11,7 +11,6 @@ import com.wouterbreukink.onedrive.client.resources.UploadSession;
 import com.wouterbreukink.onedrive.client.resources.facets.FileFacet;
 import com.wouterbreukink.onedrive.client.resources.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.client.resources.facets.FolderFacet;
-import com.wouterbreukink.onedrive.client.resources.facets.MultiPartItem;
 
 import javax.ws.rs.client.Client;
 import java.io.File;
@@ -70,7 +69,7 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
     public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws OneDriveAPIException, IOException {
         OneDriveRequest request = getDefaultRequest()
                 .path("/drive/items/" + parent.getId() + ":/" + file.getName() + ":/upload.createSession")
-                .payloadJson(MultiPartItem.create(file.getName()))
+                .payloadJson(new MultiPartItem(file.getName()))
                 .header("Content-Length", file.length())
                 .method("POST");
 
@@ -199,10 +198,34 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
             return multipart ? "cid:content" : null;
         }
 
-        //@JsonInclude(JsonInclude.Include.NON_NULL)
-        //@JsonProperty("@name.conflictBehavior")
-        //public String getConflictBehaviour() {
-        //    return "replace";
-        //}
+    }
+
+    public class MultiPartItem {
+
+        private FileDetail item;
+        private String name;
+
+        private MultiPartItem(String name) {
+            this.name = name;
+            this.item = new FileDetail();
+        }
+
+        public FileDetail getItem() {
+            return item;
+        }
+
+        public class FileDetail {
+
+            private String conflictBehavior = "replace";
+
+            public String getName() {
+                return name;
+            }
+
+            @JsonProperty("@name.conflictBehavior")
+            public String getConflictBehavior() {
+                return conflictBehavior;
+            }
+        }
     }
 }
