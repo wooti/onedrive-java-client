@@ -21,7 +21,7 @@ Open the URL in your browser, and wait for it to redirect you to a blank page. C
 java -jar onedrive-java-client.jar --direction UP --local . --remote MyTargetFolder/
 ```
 
-## Develop and Build
+## Build
 
 (1) Grab the latest source code
 ```

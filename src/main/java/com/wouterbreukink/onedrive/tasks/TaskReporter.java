@@ -104,29 +104,60 @@ public class TaskReporter {
         }
 
         if (newUploaded > 0 || replaceUploaded > 0) {
-            log.info(String.format("Uploaded %d file%s (%s) - %d new file%s (%s), %d replaced file%s (%s)",
-                    newUploaded + replaceUploaded,
-                    plural(newUploaded + replaceUploaded),
-                    readableFileSize(newUploadedSize + replaceUploadedSize),
-                    newUploaded,
-                    plural(newUploaded),
-                    readableFileSize(newUploadedSize),
-                    replaceUploaded,
-                    plural(replaceUploaded),
-                    readableFileSize(replaceUploadedSize)));
+
+            StringBuilder uploadedResult = new StringBuilder();
+
+            uploadedResult.append(
+                    String.format("Uploaded %d file%s (%s) - ",
+                            newUploaded + replaceUploaded,
+                            plural(newUploaded + replaceUploaded),
+                            readableFileSize(newUploadedSize + replaceUploadedSize)));
+
+            if (newUploaded > 0) {
+                uploadedResult.append(
+                        String.format("%d new file%s (%s) ",
+                                newUploaded,
+                                plural(newUploaded),
+                                readableFileSize(newUploadedSize)));
+            }
+
+            if (replaceUploaded > 0) {
+                uploadedResult.append(
+                        String.format("%d new file%s (%s) ",
+                                replaceUploaded,
+                                plural(replaceUploaded),
+                                readableFileSize(replaceUploadedSize)));
+            }
+
+            log.info(uploadedResult.toString());
         }
 
         if (newDownloaded > 0 || replaceDownloaded > 0) {
-            log.info(String.format("Uploaded %d file%s (%s) - %d new file%s (%s), %d replaced file%s (%s)",
-                    newDownloaded + replaceDownloaded,
-                    plural(newDownloaded + replaceDownloaded),
-                    readableFileSize(newDownloadedSize + replaceDownloadedSize),
-                    newDownloaded,
-                    plural(newDownloaded),
-                    readableFileSize(newDownloadedSize),
-                    replaceDownloaded,
-                    plural(replaceDownloaded),
-                    readableFileSize(replaceDownloadedSize)));
+            StringBuilder downloadedResult = new StringBuilder();
+
+            downloadedResult.append(
+                    String.format("Downloaded %d file%s (%s) - ",
+                            newDownloaded + replaceDownloaded,
+                            plural(newDownloaded + replaceDownloaded),
+                            readableFileSize(newDownloadedSize + replaceDownloadedSize)));
+
+            if (newDownloaded > 0) {
+                downloadedResult.append(
+                        String.format("%d new file%s (%s) ",
+                                newDownloaded,
+                                plural(newDownloaded),
+                                readableFileSize(newDownloadedSize)));
+            }
+
+            if (replaceDownloaded > 0) {
+                downloadedResult.append(
+                        String.format("%d new file%s (%s) ",
+                                replaceDownloaded,
+                                plural(replaceDownloaded),
+                                readableFileSize(replaceDownloadedSize)));
+            }
+
+            log.info(downloadedResult.toString());
         }
 
         long elapsed = System.currentTimeMillis() - startTime;
