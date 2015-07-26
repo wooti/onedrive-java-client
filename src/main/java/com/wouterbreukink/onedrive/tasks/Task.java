@@ -1,8 +1,8 @@
 package com.wouterbreukink.onedrive.tasks;
 
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.TaskQueue;
-import com.wouterbreukink.onedrive.client.OneDriveAPIException;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveProvider;
 import com.wouterbreukink.onedrive.filesystem.FileSystemProvider;
@@ -101,9 +101,9 @@ public abstract class Task implements Runnable, Comparable<Task> {
             log.debug(String.format("Starting task %d:%d - %s", id, attempt, this.toString()));
             taskBody();
             return;
-        } catch (OneDriveAPIException ex) {
+        } catch (HttpResponseException ex) {
 
-            switch (ex.getCode()) {
+            switch (ex.getStatusCode()) {
                 case 401:
                     log.warn(String.format("Task %s encountered %s", getId(), ex.getMessage()));
                     break;
@@ -124,6 +124,7 @@ public abstract class Task implements Runnable, Comparable<Task> {
             }
         } catch (Exception ex) {
             log.error(String.format("Task %s encountered exception", getId()), ex);
+            queue.suspend(1);
         }
 
         if (attempt < getCommandLineOpts().getTries()) {
