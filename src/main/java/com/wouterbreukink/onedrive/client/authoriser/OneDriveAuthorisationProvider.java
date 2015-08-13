@@ -118,7 +118,7 @@ class OneDriveAuthorisationProvider implements AuthorisationProvider {
                     private String id = clientId;
                     @Key("client_secret")
                     private String secret = clientSecret;
-                    @Key
+                    @Key("code")
                     private String authCode = code;
                     @Key("grant_type")
                     private String grantType = "authorization_code";
