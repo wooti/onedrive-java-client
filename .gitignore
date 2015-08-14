@@ -18,3 +18,7 @@ onedrive.key
 ignore.txt
 
 logging.properties
+/target/
+.project
+.classpath
+.settings
