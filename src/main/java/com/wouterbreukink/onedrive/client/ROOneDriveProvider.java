@@ -93,32 +93,32 @@ class ROOneDriveProvider implements OneDriveProvider {
         return OneDriveItem.FACTORY.create(response);
     }
 
-    public OneDriveItem replaceFile(OneDriveItem parent, File file) throws IOException {
+    public OneDriveItem replaceFile(OneDriveItem parent, File file, String remoteFilename) throws IOException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
-        return OneDriveItem.FACTORY.create(parent, file.getName(), file.isDirectory());
+        return OneDriveItem.FACTORY.create(parent, remoteFilename, file.isDirectory());
     }
 
-    public OneDriveItem uploadFile(OneDriveItem parent, File file) throws IOException {
+    public OneDriveItem uploadFile(OneDriveItem parent, File file, String remoteFilename) throws IOException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
-        return OneDriveItem.FACTORY.create(parent, file.getName(), file.isDirectory());
+        return OneDriveItem.FACTORY.create(parent, remoteFilename, file.isDirectory());
     }
 
     @Override
-    public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws IOException {
-        return new OneDriveUploadSession(parent, file, null, new String[0]);
+    public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
+        return new OneDriveUploadSession(parent, file, remoteFilename, null, new String[0]);
     }
 
     @Override
     public void uploadChunk(OneDriveUploadSession session) throws IOException {
-        session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getFile().getName(), session.getFile().isDirectory()));
+        session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getRemoteFilename(), session.getFile().isDirectory()));
     }
 
     public OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws IOException {

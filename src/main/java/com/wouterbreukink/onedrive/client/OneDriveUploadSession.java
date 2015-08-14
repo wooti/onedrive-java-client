@@ -10,6 +10,7 @@ public class OneDriveUploadSession {
     // Upload in chunks of 5MB as per MS recommendation
     private static final int CHUNK_SIZE = 5 * 1024 * 1024;
     private final File file;
+    private final String remoteFilename;
     private final String uploadUrl;
     private final RandomAccessFile raf;
     private OneDriveItem parent;
@@ -18,9 +19,10 @@ public class OneDriveUploadSession {
     private long lastUploaded;
     private OneDriveItem item;
 
-    public OneDriveUploadSession(OneDriveItem parent, File file, String uploadUrl, String[] ranges) throws IOException {
+    public OneDriveUploadSession(OneDriveItem parent, File file, String remoteFilename, String uploadUrl, String[] ranges) throws IOException {
         this.parent = parent;
         this.file = file;
+        this.remoteFilename = remoteFilename;
         this.uploadUrl = uploadUrl;
         this.raf = new RandomAccessFile(file, "r");
         setRanges(ranges);
@@ -80,6 +82,10 @@ public class OneDriveUploadSession {
 
     public File getFile() {
         return file;
+    }
+    
+    public String getRemoteFilename() {
+        return remoteFilename;
     }
 
     public boolean isComplete() {

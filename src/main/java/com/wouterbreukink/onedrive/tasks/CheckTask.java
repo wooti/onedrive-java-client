@@ -3,11 +3,16 @@ package com.wouterbreukink.onedrive.tasks;
 import com.google.api.client.util.Maps;
 import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.encryption.EncryptionException;
+import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
 import com.wouterbreukink.onedrive.filesystem.FileSystemProvider;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
@@ -15,11 +20,16 @@ public class CheckTask extends Task {
 
     private final OneDriveItem remoteFile;
     private final File localFile;
+    private EncryptionProvider encryptionProvider;
 
     public CheckTask(TaskOptions options, OneDriveItem remoteFile, File localFile) {
         super(options);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.localFile = Preconditions.checkNotNull(localFile);
+        if (getCommandLineOpts().isEncryptionEnabled())
+        {
+        	encryptionProvider = new EncryptionProvider(getCommandLineOpts().getEncryptionKey());
+        }
     }
 
     public int priority() {
@@ -52,7 +62,20 @@ public class CheckTask extends Task {
                     continue;
                 }
 
-                File localFile = localFileCache.remove(remoteFile.getName());
+                String remoteFileName = remoteFile.getName();
+                if (getCommandLineOpts().isEncryptionEnabled())
+                {
+                	try 
+                	{
+						remoteFileName = encryptionProvider.decryptFilename(remoteFileName);
+					}
+                	catch (EncryptionException e) 
+                	{
+                		throw new IllegalStateException("Cannot decrypt remote filename <" + remoteFileName + ">");
+					}                	
+                }
+                
+                File localFile = localFileCache.remove(remoteFileName);
                 processChild(remoteFile, localFile);
             }
 

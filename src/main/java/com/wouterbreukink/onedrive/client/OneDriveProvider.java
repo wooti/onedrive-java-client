@@ -21,11 +21,11 @@ public interface OneDriveProvider {
 
     // Write operations
 
-    OneDriveItem replaceFile(OneDriveItem parent, File file) throws IOException;
+    OneDriveItem replaceFile(OneDriveItem parent, File file, String remoteFilename) throws IOException;
 
-    OneDriveItem uploadFile(OneDriveItem parent, File file) throws IOException;
+    OneDriveItem uploadFile(OneDriveItem parent, File file, String remoteFilename) throws IOException;
 
-    OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws IOException;
+    OneDriveUploadSession startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
 
     void uploadChunk(OneDriveUploadSession session) throws IOException;
 
