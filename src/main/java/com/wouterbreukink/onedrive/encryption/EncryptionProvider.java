@@ -2,12 +2,16 @@ package com.wouterbreukink.onedrive.encryption;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.SequenceInputStream;
 import java.nio.file.Files;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -20,6 +24,7 @@ import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -179,6 +184,37 @@ public class EncryptionProvider
 			System.exit(1);			
 		}		
 	}
+
+	public DataInputStream encryptFileToStream(File aPlainText) throws FileNotFoundException
+	{
+		try
+		{
+			InputStream is = new BufferedInputStream(new FileInputStream(aPlainText));
+			
+			byte[] lSalt = generateSalt();
+			byte[] lSaltedPassword = getSaltedPassword(theKey, lSalt);
+			SecretKeySpec lSecretKeySpec = new SecretKeySpec(lSaltedPassword, "AES");			
+			theCipher.init(Cipher.ENCRYPT_MODE, lSecretKeySpec);
+			byte[] lIV = theCipher.getIV();
+			
+			@SuppressWarnings("resource")
+			DataInputStream ret =
+				new DataInputStream(
+					new SequenceInputStream(
+							new SequenceInputStream(
+									new ByteArrayInputStream(lIV),
+									new ByteArrayInputStream(lSalt)),
+							new CipherInputStream(is, theCipher)));
+			return ret;
+		}
+		catch (InvalidKeyException e) 
+		{
+			e.printStackTrace();
+			System.exit(1);
+			return null;
+		}		
+	}
+	
 	private void doCopy(InputStream is, OutputStream os) throws IOException {
 		byte[] bytes = new byte[1*1024*1024];
 		int numBytes;
@@ -189,6 +225,7 @@ public class EncryptionProvider
 		os.close();
 		is.close();
 	}
+	
 	/*
 public static void encryptOrDecrypt(String key, int mode, InputStream is, OutputStream os) throws Throwable {
 

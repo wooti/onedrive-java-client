@@ -3,6 +3,7 @@ package com.wouterbreukink.onedrive.tasks;
 import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
+import com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface;
 import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.encryption.EncryptedFileContent;
 import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
@@ -86,7 +87,12 @@ public class UploadTask extends Task {
             OneDriveItem response;
             if (localFile.length() > getCommandLineOpts().getSplitAfter() * 1024 * 1024) {
 
-                OneDriveUploadSession session = api.startUploadSession(parent, localFile, remoteFilename);
+                OneDriveUploadSessionInterface session;
+                if (getCommandLineOpts().isEncryptionEnabled())
+                	session = api.startEncryptedUploadSession(parent, localFile, remoteFilename);                	
+                else
+                	session = api.startUploadSession(parent, localFile, remoteFilename);
+                	
 
                 while (!session.isComplete()) {
                     long startTimeInner = System.currentTimeMillis();
@@ -96,7 +102,7 @@ public class UploadTask extends Task {
                     long elapsedTimeInner = System.currentTimeMillis() - startTimeInner;
 
                     log.info(String.format("Uploaded chunk (progress %.1f%%) of %s (%s/s) for file %s",
-                            ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
+                            ((double) session.getTotalUploaded() / session.getRemoteFileLength()) * 100,
                             readableFileSize(session.getLastUploaded()),
                             elapsedTimeInner > 0 ? readableFileSize(session.getLastUploaded() / (elapsedTimeInner / 1000d)) : 0,
                             parent.getFullName() + remoteFilename));
@@ -111,8 +117,8 @@ public class UploadTask extends Task {
             		EncryptedFileContent efc = new EncryptedFileContent(null, localFile);
         			FileSystemInfoFacet fsi = new FileSystemInfoFacet(localFile);
         			response = replace ? 
-            				api.replaceFile(parent, efc , fsi, remoteFilename) : 
-            				api.uploadFile(parent, efc, fsi, remoteFilename);            		
+            				api.replaceEncryptedFile(parent, efc , fsi, remoteFilename) : 
+            				api.uploadEncryptedFile(parent, efc, fsi, remoteFilename);            		
             	}
             	else
             	{

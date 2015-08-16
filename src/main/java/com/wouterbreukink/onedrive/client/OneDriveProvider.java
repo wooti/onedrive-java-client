@@ -1,6 +1,5 @@
 package com.wouterbreukink.onedrive.client;
 
-import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpContent;
 import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
 import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
@@ -26,15 +25,17 @@ public interface OneDriveProvider {
 
     OneDriveItem replaceFile(OneDriveItem parent, File file, String remoteFilename) throws IOException;
     
-    OneDriveItem replaceFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException;
+    OneDriveItem replaceEncryptedFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException;
 
     OneDriveItem uploadFile(OneDriveItem parent, File file, String remoteFilename) throws IOException;
     
-    OneDriveItem uploadFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException;
+    OneDriveItem uploadEncryptedFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException;
 
-    OneDriveUploadSession startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
+    OneDriveUploadSessionInterface startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
+    
+    OneDriveUploadSessionInterface startEncryptedUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
 
-    void uploadChunk(OneDriveUploadSession session) throws IOException;
+    void uploadChunk(OneDriveUploadSessionInterface session) throws IOException;
 
     OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws IOException;
     

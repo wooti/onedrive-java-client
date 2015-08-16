@@ -29,11 +29,11 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
 
         FileContent fileContent = new FileContent(null, file);
         FileSystemInfoFacet fsi = new FileSystemInfoFacet(file); 
-        return replaceFile(parent, fileContent, fsi, remoteFilename);
+        return replaceEncryptedFile(parent, fileContent, fsi, remoteFilename);
     }
     
     @Override
-    public OneDriveItem replaceFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException {
+    public OneDriveItem replaceEncryptedFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
@@ -55,11 +55,11 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
 
     	FileContent fileContent = new FileContent(null, file);
         FileSystemInfoFacet fsi = new FileSystemInfoFacet(file);
-    	return uploadFile(parent, fileContent, fsi, remoteFilename);    	
+    	return uploadEncryptedFile(parent, fileContent, fsi, remoteFilename);    	
     }
     
     @Override
-    public OneDriveItem uploadFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException {
+    public OneDriveItem uploadEncryptedFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException {
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
@@ -89,7 +89,7 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
     }
 
     @Override
-    public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
+    public OneDriveUploadSessionInterface startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
 
         HttpRequest request = requestFactory.buildPostRequest(
                 OneDriveUrl.createUploadSession(parent.getId(), remoteFilename),
@@ -99,9 +99,21 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
 
         return new OneDriveUploadSession(parent, file, remoteFilename, session.getUploadUrl(), session.getNextExpectedRanges());
     }
+    
+    @Override
+    public OneDriveUploadSessionInterface startEncryptedUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
+
+        HttpRequest request = requestFactory.buildPostRequest(
+                OneDriveUrl.createUploadSession(parent.getId(), remoteFilename),
+                new JsonHttpContent(JSON_FACTORY, new UploadSessionFacet(remoteFilename)));
+
+        UploadSession session = request.execute().parseAs(UploadSession.class);
+
+        return new OneDriveEncryptedUploadSession(parent, file, remoteFilename, session.getUploadUrl(), session.getNextExpectedRanges());
+    }
 
     @Override
-    public void uploadChunk(OneDriveUploadSession session) throws IOException {
+    public void uploadChunk(OneDriveUploadSessionInterface session) throws IOException {
 
         byte[] bytesToUpload = session.getChunk();
         OneDriveItem item;
@@ -110,7 +122,7 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
                 new GenericUrl(session.getUploadUrl()),
                 new ByteArrayContent(null, bytesToUpload));
 
-        request.getHeaders().setContentRange(String.format("bytes %d-%d/%d", session.getTotalUploaded(), session.getTotalUploaded() + bytesToUpload.length - 1, session.getFile().length()));
+        request.getHeaders().setContentRange(String.format("bytes %d-%d/%d", session.getTotalUploaded(), session.getTotalUploaded() + bytesToUpload.length - 1, session.getRemoteFileLength()));
 
         if (session.getTotalUploaded() + bytesToUpload.length < session.getFile().length()) {
             UploadSession response = request.execute().parseAs(UploadSession.class);

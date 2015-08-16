@@ -105,7 +105,7 @@ class ROOneDriveProvider implements OneDriveProvider {
     }
     
     @Override
-	public OneDriveItem replaceFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi,
+	public OneDriveItem replaceEncryptedFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi,
 			String remoteFilename) throws IOException {
     	
     	if (!parent.isDirectory()) {
@@ -125,7 +125,7 @@ class ROOneDriveProvider implements OneDriveProvider {
     }
     
 	@Override
-	public OneDriveItem uploadFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi,
+	public OneDriveItem uploadEncryptedFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi,
 			String remoteFilename) throws IOException {
 
 		if (!parent.isDirectory()) {
@@ -136,12 +136,17 @@ class ROOneDriveProvider implements OneDriveProvider {
 	}
 
     @Override
-    public OneDriveUploadSession startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
+    public OneDriveUploadSessionInterface startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
         return new OneDriveUploadSession(parent, file, remoteFilename, null, new String[0]);
+    }
+    
+    @Override
+    public OneDriveUploadSessionInterface startEncryptedUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
+        return new OneDriveEncryptedUploadSession(parent, file, remoteFilename, null, new String[0]);
     }
 
     @Override
-    public void uploadChunk(OneDriveUploadSession session) throws IOException {
+    public void uploadChunk(OneDriveUploadSessionInterface session) throws IOException {
         session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getRemoteFilename(), session.getFile().isDirectory()));
     }
 

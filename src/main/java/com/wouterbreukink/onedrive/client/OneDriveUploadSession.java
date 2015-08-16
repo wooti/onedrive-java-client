@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
 
-public class OneDriveUploadSession {
+public class OneDriveUploadSession implements OneDriveUploadSessionInterface {
 
     // Upload in chunks of 5MB as per MS recommendation
     private static final int CHUNK_SIZE = 5 * 1024 * 1024;
@@ -28,7 +28,11 @@ public class OneDriveUploadSession {
         setRanges(ranges);
     }
 
-    public void setRanges(String[] stringRanges) {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#setRanges(java.lang.String[])
+	 */
+    @Override
+	public void setRanges(String[] stringRanges) {
 
         this.ranges = new Range[stringRanges.length];
         for (int i = 0; i < stringRanges.length; i++) {
@@ -50,7 +54,11 @@ public class OneDriveUploadSession {
         }
     }
 
-    public byte[] getChunk() throws IOException {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#getChunk()
+	 */
+    @Override
+	public byte[] getChunk() throws IOException {
 
         byte[] bytes = new byte[CHUNK_SIZE];
 
@@ -64,41 +72,77 @@ public class OneDriveUploadSession {
         return bytes;
     }
 
-    public long getTotalUploaded() {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#getTotalUploaded()
+	 */
+    @Override
+	public long getTotalUploaded() {
         return totalUploaded;
     }
 
-    public long getLastUploaded() {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#getLastUploaded()
+	 */
+    @Override
+	public long getLastUploaded() {
         return lastUploaded;
     }
 
-    public OneDriveItem getParent() {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#getParent()
+	 */
+    @Override
+	public OneDriveItem getParent() {
         return parent;
     }
 
-    public String getUploadUrl() {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#getUploadUrl()
+	 */
+    @Override
+	public String getUploadUrl() {
         return uploadUrl;
     }
 
-    public File getFile() {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#getFile()
+	 */
+    @Override
+	public File getFile() {
         return file;
     }
     
-    public String getRemoteFilename() {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#getRemoteFilename()
+	 */
+    @Override
+	public String getRemoteFilename() {
         return remoteFilename;
     }
 
-    public boolean isComplete() {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#isComplete()
+	 */
+    @Override
+	public boolean isComplete() {
         return item != null;
     }
 
-    public void setComplete(OneDriveItem item) {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#setComplete(com.wouterbreukink.onedrive.client.OneDriveItem)
+	 */
+    @Override
+	public void setComplete(OneDriveItem item) {
         this.item = item;
         lastUploaded = file.length() - totalUploaded;
         totalUploaded = file.length();
     }
 
-    public OneDriveItem getItem() {
+    /* (non-Javadoc)
+	 * @see com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface2#getItem()
+	 */
+    @Override
+	public OneDriveItem getItem() {
         return item;
     }
 
@@ -111,4 +155,9 @@ public class OneDriveUploadSession {
             this.end = end;
         }
     }
+
+	@Override
+	public long getRemoteFileLength() {
+		return file.length();
+	}
 }
