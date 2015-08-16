@@ -1,6 +1,9 @@
 package com.wouterbreukink.onedrive.client;
 
+import com.google.api.client.http.FileContent;
+import com.google.api.client.http.HttpContent;
 import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
+import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 
 import java.io.File;
@@ -21,15 +24,21 @@ public interface OneDriveProvider {
 
     // Write operations
 
-    OneDriveItem replaceFile(OneDriveItem parent, File file) throws IOException;
+    OneDriveItem replaceFile(OneDriveItem parent, File file, String remoteFilename) throws IOException;
+    
+    OneDriveItem replaceFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException;
 
-    OneDriveItem uploadFile(OneDriveItem parent, File file) throws IOException;
+    OneDriveItem uploadFile(OneDriveItem parent, File file, String remoteFilename) throws IOException;
+    
+    OneDriveItem uploadFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException;
 
-    OneDriveUploadSession startUploadSession(OneDriveItem parent, File file) throws IOException;
+    OneDriveUploadSession startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
 
     void uploadChunk(OneDriveUploadSession session) throws IOException;
 
     OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws IOException;
+    
+    OneDriveItem updateFile(OneDriveItem item, FileSystemInfoFacet fsi) throws IOException;
 
     OneDriveItem createFolder(OneDriveItem parent, String name) throws IOException;
 

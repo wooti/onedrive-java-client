@@ -13,6 +13,8 @@ public interface FileSystemProvider {
     File createFile(File file, String name) throws IOException;
 
     void replaceFile(File original, File replacement) throws IOException;
+    
+    void replaceAndDecryptFile(File original, File replacement) throws IOException;
 
     void setAttributes(File downloadFile, Date created, Date lastModified) throws IOException;
 

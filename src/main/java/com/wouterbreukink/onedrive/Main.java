@@ -133,7 +133,15 @@ public class Main {
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
         queue.add(new CheckTask(new Task.TaskOptions(queue, api, fileSystem, reporter), rootFolder, new File(getCommandLineOpts().getLocalPath())));
-
+        
+        /*
+        queue.take().run();
+        while (true)
+        {
+        	System.out.println(queue.take().toString());
+        }
+        */
+        
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());
 
@@ -164,7 +172,6 @@ public class Main {
         queue.waitForCompletion();
         log.info("Synchronisation complete");
         reporter.report();
-
         System.exit(0);
     }
 }
