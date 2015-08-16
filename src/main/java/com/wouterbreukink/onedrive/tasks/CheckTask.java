@@ -11,25 +11,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
 public class CheckTask extends Task {
 
     private final OneDriveItem remoteFile;
     private final File localFile;
-    private EncryptionProvider encryptionProvider;
-
+    
     public CheckTask(TaskOptions options, OneDriveItem remoteFile, File localFile) {
         super(options);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
-        this.localFile = Preconditions.checkNotNull(localFile);
-        if (getCommandLineOpts().isEncryptionEnabled())
-        {
-        	encryptionProvider = new EncryptionProvider(getCommandLineOpts().getEncryptionKey());
-        }
+        this.localFile = Preconditions.checkNotNull(localFile);    
     }
 
     public int priority() {
@@ -67,7 +59,8 @@ public class CheckTask extends Task {
                 {
                 	try 
                 	{
-						remoteFileName = encryptionProvider.decryptFilename(remoteFileName);
+						remoteFileName = EncryptionProvider.getEncryptionProvider().
+								decryptFilename(remoteFileName);
 					}
                 	catch (EncryptionException e) 
                 	{
@@ -155,7 +148,7 @@ public class CheckTask extends Task {
         }
     }
 
-    private void processChild(OneDriveItem remoteFile, File localFile) {
+    private void processChild(OneDriveItem remoteFile, File localFile) throws IOException {
 
         if (remoteFile == null && localFile == null) {
             throw new IllegalArgumentException("Must specify at least one file");

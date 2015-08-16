@@ -1,13 +1,8 @@
 package com.wouterbreukink.onedrive.client;
 
-import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
-
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.util.Arrays;
 
 import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
 
@@ -25,7 +20,7 @@ public class OneDriveEncryptedUploadSession implements OneDriveUploadSessionInte
     private OneDriveItem item;
     private long currentStreamPosition;
     private EncryptionProvider encryptionProvider;
-    private DataInputStream encryptedInputStream;
+    private DataInputStream encryptedInputStream = null;
 
     public OneDriveEncryptedUploadSession(OneDriveItem parent, File file, String remoteFilename, String uploadUrl, String[] ranges) throws IOException 
     {
@@ -34,8 +29,8 @@ public class OneDriveEncryptedUploadSession implements OneDriveUploadSessionInte
         this.remoteFilename = remoteFilename;
         this.uploadUrl = uploadUrl;        
         this.currentStreamPosition = 0;
-        this.encryptionProvider = new EncryptionProvider(getCommandLineOpts().getEncryptionKey());
-        this.encryptedInputStream = encryptionProvider.encryptFileToStream(file);
+        this.encryptedInputStream = EncryptionProvider.getEncryptionProvider()
+        		.encryptFileToStream(file);
         setRanges(ranges);
     }
 
@@ -115,6 +110,12 @@ public class OneDriveEncryptedUploadSession implements OneDriveUploadSessionInte
         this.item = item;
         lastUploaded = file.length() - totalUploaded;
         totalUploaded = file.length();
+        if (encryptedInputStream != null)
+        {
+        	try { encryptedInputStream.close(); } 
+        	catch (IOException e) {}	
+        }
+        
     }
 
     public OneDriveItem getItem() {
@@ -123,7 +124,8 @@ public class OneDriveEncryptedUploadSession implements OneDriveUploadSessionInte
 
     private static class Range {
         public long start;
-        public long end;
+        @SuppressWarnings("unused")
+		public long end;
 
         private Range(long start, long end) {
             this.start = start;

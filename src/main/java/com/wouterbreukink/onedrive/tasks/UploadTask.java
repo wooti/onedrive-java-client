@@ -2,7 +2,6 @@ package com.wouterbreukink.onedrive.tasks;
 
 import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
-import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
 import com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface;
 import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.encryption.EncryptedFileContent;
@@ -35,10 +34,9 @@ public class UploadTask extends Task {
         this.localFile = Preconditions.checkNotNull(localFile);
         
         if (getCommandLineOpts().isEncryptionEnabled())
-        {
-        	EncryptionProvider encryptionProvider = 
-        			new EncryptionProvider(getCommandLineOpts().getEncryptionKey());
-        	remoteFilename = encryptionProvider.encryptFilename(localFile.getName());
+        {	
+        	remoteFilename = EncryptionProvider.getEncryptionProvider()
+        			.encryptFilename(localFile.getName());
         }
         else
         	remoteFilename = localFile.getName(); 
@@ -138,14 +136,6 @@ public class UploadTask extends Task {
                     response.getFullName()));
 
             reporter.fileUploaded(replace, localFile.length());
-        }
-    }
-
-    private void sleep(int i) {
-        try {
-            Thread.sleep(i * 1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 }

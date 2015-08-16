@@ -23,7 +23,7 @@ public class DownloadTask extends Task {
     private final String remoteFilename;
     private final boolean replace;
 
-    public DownloadTask(TaskOptions options, File parent, OneDriveItem remoteFile, boolean replace) {
+    public DownloadTask(TaskOptions options, File parent, OneDriveItem remoteFile, boolean replace) throws IOException {
 
         super(options);
 
@@ -33,13 +33,15 @@ public class DownloadTask extends Task {
         
         if (getCommandLineOpts().isEncryptionEnabled())
         {
-        	EncryptionProvider encryptionProvider = 
-        			new EncryptionProvider(getCommandLineOpts().getEncryptionKey());
+        	
         	try {
-				remoteFilename = encryptionProvider.decryptFilename(remoteFile.getName());
+				remoteFilename = EncryptionProvider.getEncryptionProvider()
+						.decryptFilename(remoteFile.getName());
 			} catch (EncryptionException e) {
-				throw new IllegalArgumentException("Cannot decrypt remote filename");
+				throw new IOException(String.format("Download of file '%s' failed (Cannot decrypt filename)", remoteFile.getFullName()));
 			}
+        	
+        	
         }
         else
         	remoteFilename = remoteFile.getName(); 

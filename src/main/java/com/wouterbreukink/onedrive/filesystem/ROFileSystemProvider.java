@@ -18,7 +18,8 @@ class ROFileSystemProvider implements FileSystemProvider {
         // Do nothing
     }
 
-    public File createFolder(File file, String name) throws IOException {
+    @SuppressWarnings("serial")
+	public File createFolder(File file, String name) throws IOException {
 
         return new File(file, name) {
             @Override

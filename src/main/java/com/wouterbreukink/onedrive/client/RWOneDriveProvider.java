@@ -9,7 +9,6 @@ import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.client.facets.FolderFacet;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.UploadSession;
-import com.wouterbreukink.onedrive.client.serialization.JsonDateSerializer;
 
 import java.io.File;
 import java.io.FileOutputStream;

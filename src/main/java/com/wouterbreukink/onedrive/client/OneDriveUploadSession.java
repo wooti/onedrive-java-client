@@ -148,7 +148,8 @@ public class OneDriveUploadSession implements OneDriveUploadSessionInterface {
 
     private static class Range {
         public long start;
-        public long end;
+        @SuppressWarnings("unused")
+		public long end;
 
         private Range(long start, long end) {
             this.start = start;
