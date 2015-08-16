@@ -110,7 +110,10 @@ public class DownloadTask extends Task {
                         remoteFile.getCreatedDateTime(),
                         remoteFile.getLastModifiedDateTime());
 
-                fileSystem.replaceFile(new File(parent, remoteFilename), downloadFile);
+                if (getCommandLineOpts().isEncryptionEnabled())
+                	fileSystem.replaceAndDecryptFile(new File(parent, remoteFilename), downloadFile);
+                else
+                	fileSystem.replaceFile(new File(parent, remoteFilename), downloadFile);
                 reporter.fileDownloaded(replace, remoteFile.getSize());
             } catch (Throwable e) {
                 if (downloadFile != null) {

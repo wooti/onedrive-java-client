@@ -1,5 +1,7 @@
 package com.wouterbreukink.onedrive.filesystem;
 
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -10,6 +12,9 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.Date;
+
+import com.wouterbreukink.onedrive.encryption.EncryptionException;
+import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
 
 class RWFileSystemProvider extends ROFileSystemProvider implements FileSystemProvider {
 
@@ -73,7 +78,25 @@ class RWFileSystemProvider extends ROFileSystemProvider implements FileSystemPro
 
         if (!replacement.renameTo(original)) {
             throw new IOException("Unable to replace local file" + original.getPath());
+        }        
+    }
+    
+    @Override
+    public void replaceAndDecryptFile(File original, File replacement) throws IOException {
+        if (original.exists() && !original.delete()) {
+            throw new IOException("Unable to replace local file" + original.getPath());
         }
+
+        EncryptionProvider ep = new EncryptionProvider(getCommandLineOpts().getEncryptionKey());
+        try {
+			ep.decryptFile(replacement, original);			
+		} catch (EncryptionException e) {
+			e.printStackTrace();
+		}
+        
+        if (!replacement.delete()) {
+            throw new IOException("Unable to replace local file" + original.getPath());
+        }        
     }
 
     @Override

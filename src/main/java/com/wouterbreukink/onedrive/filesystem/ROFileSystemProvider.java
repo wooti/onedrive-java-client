@@ -35,6 +35,11 @@ class ROFileSystemProvider implements FileSystemProvider {
     public void replaceFile(File original, File replacement) throws IOException {
         // Do nothing
     }
+    
+	@Override
+	public void replaceAndDecryptFile(File original, File replacement) throws IOException {
+		// Do nothing		
+	}
 
     public void setAttributes(File downloadFile, Date created, Date lastModified) throws IOException {
         // Do nothing

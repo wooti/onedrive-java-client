@@ -1,7 +1,13 @@
 package com.wouterbreukink.onedrive.encryption;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -14,6 +20,7 @@ import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKeyFactory;
@@ -145,6 +152,75 @@ public class EncryptionProvider
 			return null;
 		}
 	}
+	
+	public void decryptFile(File aCipherText, File aPlainText) throws IOException, EncryptionException
+	{
+		if (aCipherText.length() < 48)
+		{
+			throw new EncryptionException();
+		}
+		try
+		{
+			InputStream is = new BufferedInputStream(new FileInputStream(aCipherText));
+			OutputStream os = new BufferedOutputStream(new FileOutputStream(aPlainText));
+			byte[] header = new byte[32];
+			is.read(header);		
+			byte[] lIV = Arrays.copyOfRange(header,0,16);
+			byte[] lSalt = Arrays.copyOfRange(header,16,32);
+			byte[] lSaltedPassword = getSaltedPassword(theKey, lSalt);
+			SecretKeySpec mSecretKeySpec = new SecretKeySpec(lSaltedPassword, "AES");
+			theCipher.init(Cipher.DECRYPT_MODE, mSecretKeySpec, new IvParameterSpec(lIV));
+			CipherOutputStream cos = new CipherOutputStream(os, theCipher);
+			doCopy(is, cos);
+		}
+		catch (InvalidKeyException | InvalidAlgorithmParameterException e) 
+		{
+			e.printStackTrace();
+			System.exit(1);			
+		}		
+	}
+	private void doCopy(InputStream is, OutputStream os) throws IOException {
+		byte[] bytes = new byte[1*1024*1024];
+		int numBytes;
+		while ((numBytes = is.read(bytes)) != -1) {
+			os.write(bytes, 0, numBytes);
+		}
+		os.flush();
+		os.close();
+		is.close();
+	}
+	/*
+public static void encryptOrDecrypt(String key, int mode, InputStream is, OutputStream os) throws Throwable {
+
+		DESKeySpec dks = new DESKeySpec(key.getBytes());
+		SecretKeyFactory skf = SecretKeyFactory.getInstance("DES");
+		SecretKey desKey = skf.generateSecret(dks);
+		Cipher cipher = Cipher.getInstance("DES"); // DES/ECB/PKCS5Padding for SunJCE
+
+		if (mode == Cipher.ENCRYPT_MODE) {
+			cipher.init(Cipher.ENCRYPT_MODE, desKey);
+			CipherInputStream cis = new CipherInputStream(is, cipher);
+			doCopy(cis, os);
+		} else if (mode == Cipher.DECRYPT_MODE) {
+			cipher.init(Cipher.DECRYPT_MODE, desKey);
+			CipherOutputStream cos = new CipherOutputStream(os, cipher);
+			doCopy(is, cos);
+		}
+	}
+
+	public static void doCopy(InputStream is, OutputStream os) throws IOException {
+		byte[] bytes = new byte[64];
+		int numBytes;
+		while ((numBytes = is.read(bytes)) != -1) {
+			os.write(bytes, 0, numBytes);
+		}
+		os.flush();
+		os.close();
+		is.close();
+	}
+	 
+	 */
+	
 	
 	public long computeEncryptedLength(long plainTextlength)
 	{
