@@ -3,6 +3,8 @@ package com.wouterbreukink.onedrive.tasks;
 import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.client.OneDriveUploadSession;
+import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
+import com.wouterbreukink.onedrive.encryption.EncryptedFileContent;
 import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
 
 import org.apache.logging.log4j.LogManager;
@@ -103,7 +105,21 @@ public class UploadTask extends Task {
                 response = session.getItem();
 
             } else {
-                response = replace ? api.replaceFile(parent, localFile, remoteFilename) : api.uploadFile(parent, localFile, remoteFilename);
+            	
+            	if (getCommandLineOpts().isEncryptionEnabled())
+            	{
+            		EncryptedFileContent efc = new EncryptedFileContent(null, localFile);
+        			FileSystemInfoFacet fsi = new FileSystemInfoFacet(localFile);
+        			response = replace ? 
+            				api.replaceFile(parent, efc , fsi, remoteFilename) : 
+            				api.uploadFile(parent, efc, fsi, remoteFilename);            		
+            	}
+            	else
+            	{
+            		response = replace ? 
+            				api.replaceFile(parent, localFile, remoteFilename) : 
+            				api.uploadFile(parent, localFile, remoteFilename);
+            	}
             }
 
             long elapsedTime = System.currentTimeMillis() - startTime;

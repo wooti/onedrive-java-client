@@ -1,5 +1,8 @@
 package com.wouterbreukink.onedrive.encryption;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -46,22 +49,6 @@ public class EncryptionProvider
 		theKey = aKey;
 	}
 	
-	
-	private byte[] getSaltedPassword(String aPassword, byte[] aSalt)
-	{
-		try 
-	    {
-			KeySpec lKeySpec = new PBEKeySpec(aPassword.toCharArray(), aSalt, ITERATIONS, KEY_LENGTH);
-			return theSecretKeyFactory.generateSecret(lKeySpec).getEncoded();
-		} 
-	    catch (InvalidKeySpecException e) 
-	    {
-			e.printStackTrace();			
-			System.exit(1);
-			return null;
-		}
-	}
-
 	public String encryptFilename(String aPlainText)
 	{	
 		try 
@@ -125,11 +112,64 @@ public class EncryptionProvider
 			throw new EncryptionException();
 		}				
 	}
+	
+	public byte[] encryptFile(File aPlainText) throws IOException
+	{	
+		try 
+		{
+			byte[] lSalt = generateSalt();
+			byte[] lSaltedPassword = getSaltedPassword(theKey, lSalt);
+			SecretKeySpec lSecretKeySpec = new SecretKeySpec(lSaltedPassword, "AES");	    
+			theCipher.init(Cipher.ENCRYPT_MODE, lSecretKeySpec);
+			byte[] lIV = theCipher.getIV();
+			byte[] lEncryptedMessage = theCipher.doFinal(Files.readAllBytes(aPlainText.toPath()));
+			byte[] lCipherText = new byte[lIV.length + lSalt.length + lEncryptedMessage.length];       
+			System.arraycopy(lIV, 0, lCipherText, 0, lIV.length);
+			System.arraycopy(lSalt, 0, lCipherText, lIV.length, lSalt.length);
+			System.arraycopy(lEncryptedMessage, 0, lCipherText, lIV.length + lSalt.length, lEncryptedMessage.length);
+			if (lCipherText.length != computeEncryptedLength(aPlainText.length()))
+			{
+				System.out.println("Unexpected ciphertext length: " +
+						"EXP = " + computeEncryptedLength(aPlainText.length()) +
+						" ACT = " + lCipherText.length);
+				System.exit(1);
+				return null;
+			}
+			return lCipherText;
+			
+		} 
+		catch (InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) 
+		{
+			e.printStackTrace();
+			System.exit(1);
+			return null;
+		}
+	}
+	
+	public long computeEncryptedLength(long plainTextlength)
+	{
+		return 32 + ((plainTextlength + 16) & ~15);
+	}
 
-	public byte[] generateSalt()
+	private byte[] generateSalt()
 	{   
 	    byte saltBytes[] = new byte[SALT_LENGTH];
 	    theSecureRandom.nextBytes(saltBytes);
 	    return saltBytes;
+	}
+	
+	private byte[] getSaltedPassword(String aPassword, byte[] aSalt)
+	{
+		try 
+	    {
+			KeySpec lKeySpec = new PBEKeySpec(aPassword.toCharArray(), aSalt, ITERATIONS, KEY_LENGTH);
+			return theSecretKeyFactory.generateSecret(lKeySpec).getEncoded();
+		} 
+	    catch (InvalidKeySpecException e) 
+	    {
+			e.printStackTrace();			
+			System.exit(1);
+			return null;
+		}
 	}
 }

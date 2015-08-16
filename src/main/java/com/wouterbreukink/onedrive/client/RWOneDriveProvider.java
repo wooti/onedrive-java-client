@@ -27,34 +27,45 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
     @Override
     public OneDriveItem replaceFile(OneDriveItem parent, File file, String remoteFilename) throws IOException {
 
+        FileContent fileContent = new FileContent(null, file);
+        FileSystemInfoFacet fsi = new FileSystemInfoFacet(file); 
+        return replaceFile(parent, fileContent, fsi, remoteFilename);
+    }
+    
+    @Override
+    public OneDriveItem replaceFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException {
+
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
         HttpRequest request = requestFactory.buildPutRequest(
                 OneDriveUrl.putContent(parent.getId(), remoteFilename),
-                new FileContent(null, file));
+                httpContent);
 
         Item response = request.execute().parseAs(Item.class);
         OneDriveItem item = OneDriveItem.FACTORY.create(response);
 
         // Now update the item
-        BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-        return updateFile(item, new Date(attr.creationTime().toMillis()), new Date(attr.lastModifiedTime().toMillis()));
+        return updateFile(item, fsi);
     }
 
     @Override
     public OneDriveItem uploadFile(OneDriveItem parent, File file, String remoteFilename) throws IOException {
 
+    	FileContent fileContent = new FileContent(null, file);
+        FileSystemInfoFacet fsi = new FileSystemInfoFacet(file);
+    	return uploadFile(parent, fileContent, fsi, remoteFilename);    	
+    }
+    
+    @Override
+    public OneDriveItem uploadFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException {
+
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Parent is not a folder");
         }
 
-        // Generate the update item
-        BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-        FileSystemInfoFacet fsi = new FileSystemInfoFacet();
-        fsi.setLastModifiedDateTime(JsonDateSerializer.INSTANCE.serialize(new Date(attr.lastModifiedTime().toMillis())));
-        fsi.setCreatedDateTime(JsonDateSerializer.INSTANCE.serialize(new Date(attr.creationTime().toMillis())));
+        // Generate the update item        
         WriteItemFacet itemToWrite = new WriteItemFacet(remoteFilename, fsi, true);
 
         MultipartContent content = new MultipartContent()
@@ -67,7 +78,7 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
                         new HttpHeaders()
                                 .set("Content-ID", "<content>")
                                 .setAcceptEncoding(null),
-                        new FileContent(null, file)));
+                        httpContent));
 
         HttpRequest request = requestFactory.buildPostRequest(
                 OneDriveUrl.postMultiPart(parent.getId()), content);
@@ -120,11 +131,15 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
     @Override
     public OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws IOException {
 
-        FileSystemInfoFacet fileSystem = new FileSystemInfoFacet();
-        fileSystem.setCreatedDateTime(JsonDateSerializer.INSTANCE.serialize(createdDate));
-        fileSystem.setLastModifiedDateTime(JsonDateSerializer.INSTANCE.serialize(modifiedDate));
+        FileSystemInfoFacet fileSystem = new FileSystemInfoFacet(createdDate, modifiedDate);        
 
-        WriteItemFacet updateItem = new WriteItemFacet(item.getName(), fileSystem, false);
+        return updateFile(item, fileSystem);
+    }
+    
+    @Override
+    public OneDriveItem updateFile(OneDriveItem item, FileSystemInfoFacet fsi) throws IOException {
+
+        WriteItemFacet updateItem = new WriteItemFacet(item.getName(), fsi, false);
 
         HttpRequest request = requestFactory.buildPatchRequest(
                 OneDriveUrl.item(item.getId()),

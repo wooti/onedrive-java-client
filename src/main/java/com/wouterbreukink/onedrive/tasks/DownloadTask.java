@@ -2,12 +2,16 @@ package com.wouterbreukink.onedrive.tasks;
 
 import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.encryption.EncryptionException;
+import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
 import static com.wouterbreukink.onedrive.LogUtils.readableTime;
 
@@ -16,6 +20,7 @@ public class DownloadTask extends Task {
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
     private final File parent;
     private final OneDriveItem remoteFile;
+    private final String remoteFilename;
     private final boolean replace;
 
     public DownloadTask(TaskOptions options, File parent, OneDriveItem remoteFile, boolean replace) {
@@ -25,6 +30,20 @@ public class DownloadTask extends Task {
         this.parent = Preconditions.checkNotNull(parent);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
         this.replace = Preconditions.checkNotNull(replace);
+        
+        if (getCommandLineOpts().isEncryptionEnabled())
+        {
+        	EncryptionProvider encryptionProvider = 
+        			new EncryptionProvider(getCommandLineOpts().getEncryptionKey());
+        	try {
+				remoteFilename = encryptionProvider.decryptFilename(remoteFile.getName());
+			} catch (EncryptionException e) {
+				throw new IllegalArgumentException("Cannot decrypt remote filename");
+			}
+        }
+        else
+        	remoteFilename = remoteFile.getName(); 
+
 
         if (!parent.isDirectory()) {
             throw new IllegalArgumentException("Specified parent is not a folder");
@@ -50,7 +69,7 @@ public class DownloadTask extends Task {
 
         if (remoteFile.isDirectory()) {
 
-            File newParent = fileSystem.createFolder(parent, remoteFile.getName());
+            File newParent = fileSystem.createFolder(parent, remoteFilename);
 
             for (OneDriveItem item : api.getChildren(remoteFile)) {
                 queue.add(new DownloadTask(getTaskOptions(), newParent, item, false));
@@ -68,7 +87,7 @@ public class DownloadTask extends Task {
             File downloadFile = null;
 
             try {
-                downloadFile = fileSystem.createFile(parent, remoteFile.getName() + ".tmp");
+                downloadFile = fileSystem.createFile(parent, remoteFilename + ".tmp");
 
                 api.download(remoteFile, downloadFile);
 
@@ -91,7 +110,7 @@ public class DownloadTask extends Task {
                         remoteFile.getCreatedDateTime(),
                         remoteFile.getLastModifiedDateTime());
 
-                fileSystem.replaceFile(new File(parent, remoteFile.getName()), downloadFile);
+                fileSystem.replaceFile(new File(parent, remoteFilename), downloadFile);
                 reporter.fileDownloaded(replace, remoteFile.getSize());
             } catch (Throwable e) {
                 if (downloadFile != null) {
