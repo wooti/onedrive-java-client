@@ -31,11 +31,11 @@ public interface OneDriveProvider {
     
     OneDriveItem uploadEncryptedFile(OneDriveItem parent, HttpContent httpContent, FileSystemInfoFacet fsi, String remoteFilename) throws IOException;
 
-    OneDriveUploadSessionInterface startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
+    OneDriveUploadSessionBase startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
     
-    OneDriveUploadSessionInterface startEncryptedUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
+    OneDriveUploadSessionBase startEncryptedUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException;
 
-    void uploadChunk(OneDriveUploadSessionInterface session) throws IOException;
+    void uploadChunk(OneDriveUploadSessionBase session) throws IOException;
 
     OneDriveItem updateFile(OneDriveItem item, Date createdDate, Date modifiedDate) throws IOException;
     

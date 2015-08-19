@@ -244,7 +244,7 @@ public class EncryptionProvider
 		is.close();
 	}
 	
-	public long computeEncryptedLength(long plainTextlength)
+	public static long computeEncryptedLength(long plainTextlength)
 	{
 		return PREFIX_LENGTH + ((plainTextlength + BLOCK_SIZE) & ~(BLOCK_SIZE - 1));
 	}

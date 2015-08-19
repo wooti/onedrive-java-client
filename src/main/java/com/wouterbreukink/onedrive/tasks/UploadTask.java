@@ -2,7 +2,7 @@ package com.wouterbreukink.onedrive.tasks;
 
 import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
-import com.wouterbreukink.onedrive.client.OneDriveUploadSessionInterface;
+import com.wouterbreukink.onedrive.client.OneDriveUploadSessionBase;
 import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.encryption.EncryptedFileContent;
 import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
@@ -85,7 +85,7 @@ public class UploadTask extends Task {
             OneDriveItem response;
             if (localFile.length() > getCommandLineOpts().getSplitAfter() * 1024 * 1024) {
 
-                OneDriveUploadSessionInterface session;
+            	OneDriveUploadSessionBase session;
                 if (getCommandLineOpts().isEncryptionEnabled())
                 	session = api.startEncryptedUploadSession(parent, localFile, remoteFilename);                	
                 else

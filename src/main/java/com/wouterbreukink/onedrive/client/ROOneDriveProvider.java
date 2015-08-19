@@ -136,17 +136,17 @@ class ROOneDriveProvider implements OneDriveProvider {
 	}
 
     @Override
-    public OneDriveUploadSessionInterface startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
+    public OneDriveUploadSessionBase startUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
         return new OneDriveUploadSession(parent, file, remoteFilename, null, new String[0]);
     }
     
     @Override
-    public OneDriveUploadSessionInterface startEncryptedUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
+    public OneDriveUploadSessionBase startEncryptedUploadSession(OneDriveItem parent, File file, String remoteFilename) throws IOException {
         return new OneDriveEncryptedUploadSession(parent, file, remoteFilename, null, new String[0]);
     }
 
     @Override
-    public void uploadChunk(OneDriveUploadSessionInterface session) throws IOException {
+    public void uploadChunk(OneDriveUploadSessionBase session) throws IOException {
         session.setComplete(OneDriveItem.FACTORY.create(session.getParent(), session.getRemoteFilename(), session.getFile().isDirectory()));
     }
 

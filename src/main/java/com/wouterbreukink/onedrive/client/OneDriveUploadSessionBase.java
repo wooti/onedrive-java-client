@@ -46,12 +46,7 @@ public abstract class OneDriveUploadSessionBase
             totalUploaded = ranges[0].start;
         }
     }
-
-
     
-    
-	abstract byte[] getChunk() throws IOException;
-
 	public long getTotalUploaded() {
         return totalUploaded;
     }
@@ -80,11 +75,20 @@ public abstract class OneDriveUploadSessionBase
         return item != null;
     }
 
-	abstract void setComplete(OneDriveItem item);
-
-	abstract OneDriveItem getItem();
-
-	abstract long getRemoteFileLength();
+    public void setComplete(OneDriveItem item) 
+    {
+        this.item = item;
+        lastUploaded = file.length() - totalUploaded;
+        totalUploaded = file.length();
+    }
+    
+    public OneDriveItem getItem() {
+        return item;
+    }
+    
+	protected abstract byte[] getChunk() throws IOException;
+    
+	public abstract long getRemoteFileLength();
 	
     private static class Range 
     {
