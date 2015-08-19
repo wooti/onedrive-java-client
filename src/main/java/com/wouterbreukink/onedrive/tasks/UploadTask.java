@@ -128,12 +128,25 @@ public class UploadTask extends Task {
 
             long elapsedTime = System.currentTimeMillis() - startTime;
 
-            log.info(String.format("Uploaded %s in %s (%s/s) to %s file %s",
-                    readableFileSize(localFile.length()),
-                    readableTime(elapsedTime),
-                    elapsedTime > 0 ? readableFileSize(localFile.length() / (elapsedTime / 1000d)) : 0,
-                    replace ? "replace" : "new",
-                    response.getFullName()));
+            if (getCommandLineOpts().isEncryptionEnabled())
+            {
+            	log.info(String.format("Uploaded %s in %s (%s/s) from file %s to %s file <onedrive>%s",
+                        readableFileSize(localFile.length()),
+                        readableTime(elapsedTime),
+                        elapsedTime > 0 ? readableFileSize(localFile.length() / (elapsedTime / 1000d)) : 0,
+                        localFile.getAbsolutePath(),
+                        replace ? "replace" : "new",
+                        response.getFullName()));
+            }
+            else
+            {
+            	log.info(String.format("Uploaded %s in %s (%s/s) to %s file <onedrive>%s",
+                        readableFileSize(localFile.length()),
+                        readableTime(elapsedTime),
+                        elapsedTime > 0 ? readableFileSize(localFile.length() / (elapsedTime / 1000d)) : 0,
+                        replace ? "replace" : "new",
+                        response.getFullName()));
+            }
 
             reporter.fileUploaded(replace, localFile.length());
         }

@@ -59,7 +59,7 @@ public class EncryptionProvider
 	private static final String SECRET_KEY_ALGORITHM = "AES";
 	
 	public synchronized static EncryptionProvider getEncryptionProvider() {
-        if (instance != null) {
+        if (instance == null) {
         	if (!CommandLineOpts.getCommandLineOpts().isEncryptionEnabled())
         		throw new IllegalStateException("Encryption provider cannot be initialized when encryption is disabled");
         	instance = new EncryptionProvider(CommandLineOpts.getCommandLineOpts().getEncryptionKey());            
