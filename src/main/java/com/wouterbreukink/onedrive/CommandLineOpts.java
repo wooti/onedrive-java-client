@@ -128,7 +128,9 @@ public class CommandLineOpts {
             opts.encryptionKey = line.getOptionValue("encryption-key");
         }
         
-
+        if (opts.useHash && opts.isEncryptionEnabled())
+        	throw new ParseException("Hash comparison and encryption cannot be enabled at the same time");
+        
         opts.isInitialised = true;
     }
 
