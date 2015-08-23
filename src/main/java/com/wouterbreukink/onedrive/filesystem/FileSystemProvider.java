@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import com.wouterbreukink.onedrive.client.OneDriveItem;
+
 public interface FileSystemProvider {
 
     void delete(File file) throws IOException;
@@ -20,7 +22,7 @@ public interface FileSystemProvider {
 
     boolean verifyCrc(File file, long crc) throws IOException;
 
-    FileMatch verifyMatch(File file, long crc, long fileSize, Date created, Date lastModified) throws IOException;
+    FileMatch verifyMatch(File localFile, OneDriveItem remoteFile) throws IOException;
 
     /**
      * Get the CRC32 Checksum for a file

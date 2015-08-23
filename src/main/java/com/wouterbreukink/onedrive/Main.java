@@ -128,11 +128,14 @@ public class Main {
             return;
         }
 
-        log.info(String.format("Starting at root folder '%s'", rootFolder.getFullName()));
+        File localRoot = new File(getCommandLineOpts().getLocalPath());
+        
+        log.info(String.format("Local folder '%s'", localRoot.getAbsolutePath()));
+        log.info(String.format("Remote folder '<onedrive>%s'", rootFolder.getFullName()));
 
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
-        queue.add(new CheckTask(new Task.TaskOptions(queue, api, fileSystem, reporter), rootFolder, new File(getCommandLineOpts().getLocalPath())));
+        queue.add(new CheckTask(new Task.TaskOptions(queue, api, fileSystem, reporter), rootFolder, localRoot));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());

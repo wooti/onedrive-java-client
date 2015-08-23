@@ -1,6 +1,7 @@
 package com.wouterbreukink.onedrive.tasks;
 
 import com.google.api.client.util.Preconditions;
+import com.wouterbreukink.onedrive.Utils;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
 import com.wouterbreukink.onedrive.encryption.EncryptionException;
 import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
@@ -95,13 +96,6 @@ public class DownloadTask extends Task {
 
                 long elapsedTime = System.currentTimeMillis() - startTime;
 
-                log.info(String.format("Downloaded %s in %s (%s/s) to %s file %s",
-                        readableFileSize(remoteFile.getSize()),
-                        readableTime(elapsedTime),
-                        elapsedTime > 0 ? readableFileSize(remoteFile.getSize() / (elapsedTime / 1000d)) : 0,
-                        replace ? "replace" : "new",
-                        remoteFile.getFullName()));
-
                 // Do a CRC check on the downloaded file
                 if (!fileSystem.verifyCrc(downloadFile, remoteFile.getCrc32())) {
                     throw new IOException(String.format("Download of file '%s' failed", remoteFile.getFullName()));
@@ -111,11 +105,20 @@ public class DownloadTask extends Task {
                         downloadFile,
                         remoteFile.getCreatedDateTime(),
                         remoteFile.getLastModifiedDateTime());
-
+                
                 if (getCommandLineOpts().isEncryptionEnabled())
                 	fileSystem.replaceAndDecryptFile(new File(parent, remoteFilename), downloadFile);
                 else
                 	fileSystem.replaceFile(new File(parent, remoteFilename), downloadFile);
+                
+                log.info(String.format("Downloaded %s in %s (%s/s) to %s file <local>/%s from file <onedrive>%s",
+            		readableFileSize(remoteFile.getSize()),
+                    readableTime(elapsedTime),
+                    elapsedTime > 0 ? readableFileSize(remoteFile.getSize() / (elapsedTime / 1000d)) : 0,
+                    replace ? "replace" : "new",
+                    Utils.getLocalRelativePath(downloadFile),
+                    remoteFile.getFullName()));
+                
                 reporter.fileDownloaded(replace, remoteFile.getSize());
             } catch (Throwable e) {
                 if (downloadFile != null) {
