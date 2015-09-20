@@ -10,6 +10,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
+import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
+
 import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
 class ROFileSystemProvider implements FileSystemProvider {
@@ -18,7 +21,8 @@ class ROFileSystemProvider implements FileSystemProvider {
         // Do nothing
     }
 
-    public File createFolder(File file, String name) throws IOException {
+    @SuppressWarnings("serial")
+	public File createFolder(File file, String name) throws IOException {
 
         return new File(file, name) {
             @Override
@@ -35,6 +39,11 @@ class ROFileSystemProvider implements FileSystemProvider {
     public void replaceFile(File original, File replacement) throws IOException {
         // Do nothing
     }
+    
+	@Override
+	public void replaceAndDecryptFile(File original, File replacement) throws IOException {
+		// Do nothing		
+	}
 
     public void setAttributes(File downloadFile, Date created, Date lastModified) throws IOException {
         // Do nothing
@@ -44,29 +53,34 @@ class ROFileSystemProvider implements FileSystemProvider {
         return true;
     }
 
-    public FileMatch verifyMatch(File file, long crc, long fileSize, Date created, Date lastModified) throws IOException {
-
+    @Override
+    public FileMatch verifyMatch(File localFile, OneDriveItem remoteFile) throws IOException 
+    {
         // Round to nearest second
-        created = new Date((created.getTime() / 1000) * 1000);
-        lastModified = new Date((lastModified.getTime() / 1000) * 1000);
+        Date remoteCreatedDate = new Date((remoteFile.getCreatedDateTime().getTime() / 1000) * 1000);
+        Date remoteLastModifiedDate = new Date((remoteFile.getLastModifiedDateTime().getTime() / 1000) * 1000);
 
-        BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+        BasicFileAttributes attr = Files.readAttributes(localFile.toPath(), BasicFileAttributes.class);
 
         // Timestamp rounded to the nearest second
         Date localCreatedDate = new Date(attr.creationTime().to(TimeUnit.SECONDS) * 1000);
-        Date localModifiedDate = new Date(attr.lastModifiedTime().to(TimeUnit.SECONDS) * 1000);
-
-        boolean sizeMatches = fileSize == file.length();
-        boolean createdMatches = created.equals(localCreatedDate);
-        boolean modifiedMatches = lastModified.equals(localModifiedDate);
-
+        Date localLastModifiedDate = new Date(attr.lastModifiedTime().to(TimeUnit.SECONDS) * 1000);
+        
+        long localFileLength = getCommandLineOpts().isEncryptionEnabled() ? 
+        		EncryptionProvider.computeEncryptedLength(localFile.length()) : 
+        		localFile.length();
+        
+        boolean sizeMatches = remoteFile.getSize() == localFileLength;
+        boolean createdMatches = remoteCreatedDate.equals(localCreatedDate);
+        boolean modifiedMatches = remoteLastModifiedDate.equals(localLastModifiedDate);
+       
         if (!getCommandLineOpts().useHash() && sizeMatches && createdMatches && modifiedMatches) {
             // Close enough!
             return FileMatch.YES;
         }
 
-        long localCrc = getChecksum(file);
-        boolean crcMatches = crc == localCrc;
+        long localCrc = getChecksum(localFile);
+        boolean crcMatches = remoteFile.getCrc32() == localCrc;
 
         // If the crc matches but the timestamps do not we won't upload the content again
         if (crcMatches && !(modifiedMatches && createdMatches)) {

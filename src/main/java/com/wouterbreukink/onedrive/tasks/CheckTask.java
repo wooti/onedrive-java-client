@@ -3,6 +3,8 @@ package com.wouterbreukink.onedrive.tasks;
 import com.google.api.client.util.Maps;
 import com.google.api.client.util.Preconditions;
 import com.wouterbreukink.onedrive.client.OneDriveItem;
+import com.wouterbreukink.onedrive.encryption.EncryptionException;
+import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
 import com.wouterbreukink.onedrive.filesystem.FileSystemProvider;
 
 import java.io.File;
@@ -15,11 +17,11 @@ public class CheckTask extends Task {
 
     private final OneDriveItem remoteFile;
     private final File localFile;
-
+    
     public CheckTask(TaskOptions options, OneDriveItem remoteFile, File localFile) {
         super(options);
         this.remoteFile = Preconditions.checkNotNull(remoteFile);
-        this.localFile = Preconditions.checkNotNull(localFile);
+        this.localFile = Preconditions.checkNotNull(localFile);    
     }
 
     public int priority() {
@@ -52,7 +54,21 @@ public class CheckTask extends Task {
                     continue;
                 }
 
-                File localFile = localFileCache.remove(remoteFile.getName());
+                String remoteFileName = remoteFile.getName();
+                if (getCommandLineOpts().isEncryptionEnabled())
+                {
+                	try 
+                	{
+						remoteFileName = EncryptionProvider.getEncryptionProvider().
+								decryptFilename(remoteFileName);
+					}
+                	catch (EncryptionException e) 
+                	{
+                		throw new IllegalStateException("Cannot decrypt remote filename <" + remoteFileName + ">");
+					}                	
+                }
+                
+                File localFile = localFileCache.remove(remoteFileName);
                 processChild(remoteFile, localFile);
             }
 
@@ -90,10 +106,7 @@ public class CheckTask extends Task {
 
             // Check if the remote file matches the local file
             FileSystemProvider.FileMatch match = fileSystem.verifyMatch(
-                    localFile, remoteFile.getCrc32(),
-                    remoteFile.getSize(),
-                    remoteFile.getCreatedDateTime(),
-                    remoteFile.getLastModifiedDateTime());
+                    localFile, remoteFile);
 
             switch (match) {
                 case NO:
@@ -132,7 +145,7 @@ public class CheckTask extends Task {
         }
     }
 
-    private void processChild(OneDriveItem remoteFile, File localFile) {
+    private void processChild(OneDriveItem remoteFile, File localFile) throws IOException {
 
         if (remoteFile == null && localFile == null) {
             throw new IllegalArgumentException("Must specify at least one file");

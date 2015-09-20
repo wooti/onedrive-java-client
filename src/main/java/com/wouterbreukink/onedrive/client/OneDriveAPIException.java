@@ -4,7 +4,8 @@ import java.io.IOException;
 
 public class OneDriveAPIException extends IOException {
 
-    private final int code;
+	private static final long serialVersionUID = 8565200159017812597L;
+	private final int code;
 
     public OneDriveAPIException(int code, String message) {
         super(message);

@@ -11,6 +11,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.Date;
 
+import com.wouterbreukink.onedrive.encryption.EncryptionProvider;
+
 class RWFileSystemProvider extends ROFileSystemProvider implements FileSystemProvider {
 
     private static void removeRecursive(Path path) throws IOException {
@@ -73,15 +75,37 @@ class RWFileSystemProvider extends ROFileSystemProvider implements FileSystemPro
 
         if (!replacement.renameTo(original)) {
             throw new IOException("Unable to replace local file" + original.getPath());
+        }        
+    }
+    
+    @Override
+    public void replaceAndDecryptFile(File original, File replacement) throws IOException {
+        if (original.exists() && !original.delete()) {
+            throw new IOException("Unable to delete old local file " + original.getPath());
         }
+
+        EncryptionProvider.getEncryptionProvider()
+			.decryptFile(replacement, original);
+        
+        copyAttributes(replacement, original);
+		
+        if (!replacement.delete()) {
+            throw new IOException("Unable to replace local file, deletion of temporary file " + replacement.getPath() + " failed");
+        }        
     }
 
     @Override
-    public void setAttributes(File downloadFile, Date created, Date lastModified) throws IOException {
-        BasicFileAttributeView attributes = Files.getFileAttributeView(downloadFile.toPath(), BasicFileAttributeView.class);
+    public void setAttributes(File file, Date created, Date lastModified) throws IOException {
+        BasicFileAttributeView attributes = Files.getFileAttributeView(file.toPath(), BasicFileAttributeView.class);
         FileTime createdFt = FileTime.fromMillis(created.getTime());
         FileTime lastModifiedFt = FileTime.fromMillis(lastModified.getTime());
         attributes.setTimes(lastModifiedFt, lastModifiedFt, createdFt);
+    }
+    
+    private void copyAttributes(File source, File target) throws IOException {
+    	BasicFileAttributes sourceAttributes = Files.readAttributes(source.toPath(), BasicFileAttributes.class);
+    	BasicFileAttributeView targetAttributes = Files.getFileAttributeView(target.toPath(), BasicFileAttributeView.class);
+    	targetAttributes.setTimes(sourceAttributes.lastModifiedTime(), sourceAttributes.lastAccessTime(), sourceAttributes.creationTime());    	
     }
 
     @Override

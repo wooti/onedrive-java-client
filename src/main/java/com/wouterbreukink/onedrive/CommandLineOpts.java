@@ -39,6 +39,7 @@ public class CommandLineOpts {
     private int splitAfter = 5;
     private Set<String> ignored = null;
     private boolean authorise = false;
+    private String encryptionKey = null;
 
     public static CommandLineOpts getCommandLineOpts() {
         if (!opts.isInitialised) {
@@ -122,7 +123,14 @@ public class CommandLineOpts {
                 throw new ParseException(e.getMessage());
             }
         }
-
+        
+        if (line.hasOption("encryption-key")) {
+            opts.encryptionKey = line.getOptionValue("encryption-key");
+        }
+        
+        if (opts.useHash && opts.isEncryptionEnabled())
+        	throw new ParseException("Hash comparison and encryption cannot be enabled at the same time");
+        
         opts.isInitialised = true;
     }
 
@@ -233,6 +241,13 @@ public class CommandLineOpts {
                 .argName("count")
                 .desc("try each service request <count> times")
                 .build();
+        
+        Option encryptionKey = Option.builder("e")
+                .longOpt("encryption-key")
+                .hasArg()
+                .argName("key")
+                .desc("encryption key")
+                .build();
 
         return new Options()
                 .addOption(authorise)
@@ -251,7 +266,8 @@ public class CommandLineOpts {
                 .addOption(splitAfter)
                 .addOption(threads)
                 .addOption(version)
-                .addOption(retries);
+                .addOption(retries)
+                .addOption(encryptionKey);
     }
 
     public static void printHelp() {
@@ -321,6 +337,14 @@ public class CommandLineOpts {
 
     public boolean isAuthorise() {
         return authorise;
+    }
+    
+    public String getEncryptionKey() {
+        return encryptionKey;
+    }
+    
+    public boolean isEncryptionEnabled() {
+        return encryptionKey != null;
     }
 
     public enum Direction {
