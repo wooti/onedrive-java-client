@@ -6,7 +6,7 @@ __This application is currently in BETA - use with caution__
 
 ## Installation
 
-(1) Download and extract the [latest release](https://github.com/wooti/onedrive-java-client/releases/download/0.1/onedrive-java-client.zip).
+(1) Download and extract the [latest release](https://github.com/wooti/onedrive-java-client/releases/download/0.2/onedrive-java-client.zip).
 
 (2) Authorise the application
 
