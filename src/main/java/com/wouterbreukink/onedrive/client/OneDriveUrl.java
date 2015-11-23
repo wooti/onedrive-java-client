@@ -3,6 +3,9 @@ package com.wouterbreukink.onedrive.client;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.util.Key;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 class OneDriveUrl extends GenericUrl {
 
     private static final String rootUrl = "https://api.onedrive.com/v1.0";
@@ -26,7 +29,7 @@ class OneDriveUrl extends GenericUrl {
     }
 
     public static OneDriveUrl putContent(String id, String name) {
-        return new OneDriveUrl(rootUrl + "/drive/items/" + id + ":/" + name + ":/content");
+        return new OneDriveUrl(rootUrl + "/drive/items/" + id + ":/" + encode(name) + ":/content");
     }
 
     public static OneDriveUrl postMultiPart(String id) {
@@ -34,7 +37,7 @@ class OneDriveUrl extends GenericUrl {
     }
 
     public static OneDriveUrl createUploadSession(String id, String name) {
-        return new OneDriveUrl(rootUrl + "/drive/items/" + id + ":/" + name + ":/upload.createSession");
+        return new OneDriveUrl(rootUrl + "/drive/items/" + id + ":/" + encode(name) + ":/upload.createSession");
     }
 
     public static OneDriveUrl getPath(String path) {
@@ -47,6 +50,14 @@ class OneDriveUrl extends GenericUrl {
 
     public static GenericUrl content(String id) {
         return new OneDriveUrl(rootUrl + "/drive/items/" + id + "/content");
+    }
+
+    private static String encode(String url) {
+        try {
+            return URLEncoder.encode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
     public void setToken(String token) {
