@@ -41,7 +41,7 @@ class OneDriveUrl extends GenericUrl {
     }
 
     public static OneDriveUrl getPath(String path) {
-        return new OneDriveUrl(rootUrl + "/drive/root:/" + path);
+        return new OneDriveUrl(rootUrl + "/drive/root:/" + encode(path).replace("%5C", "/"));
     }
 
     public static GenericUrl item(String id) {
@@ -56,7 +56,7 @@ class OneDriveUrl extends GenericUrl {
         try {
             return URLEncoder.encode(url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            return null;
+            return "";
         }
     }
 
