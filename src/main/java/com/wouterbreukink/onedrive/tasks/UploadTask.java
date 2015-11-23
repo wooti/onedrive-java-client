@@ -16,6 +16,7 @@ import static com.wouterbreukink.onedrive.LogUtils.readableTime;
 public class UploadTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
+    private static final int MAX_RETRIES = 5;
 
     private final OneDriveItem parent;
     private final File localFile;
@@ -70,20 +71,43 @@ public class UploadTask extends Task {
             OneDriveItem response;
             if (localFile.length() > getCommandLineOpts().getSplitAfter() * 1024 * 1024) {
 
+                int tryCount = 0;
                 OneDriveUploadSession session = api.startUploadSession(parent, localFile);
 
                 while (!session.isComplete()) {
                     long startTimeInner = System.currentTimeMillis();
 
-                    api.uploadChunk(session);
+                    try {
+                        // We don't want to keep retrying infinitely
+                        if (tryCount == MAX_RETRIES) {
+                            break;
+                        }
 
-                    long elapsedTimeInner = System.currentTimeMillis() - startTimeInner;
+                        api.uploadChunk(session);
 
-                    log.info(String.format("Uploaded chunk (progress %.1f%%) of %s (%s/s) for file %s",
-                            ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
-                            readableFileSize(session.getLastUploaded()),
-                            elapsedTimeInner > 0 ? readableFileSize(session.getLastUploaded() / (elapsedTimeInner / 1000d)) : 0,
-                            parent.getFullName() + localFile.getName()));
+                        long elapsedTimeInner = System.currentTimeMillis() - startTimeInner;
+
+                        log.info(String.format("Uploaded chunk (progress %.1f%%) of %s (%s/s) for file %s",
+                                ((double) session.getTotalUploaded() / session.getFile().length()) * 100,
+                                readableFileSize(session.getLastUploaded()),
+                                elapsedTimeInner > 0 ? readableFileSize(session.getLastUploaded() / (elapsedTimeInner / 1000d)) : 0,
+                                parent.getFullName() + localFile.getName()));
+
+                        // After a successful upload we'll reset the tryCount
+                        tryCount = 0;
+
+                    } catch (IOException ex) {
+                        log.warn(String.format("Encountered '%s' while uploading chunk of %s for file %s",
+                                ex.getMessage(),
+                                readableFileSize(session.getLastUploaded()),
+                                parent.getFullName() + localFile.getName()));
+
+                        tryCount++;
+                    }
+                }
+
+                if (!session.isComplete()) {
+                    throw new IOException(String.format("Gave up on multi-part upload after %s retries", MAX_RETRIES));
                 }
 
                 response = session.getItem();
