@@ -104,13 +104,5 @@ public class UploadTask extends Task {
             reporter.fileUploaded(replace, localFile.length());
         }
     }
-
-    private void sleep(int i) {
-        try {
-            Thread.sleep(i * 1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
 }
 
