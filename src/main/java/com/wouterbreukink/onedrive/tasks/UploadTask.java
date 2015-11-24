@@ -16,7 +16,6 @@ import static com.wouterbreukink.onedrive.LogUtils.readableTime;
 public class UploadTask extends Task {
 
     private static final Logger log = LogManager.getLogger(UploadTask.class.getName());
-    private static final int MAX_RETRIES = 5;
 
     private final OneDriveItem parent;
     private final File localFile;
@@ -79,7 +78,7 @@ public class UploadTask extends Task {
 
                     try {
                         // We don't want to keep retrying infinitely
-                        if (tryCount == MAX_RETRIES) {
+                        if (tryCount == getCommandLineOpts().getTries()) {
                             break;
                         }
 
@@ -107,7 +106,7 @@ public class UploadTask extends Task {
                 }
 
                 if (!session.isComplete()) {
-                    throw new IOException(String.format("Gave up on multi-part upload after %s retries", MAX_RETRIES));
+                    throw new IOException(String.format("Gave up on multi-part upload after %s retries", getCommandLineOpts().getTries()));
                 }
 
                 response = session.getItem();
