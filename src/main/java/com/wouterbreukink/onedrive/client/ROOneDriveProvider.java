@@ -1,9 +1,6 @@
 package com.wouterbreukink.onedrive.client;
 
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.*;
 import com.google.api.client.http.apache.ApacheHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -88,9 +85,15 @@ class ROOneDriveProvider implements OneDriveProvider {
     }
 
     public OneDriveItem getPath(String path) throws IOException {
-        HttpRequest request = requestFactory.buildGetRequest(OneDriveUrl.getPath(path));
-        Item response = request.execute().parseAs(Item.class);
-        return OneDriveItem.FACTORY.create(response);
+        try {
+            HttpRequest request = requestFactory.buildGetRequest(OneDriveUrl.getPath(path));
+            Item response = request.execute().parseAs(Item.class);
+            return OneDriveItem.FACTORY.create(response);
+        } catch (HttpResponseException e) {
+            throw new OneDriveAPIException(e.getStatusCode(), "Unable to get path", e);
+        } catch (IOException e) {
+            throw new OneDriveAPIException(0, "Unable to get path", e);
+        }
     }
 
     public OneDriveItem replaceFile(OneDriveItem parent, File file) throws IOException {

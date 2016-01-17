@@ -121,10 +121,20 @@ public class Main {
                 ((double) primary.getQuota().getUsed() / primary.getQuota().getTotal()) * 100));
 
         // Check the given root folder
-        OneDriveItem rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
+        OneDriveItem rootFolder;
+        try {
+            rootFolder = api.getPath(getCommandLineOpts().getRemotePath());
+        } catch (OneDriveAPIException e) {
+            if (e.getCode() == 404) {
+                log.error(String.format("Specified remote folder '%s' does not exist", getCommandLineOpts().getRemotePath()));
+            } else {
+                log.error(String.format("Unable to locate remote folder '%s' - %s", getCommandLineOpts().getRemotePath(), e.getMessage()));
+            }
+            return;
+        }
 
-        if (!rootFolder.isDirectory()) {
-            log.error(String.format("Specified root '%s' is not a folder", rootFolder.getFullName()));
+        if (rootFolder == null || !rootFolder.isDirectory()) {
+            log.error(String.format("Specified root '%s' is not a folder", getCommandLineOpts().getRemotePath()));
             return;
         }
 
