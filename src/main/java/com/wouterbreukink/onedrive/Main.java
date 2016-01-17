@@ -138,11 +138,19 @@ public class Main {
             return;
         }
 
+        // Check the target folder
+        File localFolder = new File(getCommandLineOpts().getLocalPath());
+
+        if (!localFolder.exists() || !localFolder.isDirectory()) {
+            log.error(String.format("Specified local path '%s' is not a valid folder", getCommandLineOpts().getLocalPath()));
+            return;
+        }
+
         log.info(String.format("Starting at root folder '%s'", rootFolder.getFullName()));
 
         // Start synchronisation operation at the root
         final TaskQueue queue = new TaskQueue();
-        queue.add(new CheckTask(new Task.TaskOptions(queue, api, fileSystem, reporter), rootFolder, new File(getCommandLineOpts().getLocalPath())));
+        queue.add(new CheckTask(new Task.TaskOptions(queue, api, fileSystem, reporter), rootFolder, localFolder));
 
         // Get a bunch of threads going
         ExecutorService executorService = Executors.newFixedThreadPool(getCommandLineOpts().getThreads());
