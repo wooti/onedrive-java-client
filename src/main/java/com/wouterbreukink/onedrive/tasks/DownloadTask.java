@@ -53,6 +53,7 @@ public class DownloadTask extends Task {
         if (remoteFile.isDirectory()) {
 
             File newParent = fileSystem.createFolder(parent, remoteFile.getName());
+            queue.add(new UpdatePropertiesTask(getTaskOptions(), remoteFile, newParent));
 
             for (OneDriveItem item : api.getChildren(remoteFile)) {
                 queue.add(new DownloadTask(getTaskOptions(), newParent, item, false));
