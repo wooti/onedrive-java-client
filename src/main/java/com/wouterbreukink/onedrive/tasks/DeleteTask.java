@@ -31,7 +31,7 @@ public class DeleteTask extends Task {
     }
 
     public int priority() {
-        return 25;
+        return 100;
     }
 
     @Override

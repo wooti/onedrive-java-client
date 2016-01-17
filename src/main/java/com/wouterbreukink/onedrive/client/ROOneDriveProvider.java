@@ -8,6 +8,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
 import com.google.api.client.util.Lists;
 import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
+import com.wouterbreukink.onedrive.client.downloader.ResumableDownloaderProgressListener;
 import com.wouterbreukink.onedrive.client.resources.Drive;
 import com.wouterbreukink.onedrive.client.resources.Item;
 import com.wouterbreukink.onedrive.client.resources.ItemSet;
@@ -136,7 +137,7 @@ class ROOneDriveProvider implements OneDriveProvider {
         return OneDriveItem.FACTORY.create(parent, target.getName(), true);
     }
 
-    public void download(OneDriveItem item, File target) throws IOException {
+    public void download(OneDriveItem item, File target, ResumableDownloaderProgressListener progressListener) throws IOException {
         // Do nothing
     }
 

@@ -4,6 +4,8 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.util.Key;
 import com.wouterbreukink.onedrive.client.authoriser.AuthorisationProvider;
+import com.wouterbreukink.onedrive.client.downloader.ResumableDownloader;
+import com.wouterbreukink.onedrive.client.downloader.ResumableDownloaderProgressListener;
 import com.wouterbreukink.onedrive.client.facets.FileFacet;
 import com.wouterbreukink.onedrive.client.facets.FileSystemInfoFacet;
 import com.wouterbreukink.onedrive.client.facets.FolderFacet;
@@ -17,6 +19,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
+
+import static com.wouterbreukink.onedrive.CommandLineOpts.getCommandLineOpts;
 
 class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider {
 
@@ -149,15 +153,17 @@ class RWOneDriveProvider extends ROOneDriveProvider implements OneDriveProvider 
         return item;
     }
 
-    public void download(OneDriveItem item, File target) throws IOException {
-
-        HttpRequest request = requestFactory.buildGetRequest(OneDriveUrl.content(item.getId()));
+    public void download(OneDriveItem item, File target, ResumableDownloaderProgressListener progressListener) throws IOException {
 
         FileOutputStream fos = null;
 
         try {
             fos = new FileOutputStream(target);
-            request.execute().download(fos);
+            ResumableDownloader downloader = new ResumableDownloader(HTTP_TRANSPORT, requestFactory.getInitializer());
+            downloader.setProgressListener(progressListener);
+            downloader.setChunkSize(getCommandLineOpts().getSplitAfter() * 1024 * 1024);
+
+            downloader.download(OneDriveUrl.content(item.getId()), fos);
         } catch (IOException e) {
             throw new OneDriveAPIException(0, "Unable to download file", e);
         } finally {
