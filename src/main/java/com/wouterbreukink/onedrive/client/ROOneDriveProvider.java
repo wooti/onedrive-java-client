@@ -30,6 +30,8 @@ class ROOneDriveProvider implements OneDriveProvider {
                     @Override
                     public void initialize(HttpRequest request) {
                         request.setParser(new JsonObjectParser(JSON_FACTORY));
+                        request.setReadTimeout(60000);
+                        request.setConnectTimeout(60000);
                         try {
                             request.getHeaders().setAuthorization("bearer " + authoriser.getAccessToken());
                         } catch (IOException e) {
