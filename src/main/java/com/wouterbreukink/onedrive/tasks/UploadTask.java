@@ -52,7 +52,7 @@ public class UploadTask extends Task {
         }
 
         if (localFile.isDirectory()) {
-            OneDriveItem newParent = api.createFolder(parent, localFile.getName());
+            OneDriveItem newParent = api.createFolder(parent, localFile);
 
             //noinspection ConstantConditions
             for (File f : localFile.listFiles()) {

@@ -78,6 +78,28 @@ class ROFileSystemProvider implements FileSystemProvider {
         }
     }
 
+    public FileMatch verifyMatch(File file, Date created, Date lastModified) throws IOException {
+
+        // Round to nearest second
+        created = new Date((created.getTime() / 1000) * 1000);
+        lastModified = new Date((lastModified.getTime() / 1000) * 1000);
+
+        BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+
+        // Timestamp rounded to the nearest second
+        Date localCreatedDate = new Date(attr.creationTime().to(TimeUnit.SECONDS) * 1000);
+        Date localModifiedDate = new Date(attr.lastModifiedTime().to(TimeUnit.SECONDS) * 1000);
+
+        boolean createdMatches = created.equals(localCreatedDate);
+        boolean modifiedMatches = lastModified.equals(localModifiedDate);
+
+        if (createdMatches && modifiedMatches) {
+            return FileMatch.YES;
+        } else {
+            return FileMatch.NO;
+        }
+    }
+
     public long getChecksum(File file) throws IOException {
 
         // Compute CRC32 checksum

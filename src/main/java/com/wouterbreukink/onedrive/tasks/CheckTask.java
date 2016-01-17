@@ -40,6 +40,16 @@ public class CheckTask extends Task {
 
         if (localFile.isDirectory() && remoteFile.isDirectory()) { // If we are syncing folders
 
+            // Verify the timestamps
+            FileSystemProvider.FileMatch match = fileSystem.verifyMatch(
+                    localFile,
+                    remoteFile.getCreatedDateTime(),
+                    remoteFile.getLastModifiedDateTime());
+
+            if (match == FileSystemProvider.FileMatch.NO) {
+                queue.add(new UpdatePropertiesTask(getTaskOptions(), remoteFile, localFile));
+            }
+
             OneDriveItem[] remoteFiles = api.getChildren(remoteFile);
 
             // Index the local files

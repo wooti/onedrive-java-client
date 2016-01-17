@@ -20,6 +20,8 @@ public interface FileSystemProvider {
 
     FileMatch verifyMatch(File file, long crc, long fileSize, Date created, Date lastModified) throws IOException;
 
+    FileMatch verifyMatch(File file, Date created, Date lastModified) throws IOException;
+
     /**
      * Get the CRC32 Checksum for a file
      *

@@ -129,9 +129,9 @@ class ROOneDriveProvider implements OneDriveProvider {
         return item;
     }
 
-    public OneDriveItem createFolder(OneDriveItem parent, String name) throws IOException {
+    public OneDriveItem createFolder(OneDriveItem parent, File target) throws IOException {
         // Return a dummy folder
-        return OneDriveItem.FACTORY.create(parent, name, true);
+        return OneDriveItem.FACTORY.create(parent, target.getName(), true);
     }
 
     public void download(OneDriveItem item, File target) throws IOException {
