@@ -98,6 +98,6 @@ The following key features are currently planned / under development:
 
 ## License
 
-(C) 2015 Wouter Breukink
+(C) 2017 Wouter Breukink
 
 See [license](LICENSE.md).

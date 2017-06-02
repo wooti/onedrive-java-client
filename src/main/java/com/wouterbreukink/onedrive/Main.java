@@ -22,7 +22,7 @@ import static com.wouterbreukink.onedrive.LogUtils.readableFileSize;
 
 /***
  * OneDrive Java Client
- * Copyright (C) 2015 Wouter Breukink
+ * Copyright (C) 2017 Wouter Breukink
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
