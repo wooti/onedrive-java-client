@@ -18,6 +18,12 @@ public class HashesFacet {
     }
 
     public long getCrc32() {
+
+        // OneDrive does not always return a hash
+        if (crc32Hash == null) {
+            return 0;
+        }
+
         String reversed = crc32Hash.substring(6, 8) + crc32Hash.substring(4, 6) + crc32Hash.substring(2, 4) + crc32Hash.substring(0, 2);
         return Long.decode("0x" + reversed);
     }

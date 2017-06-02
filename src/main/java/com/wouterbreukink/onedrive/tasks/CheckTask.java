@@ -112,7 +112,8 @@ public class CheckTask extends Task {
 
             // Check if the remote file matches the local file
             FileSystemProvider.FileMatch match = fileSystem.verifyMatch(
-                    localFile, remoteFile.getCrc32(),
+                    localFile,
+                    remoteFile.getCrc32(),
                     remoteFile.getSize(),
                     remoteFile.getCreatedDateTime(),
                     remoteFile.getLastModifiedDateTime());
